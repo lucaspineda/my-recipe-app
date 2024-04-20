@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { PiForkKnife } from "react-icons/pi";
+import { IconContext } from "react-icons";
 // import PeopleCookingImg from "./../public/people-cooking.svg"
 
 export default function Home() {
@@ -23,9 +25,13 @@ export default function Home() {
 			<form className="mt-12 w-full flex flex-col">
 				<div className="bg-tertiary px-8 py-4 rounded-full self-start">1</div>
 				<label className="secondary-header py-3">Adicione ingredientes que você possuí em casa</label>
-				<input className="shadow appearance-none border border-none rounded w-full
-					py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline global-input"
-					id="ingredientes" type="string" placeholder="Digite Seus Ingredientes" />
+				<div class="relative">
+					<input className="w-full global-input"
+						id="ingredientes" type="string" placeholder="Digite Seus Ingredientes" />
+					<div class="icon-div-for-input">
+						<Image src="/fork-knife.svg" width={24} height={24} alt="Fork Icon" />
+					</div>
+				</div>
 			</form>
 		</div>
 	);
