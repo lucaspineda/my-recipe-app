@@ -37,7 +37,7 @@ h1 {
 
 .secondary-header {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .global-input {
@@ -65,4 +65,11 @@ h1 {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+
+select {
+    background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png) no-repeat right #ddd;
+    -webkit-appearance: none;
+    background-position-x: 18.5rem;
 }
