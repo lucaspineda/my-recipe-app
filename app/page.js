@@ -1,5 +1,5 @@
 import Image from "next/image";
-import MealForm from "./components/MealForm"
+import MealForm from "./components/MealForm.js"
 // import PeopleCookingImg from "./../public/people-cooking.svg"
 
 export default function Home() {
