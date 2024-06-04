@@ -28,7 +28,7 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb)); */
-    background-color: var(--primary-color);
+  background-color: var(--primary-color);
 }
 
 h1 {
@@ -42,10 +42,10 @@ h1 {
 
 .global-input {
   height: 3rem;
-  padding: 0px .5rem;
+  padding: 0px 0.5rem;
   border: 0;
   box-sizing: border-box;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   background-color: #fcfcfc;
   color: #343434;
   font-size: 1rem;
@@ -68,9 +68,14 @@ h1 {
   }
 }
 
-
 select {
-    background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png) no-repeat right #ddd;
-    -webkit-appearance: none;
-    background-position-x: 18.5rem;
+  background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png)
+    no-repeat right #ddd;
+  -webkit-appearance: none;
+  background-position-x: 18.5rem;
+}
+
+a {
+  text-decoration: underline;
+  color: var(--secondary-color);
 }
