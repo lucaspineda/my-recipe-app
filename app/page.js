@@ -1,8 +1,12 @@
+'use client'
+
 import Image from "next/image";
 import MealForm from "./components/MealForm.js"
+import { useRouter } from 'next/navigation'
 // import PeopleCookingImg from "./../public/people-cooking.svg"
 
 export default function Home() {
+	const router = useRouter()
 	return (
 		<div className="bg-primary flex items-center flex-col px-5">
 			<main className="flex items-center flex-col text-center w-full">
@@ -16,7 +20,7 @@ export default function Home() {
 						receitas incríveis
 					</p>
 				</article>
-				<button className="bg-secondary w-full mt-24 py-4 text-white rounded-2xl
+				<button onClick={router.push('/signup', undefined, { shallow: true })} className="bg-secondary w-full mt-24 py-4 text-white rounded-2xl
 					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold">
 						Começar
 				</button>
