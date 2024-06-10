@@ -54,10 +54,11 @@ h1 {
 }
 
 .icon-div-for-input {
+  display: flex;
   position: absolute;
   right: 0;
-  top: 0;
-  display: flex;
+  top: 0.75rem;
+  display: block;
   height: 100%;
   margin-right: 1rem;
 }
@@ -69,10 +70,10 @@ h1 {
 }
 
 select {
-  background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png)
-    no-repeat right #ddd;
+  /* background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png)
+    no-repeat right #ddd; */
   -webkit-appearance: none;
-  background-position-x: 18.5rem;
+  /* background-position-x: 18.5rem; */
 }
 
 a {
