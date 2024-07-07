@@ -24,7 +24,7 @@ export const MealForm = forwardRef(({}, ref) => {
   ];
 
   return (
-    <form className="mt-24 w-full flex flex-col" ref={ref}>
+    <form className="w-full flex flex-col text-left" ref={ref}>
       <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
         1
       </div>

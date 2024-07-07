@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function signup() {
   return (
-    <main className="px-5 flex flex-col text-center h-screen justify-center">
+    <main className="flex flex-col text-center h-screen justify-center">
       <div className="flex flex-col">
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Crie sua conta</h2>

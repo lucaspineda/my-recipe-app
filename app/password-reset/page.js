@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function PasswordReset() {
   return (
-    <main className="px-5 flex flex-col text-center h-screen justify-center">
+    <main className="flex flex-col text-center h-screen justify-center">
       <div>
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Digite seu e-mail para receber um link para reset de senha</h2>

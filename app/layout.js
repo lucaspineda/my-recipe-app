@@ -13,7 +13,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={rubik.className}>{children}</body>
+      <body className={rubik.className}>
+        <div className="relative p-5">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
