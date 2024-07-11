@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
 import Link from "next/link";
+import Input from "../Input/Input";
 
 export const MealForm = forwardRef(({}, ref) => {
   const mealOptions = [
@@ -31,17 +32,12 @@ export const MealForm = forwardRef(({}, ref) => {
       <label className="secondary-header py-3">
         Adicione ingredientes que você possuí em casa
       </label>
-      <div className="relative">
-        <input
-          className="global-input"
-          id="ingredientes"
-          type="string"
-          placeholder="Digite Seus Ingredientes"
-        />
-        <div className="icon-div-for-input">
-          <Image src="/fork-knife.svg" width={24} height={24} alt="Fork Icon" />
-        </div>
-      </div>
+      <Input
+        id="Ingredients"
+        placeholder="Digite Seus Ingredientes"
+        imgSource="/images/fork-knife.svg"
+        imgAlt="Icone de faca"
+      />
       <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
         2
       </div>
@@ -54,10 +50,18 @@ export const MealForm = forwardRef(({}, ref) => {
           className="global-input focus:ring-blue-500 focus:border-blue-500"
         >
           {mealOptions.map((option) => (
-            <option value={option.value}>{option.text}</option>
+            <option value={option.value} key={option.value}>
+              {option.text}
+            </option>
           ))}
         </select>
-        <Image src="/arrow-down.svg" className="top-4 right-4 absolute h-4" width={24} height={24} alt="Arow Down Icon" />
+        <Image
+          src="/images/arrow-down.svg"
+          className="top-4 right-4 absolute h-4 w-auto"
+          width={24}
+          height={24}
+          alt="Arow Down Icon"
+        />
       </div>
       <Link
         href="/signup"

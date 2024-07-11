@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import MealForm from "./../components/MealForm.js";
+import MealForm from "../components/MealForm/MealForm";
 import { useRouter } from "next/navigation";
 import { useRef } from 'react'
-// import PeopleCookingImg from "./../public/people-cooking.svg"
 
 export default function Landing() {
   const targetRef = useRef(null);
@@ -16,18 +15,18 @@ export default function Landing() {
     <div className="bg-primary flex items-center flex-col">
       <main className="flex items-center flex-col text-center w-full mb-24">
         <Image
-          src="/yellow-wave.svg"
+          src="/images/yellow-wave.svg"
           width={400}
           height={180}
           alt="test"
-          className="absolute left-0 top-0"
+          className="absolute left-0 top-0 w-auto"
         />
         <Image
-          src="/people-cooking.svg"
+          src="/images/people-cooking.svg"
           width={250}
           height={200}
           alt="test"
-          className="mt-24 z-10"
+          className="mt-24 z-10 w-auto"
         />
         <h1 className="font-semibold mt-16">ChefinhoIA</h1>
         <article className="mt-4 w-60">
