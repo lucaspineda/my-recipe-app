@@ -7,7 +7,7 @@ import Landing from './pages/Landing.js'
 export default function Init() {
 
   // Todo: retrive loggendIn data from auth system
-  const [isLoggedIn, setIsloggedIn] = useState(false)
+  const [isLoggedIn, setIsloggedIn] = useState(true)
 
   return (
     <>

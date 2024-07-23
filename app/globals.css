@@ -42,3 +42,12 @@ a {
 select {
   -webkit-appearance: none;
 }
+
+.mobile-menu {
+  background-color: var(--primary-color);
+  padding: 1rem;
+}
+
+.test {
+  /* color: rig; */
+}
