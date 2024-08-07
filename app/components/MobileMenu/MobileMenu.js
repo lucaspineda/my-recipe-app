@@ -28,7 +28,7 @@ export default function MobileMenu({ toggleMenu }) {
         <h2 className="mt-4 text-lg font-semibold">Lucas Pineda</h2>
         <span>Plano: Premium</span>
       </div>
-      <nav className="mt-8">
+      <nav className="mt-8" onClick={toggleMenu}>
         <ul className="flex flex-col gap-8">
           <li>
             <Link className="flex items-center gap-1 text-black no-underline" href="/">
