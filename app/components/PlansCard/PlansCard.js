@@ -5,13 +5,13 @@ import Button from "../Button/Button";
 export default function PlansCard({ plan }) {
   return (
     <>
-      <div className="flex flex-col bg-white rounded-xl py-4 px-8">
+      <div className="flex flex-col bg-white rounded-md py-4 px-8">
         <div className="flex content-center mb-2 justify-between">
           <h3 className="">{plan.name}</h3>
           {
             plan.recommended && (
-              <span className="bg-secondary px-1 w-min text-white rounded-md
-              shadow-lg self-center text-sm">
+              <span className="bg-white border-secondary border text-secondary px-1 w-min rounded-md
+              self-center text-sm">
                 Recomendado
               </span>
             )
