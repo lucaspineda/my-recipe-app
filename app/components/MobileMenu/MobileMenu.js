@@ -65,7 +65,7 @@ export default function MobileMenu({ toggleMenu }) {
       <button
         href="/signup"
         className="bg-secondary py-1 px-2 text-white rounded-2xl
-                shadow-[0px_0px_10px_rgba(3,3,3,0.1) text-center absolute bottom-4 right-4 text-sm"
+                shadow-lg text-center absolute bottom-4 right-4 text-sm"
       >
         Sair
       </button>
