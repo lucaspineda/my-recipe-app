@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import "../components/Input/Input.css"
 
 export default function login() {
   return (

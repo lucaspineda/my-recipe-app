@@ -1,5 +1,4 @@
 import Image from "next/image";
-import "./Input.css"
 
 export default function Input({ id, placeholder, imgSource, imgAlt }) {
   return (
