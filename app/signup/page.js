@@ -1,7 +1,35 @@
-import React from "react";
-import Link from "next/link";
+"use client"
 
-export default function signup() {
+import React, { useState } from "react";
+import Link from "next/link";
+import { initializeApp } from "firebase/app";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+} from "firebase/auth";
+
+export default function Signup() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const firebaseConfig = {
+    apiKey: "A",
+    authDomain: "r",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const signInWithEmail = (e) => {
+    e.preventDefault();
+    console.log(email, password)
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => console.log('login successful'))
+      .catch((error) => {
+        console.log("An error occurred");
+      });
+  };
+
   return (
     <main className="flex flex-col text-center h-screen justify-center">
       <div className="flex flex-col">
@@ -13,16 +41,21 @@ export default function signup() {
             id="login"
             type="string"
             placeholder="Digite seu e-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <input
             className="global-input mt-2"
             id="password"
             type="password"
             placeholder="Digite sua senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <button
             className="bg-secondary w-full mt-12 py-4 text-white rounded-2xl
 					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold"
+            onClick={signInWithEmail}
           >
             Cadastrar
           </button>
