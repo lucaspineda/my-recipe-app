@@ -20,11 +20,11 @@ export default function Signup() {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  const signInWithEmail = (e) => {
+  const signUpWithEmail = (e) => {
     e.preventDefault();
     console.log(email, password)
     createUserWithEmailAndPassword(auth, email, password)
-      .then(() => console.log('login successful'))
+      .then(() => console.log('User created'))
       .catch((error) => {
         console.log("An error occurred");
       });
@@ -55,7 +55,7 @@ export default function Signup() {
           <button
             className="bg-secondary w-full mt-12 py-4 text-white rounded-2xl
 					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold"
-            onClick={signInWithEmail}
+            onClick={signUpWithEmail}
           >
             Cadastrar
           </button>
