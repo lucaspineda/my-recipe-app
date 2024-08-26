@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Rubik } from "next/font/google";
 import MobileMenu from "./components/MobileMenu/MobileMenu";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import { IconMenu2 } from "@tabler/icons-react";
 import "./globals.css";
 IconMenu2;
@@ -19,16 +20,19 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={rubik.className}>
-        {isLoggedIn && (
-          <IconMenu2
-            className="absolute top-4 right-4 z-10"
-            size={30}
-            stroke={2}
-            onClick={() => setOpenMenu(true)}
-          />
-        )}
-        {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
-        <div className="relative p-5">{children}</div>
+        <ProtectedRoute>
+          {isLoggedIn && (
+            <IconMenu2
+              className="absolute top-4 right-4 z-10"
+              size={30}
+              stroke={2}
+              onClick={() => setOpenMenu(true)}
+            />
+          )}
+          {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
+          <div className="relative p-5">{children}</div>
+
+        </ProtectedRoute>
       </body>
     </html>
   );
