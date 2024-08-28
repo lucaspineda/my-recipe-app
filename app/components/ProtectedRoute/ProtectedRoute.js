@@ -1,31 +1,42 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { initializeApp } from "firebase/app";
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation'
+
 
 const ProtectedRoute = ({ children }) => {
   const firebaseConfig = {
-    apiKey: "AIzaSyCSiRU-d64B48InC9gQO0befLt7yzojmuw",
+    apiKey: "A",
     authDomain: "recipe-app-1bbdc.firebaseapp.com",
   };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const pathname = usePathname()
+  const router = useRouter();
 
-    useEffect(() => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          console.log('logged in')
-          // User is signed in, see docs for a list of available properties
-          // https://firebase.google.com/docs/reference/js/auth.user
-          // ...
-        } else {
-          // User is signed out
-          console.log('logged out')
-        }
-      });
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('logged in')
+      } else {
+        console.log('logged out')
+      }
+      checkRoute(user)
     });
+  });
 
-    return <div>{children}</div>;
+  const checkRoute = (user) => {
+    if (!user) {
+      router.push('/login');
+      return null;
+    }
+    if((pathname.includes('/login') || pathname.includes('/signup')) && user) {
+      router.push('/recipe');
+      return null;
+    }
+  }
+  return <div>{children}</div>;
 };
 
 export default ProtectedRoute;
