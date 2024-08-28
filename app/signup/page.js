@@ -12,13 +12,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const firebaseConfig = {
-    apiKey: "A",
-    authDomain: "r",
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  const auth = getAuth();
 
   const signUpWithEmail = (e) => {
     e.preventDefault();

@@ -1,19 +1,12 @@
 "use client"
 import React, { useState } from "react";
 import Link from "next/link";
-import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const firebaseConfig = {
-    apiKey: "A",
-    authDomain: "r.com",
-  };
-
-  const app = initializeApp(firebaseConfig);
   const auth = getAuth();
 
   const handleSignInWithEmail = (e) => {

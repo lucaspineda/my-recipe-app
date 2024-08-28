@@ -1,10 +1,15 @@
 import React, { useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-
+import { initializeApp } from "firebase/app";
 
 const ProtectedRoute = ({ children }) => {
-  const auth = getAuth();
+  const firebaseConfig = {
+    apiKey: "AIzaSyCSiRU-d64B48InC9gQO0befLt7yzojmuw",
+    authDomain: "recipe-app-1bbdc.firebaseapp.com",
+  };
 
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
     useEffect(() => {
       onAuthStateChanged(auth, (user) => {
@@ -15,9 +20,7 @@ const ProtectedRoute = ({ children }) => {
           // ...
         } else {
           // User is signed out
-          console.log('logged oout')
-
-          // ...
+          console.log('logged out')
         }
       });
     });
