@@ -31,7 +31,6 @@ export default function RootLayout({ children }) {
           )}
           {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
-
         </ProtectedRoute>
       </body>
     </html>

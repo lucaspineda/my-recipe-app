@@ -5,8 +5,27 @@ import {
   IconUser,
   IconShoppingBag,
 } from "@tabler/icons-react";
+import {
+  signOut,
+  getAuth,
+} from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { redirect } from 'next/navigation'
+
 
 export default function MobileMenu({ toggleMenu }) {
+  const router = useRouter()
+  const auth = getAuth();
+
+  const handleSignout = () => {
+    router.push('/')
+    signOut(auth).then(() => {
+      toggleMenu()
+      router.push('/')
+      console.log('user is signed out')
+    })
+
+  }
   return (
     <div className="mobile-menu flex flex-col absolute w-screen h-screen bg-black z-10">
       <Image
@@ -66,6 +85,7 @@ export default function MobileMenu({ toggleMenu }) {
         href="/signup"
         className="bg-secondary py-1 px-2 text-white rounded-2xl
                 shadow-lg text-center absolute bottom-4 right-4 text-sm"
+        onClick={handleSignout}
       >
         Sair
       </button>

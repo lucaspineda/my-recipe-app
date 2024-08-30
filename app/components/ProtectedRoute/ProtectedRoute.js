@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation'
 
 
+
 const ProtectedRoute = ({ children }) => {
   const firebaseConfig = {
     apiKey: "A",
@@ -27,7 +28,8 @@ const ProtectedRoute = ({ children }) => {
   });
 
   const checkRoute = (user) => {
-    if (!user) {
+    if (!user && pathname !== '/') {
+      console.log('caiu aquiii', pathname)
       router.push('/login');
       return null;
     }
