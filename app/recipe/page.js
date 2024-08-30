@@ -1,7 +1,9 @@
-import React from 'react'
+'use client'
+import React from "react";
 
-export default function page() {
-  return (
-    <div>recipe</div>
-  )
-}
+const RecipePage = () => {
+
+  return <div>recipe</div>;
+};
+
+export default RecipePage;

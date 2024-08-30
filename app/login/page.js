@@ -1,13 +1,23 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from 'next/navigation';
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const router = useRouter();
   const auth = getAuth();
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      router.push('/recipe')
+    });
+  }, [auth, router]);
+
 
   const handleSignInWithEmail = (e) => {
     e.preventDefault()
@@ -15,6 +25,8 @@ export default function Login() {
       .then((userCredential) => {
         const user = userCredential.user;
         console.log('user logged in')
+        router.push('/recipe');
+
       })
       .catch((error) => {
         const errorCode = error.code;
