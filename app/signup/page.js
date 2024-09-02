@@ -1,18 +1,28 @@
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getAuth,
 } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const auth = getAuth();
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        router.push("/recipe");
+      }
+    });
+  }, [auth, router]);
 
   const signUpWithEmail = (e) => {
     e.preventDefault();

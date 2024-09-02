@@ -1,13 +1,27 @@
 "use client";
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Home from './pages/Home.js'
 import Landing from './pages/Landing.js'
+import { useRouter } from "next/navigation";
+import {
+  getAuth,
+} from "firebase/auth";
 
 export default function Init() {
+  const auth = getAuth();
+  const router = useRouter();
 
   // Todo: retrive loggendIn data from auth system
   const [isLoggedIn, setIsloggedIn] = useState(true)
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log(user, 'sdff')
+        router.push("/recipe");
+      }
+    });
+  }, [auth, router]);
 
   return (
     <>

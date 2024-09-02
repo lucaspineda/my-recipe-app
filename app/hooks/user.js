@@ -1,29 +1,30 @@
-import { useEffect, useState } from 'react'
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+// import { useEffect, useState } from 'react'
+// import { initializeApp } from "firebase/app";
+// import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey: "A",
-  authDomain: "recipe-app-1bbdc.firebaseapp.com",
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDleNPOmpR0-CxS1cBKBYzRqMC8fi6EMQ4",
+//   authDomain: "recipe-app-1bbdc.firebaseapp.com",
+// };
+// const app = initializeApp(firebaseConfig);
+// const auth = getAuth(app);
 
-const useAuth = () => {
-  const [user, setUser] = useState(null);
-  console.log('here')
+// const useAuth = () => {
+//   const [user, setUser] = useState(null);
+//   console.log('here')
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-    });
+//   useEffect(() => {
+//     const unsubscribe = auth.onAuthStateChanged((user) => {
+//       console.log('caiu aquii2', user)
+//       setUser(user);
+//     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+//     return () => {
+//       unsubscribe();
+//     };
+//   }, []);
 
-  return user;
-};
+//   return user;
+// };
 
-export default useAuth;
+// export default useAuth;
