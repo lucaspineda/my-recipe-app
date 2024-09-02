@@ -4,6 +4,7 @@ import { Rubik } from "next/font/google";
 import MobileMenu from "./components/MobileMenu/MobileMenu";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import { IconMenu2 } from "@tabler/icons-react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import "./globals.css";
 IconMenu2;
 const rubik = Rubik({ subsets: ["latin"] });
@@ -17,10 +18,19 @@ export default function RootLayout({ children }) {
     setOpenMenu(!openMenu);
   };
 
+
+  const [user, setUser] = useState()
+
+  const onSetUser = (user) => {
+    console.log(user, 'userrr')
+    setUser(user)
+
+  }
+
   return (
     <html lang="en">
       <body className={rubik.className}>
-        <ProtectedRoute>
+        <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
           {isLoggedIn && (
             <IconMenu2
               className="absolute top-4 right-4 z-10"
@@ -29,7 +39,7 @@ export default function RootLayout({ children }) {
               onClick={() => setOpenMenu(true)}
             />
           )}
-          {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
+          {openMenu && user && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
         </ProtectedRoute>
       </body>

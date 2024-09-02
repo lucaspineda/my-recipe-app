@@ -3,7 +3,7 @@
 // import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 // const firebaseConfig = {
-//   apiKey: "AIzaSyDleNPOmpR0-CxS1cBKBYzRqMC8fi6EMQ4",
+//   apiKey: "4",
 //   authDomain: "recipe-app-1bbdc.firebaseapp.com",
 // };
 // const app = initializeApp(firebaseConfig);

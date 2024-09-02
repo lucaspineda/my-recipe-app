@@ -15,7 +15,6 @@ import { redirect } from 'next/navigation'
 
 export default function MobileMenu({ toggleMenu }) {
   const router = useRouter()
-  const auth = getAuth();
 
   const handleSignout = () => {
     router.push('/')
@@ -24,7 +23,6 @@ export default function MobileMenu({ toggleMenu }) {
       router.push('/')
       console.log('user is signed out')
     })
-
   }
   return (
     <div className="mobile-menu flex flex-col absolute w-screen h-screen bg-black z-10">
