@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={rubik.className}>
         <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
-          {isLoggedIn && (
+          {isLoggedIn && user && (
             <IconMenu2
               className="absolute top-4 right-4 z-10"
               size={30}
@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
               onClick={() => setOpenMenu(true)}
             />
           )}
-          {openMenu && user && <MobileMenu toggleMenu={toggleMenu} />}
+          {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
         </ProtectedRoute>
       </body>

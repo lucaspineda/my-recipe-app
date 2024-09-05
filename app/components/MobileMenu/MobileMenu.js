@@ -15,6 +15,7 @@ import { redirect } from 'next/navigation'
 
 export default function MobileMenu({ toggleMenu }) {
   const router = useRouter()
+  const auth = getAuth()
 
   const handleSignout = () => {
     router.push('/')
