@@ -16,6 +16,13 @@ export default function Signup() {
 
   const auth = getAuth();
 
+  // const schema = z.object({
+  //   email: z.string().email("Email é obrigatório"),
+  //   password: z.string().min(8, 'Senha deve ter pelo menos 6 caracteres')
+  //   .regex(/[A-Za-z]/, 'Senha deve ter pelo menos uma letra')
+  //   .regex(/[0-9]/, 'Senha deve ter pelo menos um número'),
+  // });
+
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
