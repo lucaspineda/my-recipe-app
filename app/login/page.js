@@ -3,6 +3,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const schema = z.object({
+  email: z.string().email("Email is required"),
+  password: z.string().min(6),
+});
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,6 +18,14 @@ export default function Login() {
 
   const router = useRouter();
   const auth = getAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
@@ -38,6 +54,7 @@ export default function Login() {
         <h2 className="my-6">Faça seu login</h2>
         <form className="flex flex-col">
           <input
+            {...register("name")}
             className="global-input"
             id="login"
             type="string"
@@ -46,6 +63,7 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
+            {...register("password")}
             className="global-input mt-2"
             id="password"
             type="password"
@@ -59,7 +77,7 @@ export default function Login() {
           <button
             className="bg-secondary w-full mt-6 py-4 text-white rounded-2xl
           border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold"
-            onClick={handleSignInWithEmail}
+            onClick={handleSubmit(e => handleSignInWithEmail())}
           >
             Login
           </button>
