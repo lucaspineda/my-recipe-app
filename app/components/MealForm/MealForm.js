@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import { forwardRef } from "react";
-import Link from "next/link";
-import Input from "../Input/Input";
-import { getAuth } from "firebase/auth";
+import React, { useState } from "react"
+import Image from "next/image"
+import { forwardRef } from "react"
+import Link from "next/link"
+import { getAuth } from "firebase/auth"
 
 export const MealForm = forwardRef(({ }, ref) => {
   const [recipe, setRecipe] = useState("")
   const [optionMeal, setOptionMeal] = useState("")
+  const [ingredients, setIngredients] = useState("")
 
   const mealOptions = [
     {
@@ -26,15 +26,18 @@ export const MealForm = forwardRef(({ }, ref) => {
       text: "Janta",
       value: "janta",
     },
-  ];
+  ]
 
   const handleChangeMeal = (event) => {
-    const optionMeal = mealOptions.find(option => option.value === event.target.value);
-    setOptionMeal(optionMeal.text ? optionMeal.text : "");
+    const optionMeal = mealOptions.find(option => option.value === event.target.value)
+    setOptionMeal(optionMeal.text ? optionMeal.text : "")
+  }
+
+  const handleChangeIngredients = (event) => {
+    setIngredients(event.target.value)
   }
 
   const handleGetRecipe = async () => {
-
     const auth = getAuth()
     const token = auth.currentUser?.accessToken
 
@@ -49,7 +52,7 @@ export const MealForm = forwardRef(({ }, ref) => {
         "Authorization": token
       },
       body: JSON.stringify({
-        prompt: `Crie uma receita para o ${optionMeal} apenas com os seguintes ingredientes: ${ref.current[0].value}`,
+        prompt: `Crie uma receita para o ${optionMeal} apenas com os seguintes ingredientes: ${ingredients}`,
       })
     })
     const responseJson = await response.json()
@@ -64,11 +67,13 @@ export const MealForm = forwardRef(({ }, ref) => {
       <label className="secondary-header py-3">
         Adicione ingredientes que você possuí em casa
       </label>
-      <Input
+      <input
         id="Ingredients"
+        className="global-input focus:ring-blue-500 focus:border-blue-500"
         placeholder="Digite Seus Ingredientes"
         imgSource="/images/fork-knife.svg"
         imgAlt="Icone de faca"
+        onChange={handleChangeIngredients}
       />
       <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
         2
@@ -109,7 +114,7 @@ export const MealForm = forwardRef(({ }, ref) => {
         recipe ? (
           <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
             <h1 className="" >
-              Sua receita
+              Sua receita para o {optionMeal}
             </h1>
             <h2 className="mt-10">
               {/* {recipe} */}
@@ -128,9 +133,9 @@ export const MealForm = forwardRef(({ }, ref) => {
         )
       }
     </form>
-  );
-});
+  )
+})
 
-MealForm.displayName = "MealForm";
+MealForm.displayName = "MealForm"
 
-export default MealForm;
+export default MealForm
