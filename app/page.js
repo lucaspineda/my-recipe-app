@@ -18,7 +18,7 @@ export default function Init() {
     auth.onAuthStateChanged((user) => {
       if (user) {
         console.log(user, 'sdff')
-        router.push("/recipe");
+        // router.push("/recipe");
       }
     });
   }, [auth, router]);
