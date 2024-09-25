@@ -7,6 +7,7 @@ import { getAuth } from "firebase/auth"
 export const MealForm = forwardRef(({ }, ref) => {
   const [recipe, setRecipe] = useState("")
   const [optionMeal, setOptionMeal] = useState("")
+  const [optionMealAfter, setOptionMealAfter] = useState("")
   const [ingredients, setIngredients] = useState("")
 
   const mealOptions = [
@@ -52,11 +53,15 @@ export const MealForm = forwardRef(({ }, ref) => {
         "Authorization": token
       },
       body: JSON.stringify({
-        prompt: `Crie uma receita para o ${optionMeal} apenas com os seguintes ingredientes: ${ingredients}`,
+        optionMeal: optionMeal,
+        ingredients: ingredients
       })
     })
+    
     const responseJson = await response.json()
+
     setRecipe(responseJson)
+    setOptionMealAfter(optionMeal)
   }
 
   return (
@@ -114,7 +119,7 @@ export const MealForm = forwardRef(({ }, ref) => {
         recipe ? (
           <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
             <h1 className="" >
-              Sua receita para o {optionMeal}
+              Sua receita para o {optionMealAfter}
             </h1>
             <h2 className="mt-10">
               {/* {recipe} */}
