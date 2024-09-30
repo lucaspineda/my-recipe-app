@@ -17,8 +17,7 @@ export default function Init() {
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log(user, 'sdff')
-        // router.push("/recipe");
+        router.push("/recipe");
       }
     });
   }, [auth, router]);
