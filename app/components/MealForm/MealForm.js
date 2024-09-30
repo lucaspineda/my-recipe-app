@@ -29,9 +29,16 @@ export const MealForm = forwardRef(({ }, ref) => {
     },
   ]
 
+  const mealMap = {
+    "almoco": "Almoço",
+    "cafe": "Café da Manhã",
+    "lanche": "Lanche",
+    "janta": "Janta"
+  }
+
   const handleChangeMeal = (event) => {
     const optionMeal = mealOptions.find(option => option.value === event.target.value)
-    setOptionMeal(optionMeal.text ? optionMeal.text : "")
+    setOptionMeal(optionMeal.value ? optionMeal.value : "")
   }
 
   const handleChangeIngredients = (event) => {
@@ -60,7 +67,8 @@ export const MealForm = forwardRef(({ }, ref) => {
 
     const responseJson = await response.json()
     setRecipe(responseJson.recipe)
-    setRecipeMealOption(responseJson.optionMeal)
+    setRecipeMealOption(mealMap[responseJson.optionMeal])
+
   }
 
   return (
@@ -115,11 +123,11 @@ export const MealForm = forwardRef(({ }, ref) => {
       </Link>
 
       {
-         
+
         recipe ? (
           <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
-            <h1 className="" >           
-            {recipeMealOption.includes('Janta') ? `Sua receita para a ${recipeMealOption}`: `Sua receita para o ${recipeMealOption}` }
+            <h1 className="" >
+              {recipeMealOption.includes('Janta') ? `Sua receita para a ${recipeMealOption}` : `Sua receita para o ${recipeMealOption}`}
             </h1>
             <h2 className="mt-10">
               {recipe.split('\n').map((linha, index) => (
