@@ -6,7 +6,8 @@ import { getAuth } from "firebase/auth"
 
 export const MealForm = forwardRef(({ }, ref) => {
   const [recipe, setRecipe] = useState("")
-  const [optionMeal, setOptionMeal] = useState("")
+  const [optionMeal, setOptionMeal] = useState("almoco")
+  const [recipeMealOption, setRecipeMealOption] = useState("")
   const [ingredients, setIngredients] = useState("")
 
   const mealOptions = [
@@ -28,9 +29,16 @@ export const MealForm = forwardRef(({ }, ref) => {
     },
   ]
 
+  const mealMap = {
+    "almoco": "Almoço",
+    "cafe": "Café da Manhã",
+    "lanche": "Lanche",
+    "janta": "Janta"
+  }
+
   const handleChangeMeal = (event) => {
     const optionMeal = mealOptions.find(option => option.value === event.target.value)
-    setOptionMeal(optionMeal.text ? optionMeal.text : "")
+    setOptionMeal(optionMeal.value ? optionMeal.value : "")
   }
 
   const handleChangeIngredients = (event) => {
@@ -52,11 +60,15 @@ export const MealForm = forwardRef(({ }, ref) => {
         "Authorization": token
       },
       body: JSON.stringify({
-        prompt: `Crie uma receita para o ${optionMeal} apenas com os seguintes ingredientes: ${ingredients}`,
+        optionMeal: optionMeal,
+        ingredients: ingredients
       })
     })
+
     const responseJson = await response.json()
-    setRecipe(responseJson)
+    setRecipe(responseJson.recipe)
+    setRecipeMealOption(mealMap[responseJson.optionMeal])
+
   }
 
   return (
@@ -71,8 +83,8 @@ export const MealForm = forwardRef(({ }, ref) => {
         id="Ingredients"
         className="global-input focus:ring-blue-500 focus:border-blue-500"
         placeholder="Digite Seus Ingredientes"
-        imgSource="/images/fork-knife.svg"
-        imgAlt="Icone de faca"
+        // imgSource="/images/fork-knife.svg"
+        // imgAlt="Icone de faca"
         onChange={handleChangeIngredients}
       />
       <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
@@ -111,13 +123,13 @@ export const MealForm = forwardRef(({ }, ref) => {
       </Link>
 
       {
+
         recipe ? (
           <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
             <h1 className="" >
-              Sua receita para o {optionMeal}
+              {recipeMealOption.includes('Janta') ? `Sua receita para a ${recipeMealOption}` : `Sua receita para o ${recipeMealOption}`}
             </h1>
             <h2 className="mt-10">
-              {/* {recipe} */}
               {recipe.split('\n').map((linha, index) => (
                 <p key={index}>{linha}</p>
               ))}
