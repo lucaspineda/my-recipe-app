@@ -22,9 +22,7 @@ export default function RootLayout({ children }) {
   const [user, setUser] = useState()
 
   const onSetUser = (user) => {
-    console.log(user, 'userrr')
     setUser(user)
-
   }
 
   return (

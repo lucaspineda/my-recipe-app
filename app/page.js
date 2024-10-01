@@ -24,15 +24,7 @@ export default function Init() {
 
   return (
     <>
-    {
-      isLoggedIn ? (
-        <div>
-          <Home />
-        </div>
-      ) : (
-        <Landing />
-      )
-    }
+    <Landing />
     </>
   );
 }

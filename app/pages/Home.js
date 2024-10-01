@@ -1,6 +1,6 @@
 "use client";
 
-import MealForm from "../components/MealForm/MealForm";
+import MealForm from "../components/MealForm/MealForm.tsx";
 import { useRef } from 'react'
 // import PeopleCookingImg from "./../public/people-cooking.svg"
 

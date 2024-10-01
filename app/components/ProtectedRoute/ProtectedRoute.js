@@ -15,18 +15,6 @@ const ProtectedRoute = ({ children, onSetUser }) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const checkRoute = (user) => {
-    if (!user && pathname !== "/") {
-      console.log("caiu aquiii", pathname);
-      router.push("/login");
-      return null;
-    }
-    // if((pathname.includes('/login') || pathname.includes('/signup')) && user) {
-    //   router.push('/recipe');
-    //   return null;
-    // }
-  };
-
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {

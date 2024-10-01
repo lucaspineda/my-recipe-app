@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import MealForm from "../components/MealForm/MealForm";
+import MealForm from "../components/MealForm/MealForm.tsx";
 import { useRouter } from "next/navigation";
 import { useRef } from 'react'
 
