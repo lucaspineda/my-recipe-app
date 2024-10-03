@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useState, MouseEvent } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
 import Link from "next/link";
@@ -8,25 +8,19 @@ import { useRecipeStore } from "../../store/recipe";
 import { useRouter } from "next/navigation";
 
 export const MealForm = forwardRef(({}, ref) => {
-  const [recipe, setRecipe] = useState("");
-  const [optionMeal, setOptionMeal] = useState("almoco");
-  const [recipeMealOption, setRecipeMealOption] = useState("");
-  const [ingredients, setIngredients] = useState("");
-  const pathname = usePathname();
-  const auth = getAuth();
-  const router = useRouter()
   const {
     ingredients: storeIngredients,
     updateIngredients,
     updateMealOption,
   } = useRecipeStore();
-
-  console.log(storeIngredients, "storeIngredients");
-  // router.push("/signup");
-
-
-  // console.log(auth, 'auth')
-
+  const [recipe, setRecipe] = useState("");
+  const [optionMeal, setOptionMeal] = useState("almoco");
+  const [recipeMealOption, setRecipeMealOption] = useState("");
+  const [ingredients, setIngredients] = useState(storeIngredients || "");
+  const pathname = usePathname();
+  const auth = getAuth();
+  const router = useRouter()
+  
   const mealOptions = [
     {
       text: "Almoço",
@@ -64,22 +58,22 @@ export const MealForm = forwardRef(({}, ref) => {
     setIngredients(event.target.value);
   };
 
-  const handleButtonClick = (e: ChangeEvent<HTMLButtonElement>) => {
+  const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    router.push("/signup");
-  }
 
-  const handleGetRecipe = async () => {
     const auth = getAuth();
 
     if (!auth.currentUser) {
       // send ingredients and recipe to store
       // send user to sign up
-      console.log('caiu aqui')
       updateIngredients(ingredients);
       updateMealOption(optionMeal);
       router.push("/signup");
       return;
+    } else {
+      updateIngredients(null)
+      updateMealOption(null);
+      setIngredients('')
     }
 
     const token = auth.currentUser?.accessToken;
@@ -119,6 +113,7 @@ export const MealForm = forwardRef(({}, ref) => {
         placeholder="Digite Seus Ingredientes"
         imgsource="/images/fork-knife.svg"
         imgalt="Icone de faca"
+        value={ingredients}
         onChange={handleChangeIngredients}
       />
       <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
@@ -150,7 +145,7 @@ export const MealForm = forwardRef(({}, ref) => {
       <button
         className="bg-secondary w-full my-20 py-4 text-white rounded-2xl
                 border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold text-center no-underline"
-        onClick={handleButtonClick}
+        onClick={handleGetRecipe}
       >
         Gerar Receita
       </button>
