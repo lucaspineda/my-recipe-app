@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
 import Link from "next/link";
@@ -64,7 +64,8 @@ export const MealForm = forwardRef(({}, ref) => {
     setIngredients(event.target.value);
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = (e: ChangeEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     router.push("/signup");
   }
 
