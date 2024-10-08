@@ -1,26 +1,27 @@
 import React, { ChangeEvent, useState, MouseEvent } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
-import Link from "next/link";
 import { getAuth } from "firebase/auth";
 import { usePathname } from "next/navigation";
 import { useRecipeStore } from "../../store/recipe";
 import { useRouter } from "next/navigation";
+import Loading from "../Loading/Loading";
 
-export const MealForm = forwardRef(({}, ref) => {
+export const MealForm = forwardRef(({ }, ref) => {
   const {
     ingredients: storeIngredients,
     updateIngredients,
     updateMealOption,
   } = useRecipeStore();
+
   const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
+  const [loading, setLoading] = useState(false);
   const [ingredients, setIngredients] = useState(storeIngredients || "");
   const pathname = usePathname();
-  const auth = getAuth();
   const router = useRouter()
-  
+
   const mealOptions = [
     {
       text: "Almoço",
@@ -82,22 +83,40 @@ export const MealForm = forwardRef(({}, ref) => {
       return console.log("unauthorized");
     }
 
-    const response = await fetch("http://localhost:3003/gemini", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-      body: JSON.stringify({
-        optionMeal: optionMeal,
-        ingredients: ingredients,
-      }),
-    });
+    setLoading(true);
 
-    const responseJson = await response.json();
-    setRecipe(responseJson.recipe);
-    setRecipeMealOption(mealMap[responseJson.optionMeal]);
+    try {
+      const response = await fetch("http://localhost:3003/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({
+          optionMeal: optionMeal,
+          ingredients: ingredients,
+        }),
+      });
+
+      const responseJson = await response.json();
+      setRecipe(responseJson.recipe);
+      setRecipeMealOption(mealMap[responseJson.optionMeal]);
+    } catch (error) {
+      return console.log(error)
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 6000);
+    }
+
   };
+
+
+  if (loading) {
+    return (
+      <Loading />
+    )
+  }
 
   return (
     <form className="w-full flex flex-col text-left" ref={ref}>
