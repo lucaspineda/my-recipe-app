@@ -10,14 +10,15 @@ import Loading from "../Loading/Loading";
 export const MealForm = forwardRef(({ }, ref) => {
   const {
     ingredients: storeIngredients,
+    recipeLoading,
     updateIngredients,
     updateMealOption,
+    setRecipeLoading
   } = useRecipeStore();
 
   const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
-  const [loading, setLoading] = useState(false);
   const [ingredients, setIngredients] = useState(storeIngredients || "");
   const pathname = usePathname();
   const router = useRouter()
@@ -83,7 +84,7 @@ export const MealForm = forwardRef(({ }, ref) => {
       return console.log("unauthorized");
     }
 
-    setLoading(true);
+    setRecipeLoading(true)
 
     try {
       const response = await fetch("http://localhost:3003/gemini", {
@@ -105,14 +106,14 @@ export const MealForm = forwardRef(({ }, ref) => {
       return console.log(error)
     } finally {
       setTimeout(() => {
-        setLoading(false);
+        setRecipeLoading(false);
       }, 6000);
     }
 
   };
 
 
-  if (loading) {
+  if (recipeLoading) {
     return (
       <Loading />
     )
