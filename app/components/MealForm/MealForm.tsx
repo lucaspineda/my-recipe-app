@@ -107,7 +107,7 @@ export const MealForm = forwardRef(({ }, ref) => {
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
-      }, 6000);
+      }, 3000);
     }
 
   };
@@ -177,10 +177,11 @@ export const MealForm = forwardRef(({ }, ref) => {
               ? `Sua receita para a ${recipeMealOption}`
               : `Sua receita para o ${recipeMealOption}`}
           </h1>
-          <h2 className="mt-10">
-            {recipe.split("\n").map((linha, index) => (
-              <p key={index}>{linha}</p>
-            ))}
+          <h2 className="mt-10 text-left">
+            <div
+              dangerouslySetInnerHTML={{ __html: recipe }}
+            />
+
           </h2>
         </div>
       ) : (
