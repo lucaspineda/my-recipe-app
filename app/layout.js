@@ -4,7 +4,6 @@ import { Rubik } from "next/font/google";
 import MobileMenu from "./components/MobileMenu/MobileMenu.js";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.js";
 import { IconMenu2 } from "@tabler/icons-react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import "./globals.css";
 import { useRecipeStore } from "./store/recipe.ts";
 IconMenu2;

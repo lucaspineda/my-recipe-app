@@ -6,14 +6,18 @@ import { usePathname } from "next/navigation";
 import { useRecipeStore } from "../../store/recipe";
 import { useRouter } from "next/navigation";
 import Loading from "../Loading/Loading";
+import RecipeView from "../RecipeView/RecipeView";
+import Button from "../Button/Button";
 
 export const MealForm = forwardRef(({ }, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
+    showRecipe,
     updateIngredients,
     updateMealOption,
-    setRecipeLoading
+    setRecipeLoading,
+    setShowRecipe
   } = useRecipeStore();
 
   const [recipe, setRecipe] = useState("");
@@ -75,6 +79,7 @@ export const MealForm = forwardRef(({ }, ref) => {
     } else {
       updateIngredients(null)
       updateMealOption(null);
+      setShowRecipe(true);
       setIngredients('')
     }
 
@@ -109,7 +114,6 @@ export const MealForm = forwardRef(({ }, ref) => {
         setRecipeLoading(false);
       }, 6000);
     }
-
   };
 
 
@@ -120,56 +124,58 @@ export const MealForm = forwardRef(({ }, ref) => {
   }
 
   return (
-    <form className="w-full flex flex-col text-left" ref={ref}>
-      <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
-        1
-      </div>
-      <label className="secondary-header py-3">
-        Adicione ingredientes que você possuí em casa
-      </label>
-      <input
-        id="Ingredients"
-        className="global-input focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Digite Seus Ingredientes"
-        imgsource="/images/fork-knife.svg"
-        imgalt="Icone de faca"
-        value={ingredients}
-        onChange={handleChangeIngredients}
-      />
-      <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
-        2
-      </div>
-      <label className="secondary-header py-3">
-        Selecione qual refeição irá preparar
-      </label>
-      <div className="relative">
-        <select
-          id="countries"
-          className="global-input focus:ring-blue-500 focus:border-blue-500"
-          onChange={handleChangeMeal}
-        >
-          {mealOptions.map((option) => (
-            <option value={option.value} key={option.value}>
-              {option.text}
-            </option>
-          ))}
-        </select>
-        <Image
-          src="/images/arrow-down.svg"
-          className="top-4 right-4 absolute h-4 w-auto"
-          width={24}
-          height={24}
-          alt="Arow Down Icon"
-        />
-      </div>
-      <button
-        className="bg-secondary w-full my-20 py-4 text-white rounded-2xl
-                border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold text-center no-underline"
-        onClick={handleGetRecipe}
-      >
-        Gerar Receita
-      </button>
-
+    <>
+      {!showRecipe && (
+        <form className="w-full flex flex-col text-left" ref={ref}>
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
+            1
+          </div>
+          <label className="secondary-header py-3">
+            Adicione ingredientes que você possuí em casa
+          </label>
+          <input
+            id="Ingredients"
+            className="global-input focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Digite Seus Ingredientes"
+            imgsource="/images/fork-knife.svg"
+            imgalt="Icone de faca"
+            value={ingredients}
+            onChange={handleChangeIngredients}
+          />
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
+            2
+          </div>
+          <label className="secondary-header py-3">
+            Selecione qual refeição irá preparar
+          </label>
+          <div className="relative">
+            <select
+              id="countries"
+              className="global-input focus:ring-blue-500 focus:border-blue-500"
+              onChange={handleChangeMeal}
+            >
+              {mealOptions.map((option) => (
+                <option value={option.value} key={option.value}>
+                  {option.text}
+                </option>
+              ))}
+            </select>
+            <Image
+              src="/images/arrow-down.svg"
+              className="top-4 right-4 absolute h-4 w-auto"
+              width={24}
+              height={24}
+              alt="Arow Down Icon"
+            />
+          </div>
+          <Button
+            onClick={handleGetRecipe}
+            text="Gerar Receita"
+          >
+            Gerar Receita
+          </Button>
+        </form >
+      )}
       {recipe ? (
         <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
           <h1 className="">
@@ -184,13 +190,13 @@ export const MealForm = forwardRef(({ }, ref) => {
           </h2>
         </div>
       ) : (
-        <div>
-          <h2 className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
-            Crie sua primeira receita!
-          </h2>
-        </div>
+        <>
+          {
+            showRecipe && <RecipeView />
+          }
+        </>
       )}
-    </form>
+    </>
   );
 });
 
