@@ -11,6 +11,7 @@ import {
 export default function Init() {
   const auth = getAuth();
   const router = useRouter();
+  console.log(auth)
 
   // Todo: retrive loggendIn data from auth system
   const [isLoggedIn, setIsloggedIn] = useState(true)
