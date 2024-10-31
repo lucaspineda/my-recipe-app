@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import EditProfileField from "../components/EditProfileField/EditProfileField";
 import Link from "next/link";
+import ChangePassword from "../components/ChangePassword/ChangePassword";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);
@@ -16,9 +17,9 @@ const Profile = () => {
         <div className="flex flex-col">
           <div className="flex justify-between w-full">
             <p className="font-bold">Nome</p>
-            <button className="text-secondary font-semibold" onClick={handleEditNameBtnClick}>{editName ? "Editar" : "Cancelar"}</button>
+            <button className="text-secondary font-semibold" onClick={handleEditNameBtnClick}>{!editName ? "Editar" : "Cancelar"}</button>
           </div>
-          {editName ? <p>Lucas Pineda</p> : <EditProfileField />}
+          {!editName ? <p>Lucas Pineda</p> : <EditProfileField />}
         </div>
         <div>
           <p className="font-bold">Email</p>
@@ -32,6 +33,7 @@ const Profile = () => {
           <Link href={'/plans'} className="text-secondary font-semibold no-underline">Mudar Plano</Link>
         </div>
         <button className="text-secondary font-semibold">Mudar senha</button>
+        <ChangePassword />
       </div>
     </main>
   );

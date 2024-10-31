@@ -13,13 +13,14 @@ export default function Input({
   placeholder,
   imgSource,
   imgAlt,
+  className,
   ...rest
 }: InputProps) {
   return (
     <div className="relative">
       <input
         onChange={onChange}
-        className="global-input"
+        className={`global-input ${className}`}
         id={id}
         type="string"
         placeholder={placeholder}
