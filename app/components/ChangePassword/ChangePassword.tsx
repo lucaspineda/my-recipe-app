@@ -13,6 +13,7 @@ interface ChangePasswordProps {
 }
 
 const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
+  const [currentPassword, setCurrentPassword] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
   const schema = z.object({
@@ -51,6 +52,9 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
         console.log("ocorreu um erro ao atualizar senha");
       });
   };
+  const handleCurrentPasswordChange = (e) => {
+    setCurrentPassword(e.target.value);
+  };
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
@@ -67,7 +71,7 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
       <form onSubmit={handleSubmit(saveNewPassword)}>
         <div className="flex flex-col">
           <div className="flex justify-between mb-2">
-            <label htmlFor="password">Nova senha</label>
+            <label htmlFor="password">Senha Atual</label>
             <button
               onClick={handleCancelClick}
               className="text-secondary font-semibold"
@@ -75,6 +79,23 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
               Cancelar
             </button>
           </div>
+          <Input
+            {...register("currentPassword")}
+            id="currentPassword"
+            placeholder="********"
+            type="password"
+            value={currentPassword}
+            onChange={handleCurrentPasswordChange}
+          />
+          {errors?.currentPassword?.message && (
+            <span className="text-red-700 text-sm m-2">
+              {errors?.currentPassword?.message.toString()}
+            </span>
+          )}
+
+          <label className="mb-2 mt-4" htmlFor="password">
+            Nova senha
+          </label>
           <Input
             {...register("password")}
             className=""
@@ -84,19 +105,13 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
             value={password}
             onChange={handlePasswordChange}
           />
-          {errors?.password?.message && (
-            <span className="text-red-700 text-sm m-2">
-              {errors?.password?.message.toString()}
-            </span>
-          )}
-
-          <label className="mb-2 mt-4" htmlFor="password-confirmation">
+          <label className="mb-2 mt-4" htmlFor="passwordConfirmation">
             Confirme sua senha
           </label>
           <Input
             {...register("confirmPassword")}
             className=""
-            id="password-confirmation"
+            id="passwordConfirmation"
             placeholder="********"
             type="password"
             value={confirmationPassword}

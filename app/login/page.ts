@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useUserAuth } from "../hooks/userAuth";
 
 const schema = z.object({
   email: z.string().email("Email é obrigatório"),
@@ -18,6 +19,7 @@ export default function Login() {
   const [signInError, setSignInError] = useState();
 
   const router = useRouter();
+  const {signInWithEmail, error} = useUserAuth()
   const auth = getAuth();
 
   const {
@@ -42,16 +44,7 @@ export default function Login() {
   
 
   const handleSignInWithEmail = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        router.push("/recipe");
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        setSignInError("Dados incorretos")
-      });
+    signInWithEmail(email, password)
   };
 
   const handleKeyDown = (e) => {
