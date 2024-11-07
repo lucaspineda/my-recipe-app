@@ -9,7 +9,7 @@ interface EditProfileFieldProps {}
 const EditProfileField = () => {
   return (
     <div className="w-full pt-4">
-      <Input value={'Lucas Pineda'}/>
+      <Input value={'Lucas Pineda'} onChange={() => {}}/>
       <Button className="mt-4" text="Salvar"></Button>
     </div>
   );
