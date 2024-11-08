@@ -15,6 +15,8 @@ const ProtectedRoute = ({ children, onSetUser }) => {
   const pathname = usePathname();
   const router = useRouter();
 
+  console.log(auth, 'auth')
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {

@@ -1,16 +1,14 @@
 import { useRecipeStore } from "../../store/recipe";
 import Button from "../Button/Button";
-import {MouseEvent} from 'react'
+import { MouseEvent } from "react";
 
 export default function RecipeView() {
   const handleGetOtherRecipe = (event: MouseEvent<HTMLButtonElement>): void => {
-    event.preventDefault()
-    setShowRecipe(false)
-  }
+    event.preventDefault();
+    setShowRecipe(false);
+  };
 
-  const {
-    setShowRecipe
-  } = useRecipeStore();
+  const { setShowRecipe } = useRecipeStore();
 
   return (
     <div>
@@ -19,6 +17,7 @@ export default function RecipeView() {
       </h2>
       Recipe here
       <Button
+        className="mt-12"
         onClick={handleGetOtherRecipe}
         text="Gerar outra receita"
       />

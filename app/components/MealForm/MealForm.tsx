@@ -9,7 +9,7 @@ import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
 
-export const MealForm = forwardRef(({ }, ref) => {
+export const MealForm = forwardRef(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -17,7 +17,7 @@ export const MealForm = forwardRef(({ }, ref) => {
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
-    setShowRecipe
+    setShowRecipe,
   } = useRecipeStore();
 
   const [recipe, setRecipe] = useState("");
@@ -25,7 +25,7 @@ export const MealForm = forwardRef(({ }, ref) => {
   const [recipeMealOption, setRecipeMealOption] = useState("");
   const [ingredients, setIngredients] = useState(storeIngredients || "");
   const pathname = usePathname();
-  const router = useRouter()
+  const router = useRouter();
 
   const mealOptions = [
     {
@@ -65,7 +65,7 @@ export const MealForm = forwardRef(({ }, ref) => {
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
     const auth = getAuth();
 
@@ -77,10 +77,10 @@ export const MealForm = forwardRef(({ }, ref) => {
       router.push("/signup");
       return;
     } else {
-      updateIngredients(null)
+      updateIngredients(null);
       updateMealOption(null);
       setShowRecipe(true);
-      setIngredients('')
+      setIngredients("");
     }
 
     const token = auth.currentUser?.accessToken;
@@ -89,7 +89,7 @@ export const MealForm = forwardRef(({ }, ref) => {
       return console.log("unauthorized");
     }
 
-    setRecipeLoading(true)
+    setRecipeLoading(true);
 
     try {
       const response = await fetch("http://localhost:3003/gemini", {
@@ -108,7 +108,7 @@ export const MealForm = forwardRef(({ }, ref) => {
       setRecipe(responseJson.recipe);
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
     } catch (error) {
-      return console.log(error)
+      return console.log(error);
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
@@ -116,11 +116,8 @@ export const MealForm = forwardRef(({ }, ref) => {
     }
   };
 
-
   if (recipeLoading) {
-    return (
-      <Loading />
-    )
+    return <Loading />;
   }
 
   return (
@@ -169,12 +166,13 @@ export const MealForm = forwardRef(({ }, ref) => {
             />
           </div>
           <Button
+            className="mt-12"
             onClick={handleGetRecipe}
             text="Gerar Receita"
           >
             Gerar Receita
           </Button>
-        </form >
+        </form>
       )}
       {recipe ? (
         <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
@@ -191,11 +189,7 @@ export const MealForm = forwardRef(({ }, ref) => {
           </h2>
         </div>
       ) : (
-        <>
-          {
-            showRecipe && <RecipeView />
-          }
-        </>
+        <>{showRecipe && <RecipeView />}</>
       )}
     </>
   );
