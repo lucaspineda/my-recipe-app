@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Landing from './pages/Landing.js'
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import {
   getAuth,
 } from "firebase/auth";
