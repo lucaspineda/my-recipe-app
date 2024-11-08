@@ -16,11 +16,8 @@ const schema = z.object({
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [signInError, setSignInError] = useState();
-
   const router = useRouter();
-  const { signInWithEmail, error } = useUserAuth();
-  const auth = getAuth();
+  const { signInWithEmail, error: signInError } = useUserAuth();
 
   const {
     register,
@@ -31,19 +28,11 @@ export default function Login() {
   });
 
   useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        router.push("/recipe");
-      }
-    });
-  }, [auth, router]);
-
-  useEffect(() => {
     console.log(errors);
   }, [errors]);
 
-  const handleSignInWithEmail = () => {
-    signInWithEmail(email, password);
+  const handleSignInWithEmail = async () => {
+    await signInWithEmail(email, password, router);
   };
 
   const handleKeyDown = (e) => {
