@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react'
-import Home from './pages/Home.js'
 import Landing from './pages/Landing.js'
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +10,6 @@ import {
 export default function Init() {
   const auth = getAuth();
   const router = useRouter();
-  console.log(auth)
 
   // Todo: retrive loggendIn data from auth system
   const [isLoggedIn, setIsloggedIn] = useState(true)
