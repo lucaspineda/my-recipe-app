@@ -15,7 +15,7 @@ const schema = z.object({
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [passwordState, setPassword] = useState("");
   const router = useRouter();
   const { signInWithEmail, error: signInError } = useUserAuth();
 
@@ -27,18 +27,8 @@ export default function Login() {
     resolver: zodResolver(schema),
   });
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
-  const handleSignInWithEmail = async () => {
-    await signInWithEmail(email, password, router);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "enter") {
-      handleSubmit(handleSignInWithEmail);
-    }
+  const handleSignInWithEmail = async (data) => {
+    await signInWithEmail(data.email, data.password, router);
   };
 
   return (
@@ -56,9 +46,6 @@ export default function Login() {
             id="login"
             type="string"
             placeholder="Digite seu e-mail"
-            value={email}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setEmail(e.target.value)}
           />
           {errors?.email?.message && (
             <span className="text-red-700 text-sm m-2">
@@ -71,9 +58,6 @@ export default function Login() {
             id="password"
             type="password"
             placeholder="Digite sua senha"
-            value={password}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setPassword(e.target.value)}
           />
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
