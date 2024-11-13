@@ -9,6 +9,7 @@ const ProtectedRoute = ({ children, onSetUser }) => {
   const firebaseConfig = {
     apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
     authDomain: "recipe-app-1bbdc.firebaseapp.com",
+    projectId: "recipe-app-1bbdc",
   };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);

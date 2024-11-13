@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
+import { doc, getFirestore, setDoc } from "firebase/firestore";
 
 export const MealForm = forwardRef(({}, ref) => {
   const {
@@ -19,6 +20,14 @@ export const MealForm = forwardRef(({}, ref) => {
     setRecipeLoading,
     setShowRecipe,
   } = useRecipeStore();
+
+  const db = getFirestore();
+
+  setDoc(doc(db, "cities", "LA"), {
+    name: "Los Angelesss",
+    state: "CA",
+    country: "USA",
+  });
 
   const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
