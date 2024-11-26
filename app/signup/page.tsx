@@ -9,6 +9,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUserAuth } from "../hooks/userAuth";
+import Button from "../components/Button/Button";
 
 export default function Signup() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function Signup() {
     password: z.string("Senha é obrigatório").min(1, "Senha é obrigatório"),
   });
 
-  const { signUpWithEmail, error: signUpError } = useUserAuth();
+  const { signUpWithEmail, signUpWithEmailLoading, error: signUpError } = useUserAuth();
 
   const {
     register,
@@ -68,12 +69,10 @@ export default function Signup() {
               {errors?.password?.message}
             </span>
           )}
-          <button
-            className="bg-secondary w-full mt-12 py-4 text-white rounded-2xl
-					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold"
-          >
-            Cadastrar
-          </button>
+          {signUpError && (
+            <span className="text-red-700 text-sm m-2">{signUpError}</span>
+          )}
+          <Button className="mt-8" text="Cadastrar" loading={signUpWithEmailLoading}></Button>
         </form>
         <span className="text-xs mt-4">
           Clicando no botão, você concorda com nossos Termos de Serviço e

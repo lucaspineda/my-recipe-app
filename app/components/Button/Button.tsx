@@ -1,16 +1,26 @@
+import { Loader2 } from "lucide-react";
 import React from "react";
 
 interface ButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   text: string;
+  loading?: boolean;
 }
 
-export default function Button({ text, className, ...rest }: ButtonProps) {
+export default function Button({
+  text,
+  loading,
+  className,
+  ...rest
+}: ButtonProps) {
   return (
     <button
-      className={`bg-secondary w-full py-4 text-white rounded-2xl border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
+      className={`flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-2xl border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
         font-semibold  ${className}`}
+      disabled={loading}
       {...rest}
     >
+      {loading && <Loader2 className="animate-spin" />}
+
       {text}
     </button>
   );

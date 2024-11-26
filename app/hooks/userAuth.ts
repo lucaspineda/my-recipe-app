@@ -11,9 +11,14 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 
 export const useUserAuth = () => {
   const [error, setError] = useState<string>("");
+  const [signUpWithEmailLoading, setSignUpWithEmailLoading] = useState<boolean>(false);
+  const [signInWithEmailLoading, setSignInWithEmailLoading] = useState<boolean>(false);
+  // const [saveNewPasswordLoading, setSaveNewPasswordLoading] = useState<boolean>(false);
+  const [reauthenticateLoading, setReauthenticateLoading] = useState<boolean>(false);
   const auth = getAuth();
 
   const signUpWithEmail = async (email, password, router) => {
+    setSignUpWithEmailLoading(true)
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -25,7 +30,10 @@ export const useUserAuth = () => {
       }
       return userCredential.user
     } catch {
+      setError("Erro ao cadastrar");
       console.log("erro ao cadastrar usuário");
+    } finally {
+      setSignUpWithEmailLoading(false)
     }
   };
 
@@ -34,6 +42,7 @@ export const useUserAuth = () => {
     password: string,
     router?: AppRouterInstance
   ) => {
+    setSignInWithEmailLoading(true)
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -47,6 +56,8 @@ export const useUserAuth = () => {
     } catch {
       console.log("dados incorretos 1");
       setError("Dados incorretos");
+    } finally {
+      setSignInWithEmailLoading(false)
     }
   };
 
@@ -68,6 +79,7 @@ export const useUserAuth = () => {
     currentPassword,
     newPassword
   ) => {
+    setReauthenticateLoading(true)
     try {
       const userLocal = await signInWithEmail(user.email, currentPassword);
       if (userLocal) {
@@ -79,13 +91,17 @@ export const useUserAuth = () => {
     } catch {
       console.log("Erro ao salvar nova senha");
       setError("Erro ao atualizar senha");
+    } finally {
+      setReauthenticateLoading(false)
     }
   };
   return {
     signUpWithEmail,
+    signUpWithEmailLoading,
     signInWithEmail,
-    saveNewPassword,
+    signInWithEmailLoading,
     reauthenticateAndSaveNewPassword,
+    reauthenticateLoading,
     error,
   };
 };
