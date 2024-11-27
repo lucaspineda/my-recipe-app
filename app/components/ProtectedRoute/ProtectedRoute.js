@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, onSetUser }) => {
         onSetUser(user)
       }
       onSetUser(user)
-      if (!user && pathname !== "/" && pathname !== "/signup") {
+      if (!user && pathname !== "/" && pathname !== "/signup" && pathname !== "/password-reset") {
         router.push("/login");
         return null;
       }

@@ -14,7 +14,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-2xl border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
+      className={`flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
         font-semibold  ${className}`}
       disabled={loading}
       {...rest}

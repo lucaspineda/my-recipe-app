@@ -9,7 +9,6 @@ import * as z from "zod";
 import { useUserAuth } from "../hooks/userAuth";
 import Button from "../components/Button/Button";
 
-
 const schema = z.object({
   email: z.string().email("Email é obrigatório"),
   password: z.string("Senha é obrigatório").min(1, "Senha é obrigatório"),
@@ -17,7 +16,11 @@ const schema = z.object({
 
 export default function Login() {
   const router = useRouter();
-  const { signInWithEmail, signInWithEmailLoading, error: signInError } = useUserAuth();
+  const {
+    signInWithEmail,
+    signInWithEmailLoading,
+    error: signInError,
+  } = useUserAuth();
 
   const {
     register,
@@ -49,7 +52,7 @@ export default function Login() {
           />
           {errors?.email?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.email?.message}
+              {errors?.email?.message.toString()}
             </span>
           )}
           <input
@@ -61,20 +64,25 @@ export default function Login() {
           />
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.password?.message}
+              {errors?.password?.message.toString()}
             </span>
           )}
           {signInError && (
             <span className="text-red-700 text-sm m-2">{signInError}</span>
           )}
-          <span className="text-xs mt-2 text-left">
-          </span>
-          <Button text="Login" loading={signInWithEmailLoading}>Login</Button>
+          <span className="text-xs mt-2 text-left"></span>
+          <Button text="Entrar" loading={signInWithEmailLoading}></Button>
         </form>
-        <span className="text-xs mt-4 text-left">
-          Não tem conta ainda?&nbsp;
-          <Link href="/signup">Faça seu cadastro</Link>
-        </span>
+        <div className="flex flex-col items-center">
+          <span className="text-xs mt-4 text-left">
+            Não tem conta ainda?&nbsp;
+            <Link href="/signup">Faça seu cadastro</Link>
+          </span>
+          <span className="text-xs mt-4 text-left">
+            Perdeu a senha?&nbsp;
+            <Link href="/password-reset">Clique aqui para recuperar a senha</Link>
+          </span>
+        </div>
       </div>
     </main>
   );
