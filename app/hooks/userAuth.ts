@@ -7,8 +7,16 @@ import {
   updatePassword,
   User,
 } from "firebase/auth";
-import { Router } from "next/router";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
+  authDomain: "recipe-app-1bbdc.firebaseapp.com",
+  projectId: "recipe-app-1bbdc",
+};
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 
 export const useUserAuth = () => {
   const [error, setError] = useState<string>("");

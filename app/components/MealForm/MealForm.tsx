@@ -1,14 +1,13 @@
 import React, { ChangeEvent, useState, MouseEvent } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
-import { getAuth } from "firebase/auth";
 import { usePathname } from "next/navigation";
 import { useRecipeStore } from "../../store/recipe";
 import { useRouter } from "next/navigation";
 import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
-import { doc, getFirestore, setDoc } from "firebase/firestore";
+import { auth } from "../../hooks/userAuth";
 
 export const MealForm = forwardRef(({}, ref) => {
   const {
@@ -21,13 +20,13 @@ export const MealForm = forwardRef(({}, ref) => {
     setShowRecipe,
   } = useRecipeStore();
 
-  const db = getFirestore();
+  // const db = getFirestore();
 
-  setDoc(doc(db, "cities", "LA"), {
-    name: "Los Angelesss",
-    state: "CA",
-    country: "USA",
-  });
+  // setDoc(doc(db, "cities", "LA"), {
+  //   name: "Los Angelesss",
+  //   state: "CA",
+  //   country: "USA",
+  // });
 
   const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
@@ -75,8 +74,6 @@ export const MealForm = forwardRef(({}, ref) => {
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
-    const auth = getAuth();
 
     if (!auth.currentUser) {
       // send ingredients and recipe to store

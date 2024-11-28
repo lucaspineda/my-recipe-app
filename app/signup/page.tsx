@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { initializeApp } from "firebase/app";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,8 +11,6 @@ import Button from "../components/Button/Button";
 
 export default function Signup() {
   const router = useRouter();
-
-  const auth = getAuth();
 
   const schema = z.object({
     email: z.string().email("Email é obrigatório"),

@@ -71,7 +71,7 @@ export default function MobileMenu({ toggleMenu }) {
           <li>
             <Link
               className="flex items-center gap-1 text-black no-underline"
-              href="/"
+              href="/profile"
               onClick={toggleMenu}
             >
               <IconUser size={20} stroke={2} />

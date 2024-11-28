@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Rubik } from "next/font/google";
 import MobileMenu from "./components/MobileMenu/MobileMenu.js";
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.js";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.tsx";
 import { IconMenu2 } from "@tabler/icons-react";
 import "./globals.css";
 import { useRecipeStore } from "./store/recipe.ts";
