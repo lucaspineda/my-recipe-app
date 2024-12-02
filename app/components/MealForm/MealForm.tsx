@@ -8,12 +8,15 @@ import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
 import { auth } from "../../hooks/userAuth";
+import { getIdToken } from "firebase/auth";
 
 export const MealForm = forwardRef(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
     showRecipe,
+    recipe,
+    setRecipe,
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
@@ -28,7 +31,7 @@ export const MealForm = forwardRef(({}, ref) => {
   //   country: "USA",
   // });
 
-  const [recipe, setRecipe] = useState("");
+  // const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
   const [ingredients, setIngredients] = useState(storeIngredients || "");
@@ -96,13 +99,14 @@ export const MealForm = forwardRef(({}, ref) => {
     }
 
     setRecipeLoading(true);
+    const newToken = await getIdToken(auth.currentUser)
 
     try {
       const response = await fetch("http://localhost:3003/gemini", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: newToken,
         },
         body: JSON.stringify({
           optionMeal: optionMeal,
@@ -111,14 +115,14 @@ export const MealForm = forwardRef(({}, ref) => {
       });
 
       const responseJson = await response.json();
-      setRecipe(responseJson.recipe);
+      setRecipe(responseJson);
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
     } catch (error) {
       return console.log(error);
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
-      }, 6000);
+      }, 4000);
     }
   };
 
@@ -180,22 +184,7 @@ export const MealForm = forwardRef(({}, ref) => {
           </Button>
         </form>
       )}
-      {recipe ? (
-        <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
-          <h1 className="">
-            {recipeMealOption.includes("Janta")
-              ? `Sua receita para a ${recipeMealOption}`
-              : `Sua receita para o ${recipeMealOption}`}
-          </h1>
-          <h2 className="mt-10">
-            {recipe.split("\n").map((linha, index) => (
-              <p key={index}>{linha}</p>
-            ))}
-          </h2>
-        </div>
-      ) : (
-        <>{showRecipe && <RecipeView />}</>
-      )}
+      {showRecipe && <RecipeView />}
     </>
   );
 });
