@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children, onSetUser }) => {
     return () => {
       unsubscribe();
     };
-  }, [auth, onSetUser, pathname, router]);
+  }, [onSetUser, pathname, router]);
 
   return <div>{children}</div>;
 };
