@@ -1,26 +1,31 @@
 import { useRecipeStore } from "../../store/recipe";
 import Button from "../Button/Button";
 import { MouseEvent } from "react";
+import DOMPurify from 'dompurify';
+
 
 export default function RecipeView() {
+  const { setShowRecipe, recipe, showRecipe } = useRecipeStore();
   const handleGetOtherRecipe = (event: MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     setShowRecipe(false);
   };
 
-  const { setShowRecipe } = useRecipeStore();
+  const cleanRecipe = DOMPurify.sanitize(recipe);
+
 
   return (
-    <div>
-      <h2 className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
-        Crie sua primeira receita!
-      </h2>
-      Recipe here
-      <Button
-        className="mt-12"
-        onClick={handleGetOtherRecipe}
-        text="Gerar outra receita"
-      />
-    </div>
+    <>
+      {showRecipe && (
+        <div>
+          <div dangerouslySetInnerHTML={{ __html: cleanRecipe }}></div>
+          <Button
+            className="mt-12"
+            onClick={handleGetOtherRecipe}
+            text="Gerar outra receita"
+          />
+        </div>
+      )}
+    </>
   );
 }

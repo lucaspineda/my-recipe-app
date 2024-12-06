@@ -1,17 +1,138 @@
 import { useState } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  updatePassword,
+  User,
+} from "firebase/auth";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
+  authDomain: "recipe-app-1bbdc.firebaseapp.com",
+  projectId: "recipe-app-1bbdc",
+};
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 
 export const useUserAuth = () => {
   const [error, setError] = useState<string>("");
+  const [signUpWithEmailLoading, setSignUpWithEmailLoading] =
+    useState<boolean>(false);
+  const [signInWithEmailLoading, setSignInWithEmailLoading] =
+    useState<boolean>(false);
+  // const [saveNewPasswordLoading, setSaveNewPasswordLoading] = useState<boolean>(false);
+  const [reauthenticateLoading, setReauthenticateLoading] =
+    useState<boolean>(false);
+  const [passwordRecoverLoading, setPasswordRecoverLoading] =
+    useState<boolean>(false);
+
   const auth = getAuth();
 
-  const signInWithEmail = async (email, password, router) => {
+  const signUpWithEmail = async (email, password, router) => {
+    setSignUpWithEmailLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/recipe");
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (router) {
+        router.push("/recipe");
+      }
+      return userCredential.user;
     } catch {
-      setError("Dados incorretos");
+      setError("Erro ao cadastrar");
+      console.log("erro ao cadastrar usuário");
+    } finally {
+      setSignUpWithEmailLoading(false);
     }
   };
-  return { signInWithEmail, error };
+
+  const signInWithEmail = async (
+    email: string,
+    password: string,
+    router?: AppRouterInstance
+  ) => {
+    setSignInWithEmailLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (router) {
+        router.push("/recipe");
+      }
+      return userCredential.user;
+    } catch {
+      console.log("dados incorretos 1");
+      setError("Dados incorretos");
+    } finally {
+      setSignInWithEmailLoading(false);
+    }
+  };
+
+  const saveNewPassword = async (user, password) => {
+    try {
+      console.log("chamou aqui", user, password);
+      await updatePassword(user, password);
+      console.log("chamou aqui 2");
+      return true;
+    } catch {
+      setError("Erro ao atualizar senha, tente novamente");
+      console.log("Erro ao atualizar senha, tente novamente");
+      return false;
+    }
+  };
+
+  const reauthenticateAndSaveNewPassword = async (
+    user: User,
+    currentPassword,
+    newPassword
+  ) => {
+    setReauthenticateLoading(true);
+    try {
+      const userLocal = await signInWithEmail(user.email, currentPassword);
+      if (userLocal) {
+        const passworSaved = await saveNewPassword(user, newPassword);
+        if (passworSaved) {
+          return true;
+        }
+      }
+    } catch {
+      console.log("Erro ao salvar nova senha");
+      setError("Erro ao atualizar senha");
+    } finally {
+      setReauthenticateLoading(false);
+    }
+  };
+
+  const sendPasswordRecoverEmail = async (email) => {
+    setPasswordRecoverLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return true
+    } catch {
+      console.log("Erro ao enviar email");
+      setError("Erro ao enviar email");
+      return false
+    } finally {
+      setPasswordRecoverLoading(false);
+    }
+  };
+    return {
+      signUpWithEmail,
+      signUpWithEmailLoading,
+      signInWithEmail,
+      signInWithEmailLoading,
+      reauthenticateAndSaveNewPassword,
+      reauthenticateLoading,
+      sendPasswordRecoverEmail,
+      passwordRecoverLoading,
+      error,
+    };
 };

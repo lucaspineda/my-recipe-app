@@ -1,26 +1,37 @@
 import React, { ChangeEvent, useState, MouseEvent } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
-import { getAuth } from "firebase/auth";
 import { usePathname } from "next/navigation";
 import { useRecipeStore } from "../../store/recipe";
 import { useRouter } from "next/navigation";
 import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
+import { auth } from "../../hooks/userAuth";
+import { getIdToken } from "firebase/auth";
 
 export const MealForm = forwardRef(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
     showRecipe,
+    recipe,
+    setRecipe,
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
     setShowRecipe,
   } = useRecipeStore();
 
-  const [recipe, setRecipe] = useState("");
+  // const db = getFirestore();
+
+  // setDoc(doc(db, "cities", "LA"), {
+  //   name: "Los Angelesss",
+  //   state: "CA",
+  //   country: "USA",
+  // });
+
+  // const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
   const [ingredients, setIngredients] = useState(storeIngredients || "");
@@ -67,8 +78,6 @@ export const MealForm = forwardRef(({}, ref) => {
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const auth = getAuth();
-
     if (!auth.currentUser) {
       // send ingredients and recipe to store
       // send user to sign up
@@ -90,13 +99,14 @@ export const MealForm = forwardRef(({}, ref) => {
     }
 
     setRecipeLoading(true);
+    const newToken = await getIdToken(auth.currentUser)
 
     try {
       const response = await fetch("http://localhost:3003/gemini", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: newToken,
         },
         body: JSON.stringify({
           optionMeal: optionMeal,
@@ -105,14 +115,14 @@ export const MealForm = forwardRef(({}, ref) => {
       });
 
       const responseJson = await response.json();
-      setRecipe(responseJson.recipe);
+      setRecipe(responseJson);
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
     } catch (error) {
       return console.log(error);
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
-      }, 3000);
+      }, 4000);
     }
   };
 
@@ -174,23 +184,7 @@ export const MealForm = forwardRef(({}, ref) => {
           </Button>
         </form>
       )}
-      {recipe ? (
-        <div className="bg-tertiary px-6 py-10 rounded-lg self-start text-2xl text-center mx-auto">
-          <h1 className="">
-            {recipeMealOption.includes("Janta")
-              ? `Sua receita para a ${recipeMealOption}`
-              : `Sua receita para o ${recipeMealOption}`}
-          </h1>
-          <h2 className="mt-10 text-left">
-            <div
-              dangerouslySetInnerHTML={{ __html: recipe }}
-            />
-
-          </h2>
-        </div>
-      ) : (
-        <>{showRecipe && <RecipeView />}</>
-      )}
+      {showRecipe && <RecipeView />}
     </>
   );
 });

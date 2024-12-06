@@ -53,7 +53,7 @@ select {
   padding: 0px 0.5rem;
   border: 0;
   box-sizing: border-box;
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
   background-color: #fcfcfc;
   color: #343434;
   font-size: 1rem;
@@ -69,4 +69,9 @@ select {
   display: block;
   height: 100%;
   margin-right: 1rem;
+}
+
+button:disabled,
+button[disabled]{
+  opacity: 0.75;
 }

@@ -12,7 +12,6 @@ export default function Init() {
   const router = useRouter();
 
   // Todo: retrive loggendIn data from auth system
-  const [isLoggedIn, setIsloggedIn] = useState(true)
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
@@ -23,7 +22,7 @@ export default function Init() {
 
   return (
     <>
-    <Landing />
+      <Landing />
     </>
   );
 }

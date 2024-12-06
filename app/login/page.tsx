@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useUserAuth } from "../hooks/userAuth";
+import Button from "../components/Button/Button";
 
 const schema = z.object({
   email: z.string().email("Email é obrigatório"),
@@ -14,10 +15,12 @@ const schema = z.object({
 });
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
-  const { signInWithEmail, error: signInError } = useUserAuth();
+  const {
+    signInWithEmail,
+    signInWithEmailLoading,
+    error: signInError,
+  } = useUserAuth();
 
   const {
     register,
@@ -27,18 +30,8 @@ export default function Login() {
     resolver: zodResolver(schema),
   });
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
-  const handleSignInWithEmail = async () => {
-    await signInWithEmail(email, password, router);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "enter") {
-      handleSubmit(handleSignInWithEmail);
-    }
+  const handleSignInWithEmail = async (data) => {
+    await signInWithEmail(data.email, data.password, router);
   };
 
   return (
@@ -56,13 +49,10 @@ export default function Login() {
             id="login"
             type="string"
             placeholder="Digite seu e-mail"
-            value={email}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setEmail(e.target.value)}
           />
           {errors?.email?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.email?.message}
+              {errors?.email?.message.toString()}
             </span>
           )}
           <input
@@ -71,32 +61,28 @@ export default function Login() {
             id="password"
             type="password"
             placeholder="Digite sua senha"
-            value={password}
-            onKeyDown={handleKeyDown}
-            onChange={(e) => setPassword(e.target.value)}
           />
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.password?.message}
+              {errors?.password?.message.toString()}
             </span>
           )}
           {signInError && (
             <span className="text-red-700 text-sm m-2">{signInError}</span>
           )}
-          <span className="text-xs mt-2 text-left">
-            <Link href="/password-reset">Esqueceu a senha?</Link>
-          </span>
-          <button
-            className="bg-secondary w-full mt-6 py-4 text-white rounded-2xl
-          border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold"
-          >
-            Login
-          </button>
+          <span className="text-xs mt-2 text-left"></span>
+          <Button text="Entrar" loading={signInWithEmailLoading}></Button>
         </form>
-        <span className="text-xs mt-4 text-left">
-          Não tem conta ainda?&nbsp;
-          <Link href="/signup">Faça seu cadastro</Link>
-        </span>
+        <div className="flex flex-col items-center">
+          <span className="text-xs mt-4 text-left">
+            Não tem conta ainda?&nbsp;
+            <Link href="/signup">Faça seu cadastro</Link>
+          </span>
+          <span className="text-xs mt-4 text-left">
+            Perdeu a senha?&nbsp;
+            <Link href="/password-reset">Clique aqui para recuperar a senha</Link>
+          </span>
+        </div>
       </div>
     </main>
   );

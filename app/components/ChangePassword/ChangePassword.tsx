@@ -6,7 +6,8 @@ import Input from "../Input/Input";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getAuth, updatePassword } from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import { useUserAuth } from "../../hooks/userAuth";
 
 interface ChangePasswordProps {
   toggleChangePassword: () => void;
@@ -40,17 +41,19 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
     resolver: zodResolver(schema),
   });
 
-  const saveNewPassword = () => {
-    updatePassword(user, password)
-      .then(() => {
-        console.log("senha atualizada com sucesso");
-        alert("senha atualizada com sucesso");
-        toggleChangePassword()
+  const { reauthenticateAndSaveNewPassword, error: changePasswordError } =
+    useUserAuth();
 
-      })
-      .catch((error) => {
-        console.log("ocorreu um erro ao atualizar senha");
-      });
+  const saveNewPassword = async () => {
+    const userAuthenticated = await reauthenticateAndSaveNewPassword(
+      user,
+      currentPassword,
+      password
+    );
+    if (userAuthenticated) {
+      console.log(userAuthenticated, userAuthenticated)
+      toggleChangePassword();
+    }
   };
   const handleCurrentPasswordChange = (e) => {
     setCurrentPassword(e.target.value);
@@ -63,8 +66,8 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
   };
 
   const handleCancelClick = () => {
-    toggleChangePassword()
-  }
+    toggleChangePassword();
+  };
 
   return (
     <div className="w-full pt-4">
@@ -120,6 +123,11 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
           {errors?.confirmPassword?.message && (
             <span className="text-red-700 text-sm m-2">
               {errors?.confirmPassword?.message.toString()}
+            </span>
+          )}
+          {changePasswordError && (
+            <span className="text-red-700 text-sm m-2">
+              {changePasswordError}
             </span>
           )}
           <Button text="Salvar" className="mt-4"></Button>
