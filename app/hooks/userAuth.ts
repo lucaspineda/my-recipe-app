@@ -9,6 +9,8 @@ import {
 } from "firebase/auth";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { initializeApp } from "firebase/app";
+import { getFirestore, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
@@ -17,6 +19,7 @@ const firebaseConfig = {
 };
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 export const useUserAuth = () => {
   const [error, setError] = useState<string>("");
@@ -32,7 +35,22 @@ export const useUserAuth = () => {
 
   const auth = getAuth();
 
+  const createUserInDB = async (email) => {
+    await setDoc(doc(db, "users", auth.currentUser.uid), {
+      email,
+      createdAt: serverTimestamp()
+    });
+  }
+
+  const registerLoginInDB = async (email) => {
+    await setDoc(doc(db, "users", auth.currentUser.uid), {
+      email,
+      lastLoginAt: serverTimestamp()
+    });
+  }
+
   const signUpWithEmail = async (email, password, router) => {
+    console.log('caiu aqui')
     setSignUpWithEmailLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -40,9 +58,13 @@ export const useUserAuth = () => {
         email,
         password
       );
+      if(userCredential) {
+        createUserInDB(email)
+      }
       if (router) {
         router.push("/recipe");
       }
+      
       return userCredential.user;
     } catch {
       setError("Erro ao cadastrar");
@@ -66,6 +88,9 @@ export const useUserAuth = () => {
       );
       if (router) {
         router.push("/recipe");
+      }
+      if(userCredential) {
+        registerLoginInDB(email)
       }
       return userCredential.user;
     } catch {
