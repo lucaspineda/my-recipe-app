@@ -1,33 +1,41 @@
-'use client'
+"use client";
 import React, { useEffect, useState } from "react";
-import PlansCard from "../components/PlansCard/PlansCard"
-import { getDoc, doc, collection, getDocs } from "firebase/firestore";
+import PlansCard from "../components/PlansCard/PlansCard";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
+import { Plan } from "../types";
+import { useUserStore } from "../store/user";
 
 export default function Plans() {
-  const [plans, setPlans] = useState([])
-  
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const { userPlanId } = useUserStore()
+
   const getPlans = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "plans"));
-      const localPlans = []
-      console.log("Cached document data:", plans);
-      // setPlans(plans)
+      const localPlans: Plan[] = [];
       querySnapshot.forEach((doc) => {
-        localPlans.push(doc.data())
+        localPlans.push(doc.data() as Plan);
       });
-      localPlans.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0))
-      setPlans(localPlans)
+      localPlans.sort((a, b) => (a.id > b.id ? 1 : b.id > a.id ? -1 : 0));
+      checkUsersActivePlan(localPlans);
+      setPlans(localPlans);6
     } catch (e) {
-      console.log("Error getting cached document:", e);
+      console.log("Error getting plans:", e);
     }
-  }
-  
-  
-  
+  };
+
+  const checkUsersActivePlan = (localPlans: Plan[]) => {
+    localPlans.forEach(plan => {
+      if(plan.id === userPlanId) {
+        plan.active = true
+      }
+    });
+  };
+
   useEffect(() => {
-    getPlans()
-  }, [])
+    getPlans();
+  }, [userPlanId]);
   return (
     <main className="flex flex-col">
       <div className="flex flex-col items-center mt-8 text-center">
@@ -36,7 +44,10 @@ export default function Plans() {
       </div>
       <section className="flex flex-col gap-8 mt-4">
         {plans.map((plan) => (
-          <PlansCard key={plan.id} plan={plan}/>
+          <PlansCard
+            key={plan.id}
+            plan={plan}
+          />
         ))}
       </section>
     </main>

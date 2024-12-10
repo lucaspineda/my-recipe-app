@@ -9,8 +9,15 @@ import {
 } from "firebase/auth";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { initializeApp } from "firebase/app";
-import { getFirestore, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { doc, setDoc } from 'firebase/firestore';
+import {
+  getDoc,
+  getFirestore,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
+import { Plan, UserPlan } from "../types";
+import { useUserStore } from "../store/user";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
@@ -34,23 +41,35 @@ export const useUserAuth = () => {
     useState<boolean>(false);
 
   const auth = getAuth();
+  const { setUserPlanId } = useUserStore();
+
+  const getUserPlanId = async () => {
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const plan: UserPlan = docSnap.data().plan;
+      setUserPlanId(plan?.planId);
+    } else {
+      // docSnap.data() will be undefined in this case
+      console.log("No such document!");
+    }
+  };
 
   const createUserInDB = async (email) => {
     await setDoc(doc(db, "users", auth.currentUser.uid), {
       email,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
-  }
+  };
 
   const registerLoginInDB = async (email) => {
     await setDoc(doc(db, "users", auth.currentUser.uid), {
       email,
-      lastLoginAt: serverTimestamp()
+      lastLoginAt: serverTimestamp(),
     });
-  }
+  };
 
   const signUpWithEmail = async (email, password, router) => {
-    console.log('caiu aqui')
     setSignUpWithEmailLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -58,13 +77,13 @@ export const useUserAuth = () => {
         email,
         password
       );
-      if(userCredential) {
-        createUserInDB(email)
+      if (userCredential) {
+        createUserInDB(email);
       }
       if (router) {
         router.push("/recipe");
       }
-      
+
       return userCredential.user;
     } catch {
       setError("Erro ao cadastrar");
@@ -89,8 +108,8 @@ export const useUserAuth = () => {
       if (router) {
         router.push("/recipe");
       }
-      if(userCredential) {
-        registerLoginInDB(email)
+      if (userCredential) {
+        registerLoginInDB(email);
       }
       return userCredential.user;
     } catch {
@@ -140,24 +159,25 @@ export const useUserAuth = () => {
     setPasswordRecoverLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      return true
+      return true;
     } catch {
       console.log("Erro ao enviar email");
       setError("Erro ao enviar email");
-      return false
+      return false;
     } finally {
       setPasswordRecoverLoading(false);
     }
   };
-    return {
-      signUpWithEmail,
-      signUpWithEmailLoading,
-      signInWithEmail,
-      signInWithEmailLoading,
-      reauthenticateAndSaveNewPassword,
-      reauthenticateLoading,
-      sendPasswordRecoverEmail,
-      passwordRecoverLoading,
-      error,
-    };
+  return {
+    getUserPlanId,
+    signUpWithEmail,
+    signUpWithEmailLoading,
+    signInWithEmail,
+    signInWithEmailLoading,
+    reauthenticateAndSaveNewPassword,
+    reauthenticateLoading,
+    sendPasswordRecoverEmail,
+    passwordRecoverLoading,
+    error,
+  };
 };

@@ -1,15 +1,17 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { auth } from "../../hooks/userAuth";
+import { auth, useUserAuth } from "../../hooks/userAuth";
 
 const ProtectedRoute = ({ children, onSetUser }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { getUserPlanId } = useUserAuth()
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
+        getUserPlanId()
         onSetUser(user)
         if(pathname === "/login" || pathname === "/signup" || pathname === "/password-reset") {
           router.push('/recipe')
