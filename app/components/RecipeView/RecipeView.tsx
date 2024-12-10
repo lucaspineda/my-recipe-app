@@ -13,11 +13,11 @@ export default function RecipeView() {
 
   let newRecipeObject = JSON.parse(newRecipe);
 
-  const title = newRecipeObject.titulo
-  const introduction = newRecipeObject.introducao
-  const ingredients = newRecipeObject.ingredientes
-  const preparationMethod = newRecipeObject.modoDePreparo
-  const observations = newRecipeObject.observacoes
+  const title = newRecipeObject?.titulo
+  const introduction = newRecipeObject?.introducao
+  const ingredients = newRecipeObject?.ingredientes
+  const preparationMethod = newRecipeObject?.modoDePreparo
+  const observations = newRecipeObject?.observacoes
 
   return (
     <>
