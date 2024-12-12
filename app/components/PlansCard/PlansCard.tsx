@@ -9,11 +9,9 @@ interface PlansCardProps {
   plan: Plan;
 }
 
-export default function PlansCard({
-  plan,
-}: PlansCardProps) {
+export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
-  const { setUserPlanId } = useUserStore()
+  const { setUserPlanId, userPlanId } = useUserStore();
 
   const handlePlanSelecting = async () => {
     setLoading(true);
@@ -32,12 +30,20 @@ export default function PlansCard({
       <div className="flex flex-col bg-white rounded-md py-4 px-8">
         <div className="flex content-center mb-2 justify-between">
           <h3 className="">{plan.name}</h3>
-          {plan.recommended && (
+          {plan.recommended && !plan.active && userPlanId !== 3 && (
             <span
               className="bg-white border-secondary border text-secondary px-1 w-min rounded-md
               self-center text-sm"
             >
               Recomendado
+            </span>
+          )}
+          {plan.active && (
+            <span
+              className="bg-white border-secondary border text-secondary px-1 w-min rounded-md
+              self-center text-sm"
+            >
+              Atual
             </span>
           )}
         </div>
@@ -48,19 +54,12 @@ export default function PlansCard({
           <span>/ Mês</span>
         </div>
         <p className="mb-6 mt-2">{plan.description}</p>
-        {plan.active ? (
-          <Button
-            text="Atual"
-            loading={loading}
-            className="bg-secondary py-2 px-4 w-min text-white rounded-md
-        border-none shadow-lg self-center"
-          />
-        ) : (
+        {!plan.active && (
           <Button
             text="Escolher"
             loading={loading}
             className="bg-secondary py-2 px-4 w-min text-white rounded-md
-					border-none shadow-lg self-center"
+        border-none shadow-lg self-center"
             onClick={handlePlanSelecting}
           />
         )}
