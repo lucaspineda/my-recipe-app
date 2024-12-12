@@ -26,7 +26,7 @@ export default function MobileMenu({ toggleMenu }) {
     })
   }
   return (
-    <div className="mobile-menu flex flex-col absolute w-screen h-screen bg-black z-10">
+    <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-10">
       <Image
         className="absolute right-4"
         src="./images/close-icon.svg"

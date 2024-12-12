@@ -9,23 +9,23 @@ export default function RecipeView() {
     setShowRecipe(false);
   };
 
-  let newRecipe = recipe.replace(/```json|```/g, '').trim();
+  let newRecipe = recipe.replace(/```json|```/g, "").trim();
 
   let newRecipeObject = JSON.parse(newRecipe);
 
-  const title = newRecipeObject?.titulo
-  const introduction = newRecipeObject?.introducao
-  const ingredients = newRecipeObject?.ingredientes
-  const preparationMethod = newRecipeObject?.modoDePreparo
-  const observations = newRecipeObject?.observacoes
+  const title = newRecipeObject?.titulo;
+  const introduction = newRecipeObject?.introducao;
+  const ingredients = newRecipeObject?.ingredientes;
+  const preparationMethod = newRecipeObject?.modoDePreparo;
+  const observations = newRecipeObject?.observacoes;
 
   return (
     <>
       {showRecipe && (
-        <div>
+        <section>
           <div>
-            <h1>{title}</h1>
-            <h2>{introduction}</h2>
+            <h1 className="mt-8">{title}</h1>
+            <p>{introduction}</p>
             <br />
 
             <h3>
@@ -34,7 +34,11 @@ export default function RecipeView() {
 
             <ul>
               {ingredients.map((ingredients, index) => (
-                <li key={index}> • {ingredients.nome || ingredients.item} - {ingredients.quantidade}</li>
+                <li key={index}>
+                  {" "}
+                  • {ingredients.nome || ingredients.item} -{" "}
+                  {ingredients.quantidade}
+                </li>
               ))}
             </ul>
             <br />
@@ -64,7 +68,7 @@ export default function RecipeView() {
             onClick={handleGetOtherRecipe}
             text="Gerar outra receita"
           />
-        </div>
+        </section>
       )}
     </>
   );
