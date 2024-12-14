@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import EditProfileField from "../components/EditProfileField/EditProfileField";
 import Link from "next/link";
 import ChangePassword from "../components/ChangePassword/ChangePassword";
+import { useUserStore } from "../store/user";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);
   const [changePassword, setChangePassword] = useState<boolean>(false);
+  const {user} = useUserStore()
   const handleEditNameBtnClick = () => {
     setEditName(!editName);
   };
@@ -37,7 +39,7 @@ const Profile = () => {
         <div className="flex w-full justify-between">
           <div>
             <p className="font-bold">Plano</p>
-            <p>Gold</p>
+            <p>{user.plan.name}</p>
           </div>
           <Link
             href={"/plans"}

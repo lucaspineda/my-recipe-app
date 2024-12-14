@@ -10,12 +10,14 @@ import {
   getAuth,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { redirect } from 'next/navigation'
+import { useUserStore } from "../../store/user";
 
 
 export default function MobileMenu({ toggleMenu }) {
   const router = useRouter()
   const auth = getAuth()
+
+  const { user } = useUserStore()
 
   const handleSignout = () => {
     router.push('/')
@@ -44,7 +46,7 @@ export default function MobileMenu({ toggleMenu }) {
           height={80}
         />
         <h2 className="mt-4 text-lg font-semibold">Lucas Pineda</h2>
-        <span>Plano: Premium</span>
+        <span>Plano: {user.plan.name}</span>
       </div>
       <nav className="mt-8">
         <ul className="flex flex-col gap-8">

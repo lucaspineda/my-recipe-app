@@ -20,6 +20,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
         planId: plan.id,
         updatedAt: serverTimestamp(),
         cost: plan.cost,
+        name: plan.name
       },
     });
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));

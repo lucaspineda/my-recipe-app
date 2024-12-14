@@ -11,10 +11,11 @@ export interface UserPlan {
   planId: number;
   cost: number;
   updatedat: Date;
+  name: string;
 }
 
 export interface User {
   email: string;
   plan: UserPlan;
-  lastLoginAt: Date
+  lastLoginAt: Date;
 }
