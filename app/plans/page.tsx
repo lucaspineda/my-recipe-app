@@ -8,7 +8,7 @@ import { useUserStore } from "../store/user";
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const { userPlanId } = useUserStore()
+  const { user } = useUserStore()
 
   const getPlans = async () => {
     try {
@@ -19,7 +19,7 @@ export default function Plans() {
       });
       localPlans.sort((a, b) => (a.id > b.id ? 1 : b.id > a.id ? -1 : 0));
       checkUsersActivePlan(localPlans);
-      setPlans(localPlans);6
+      setPlans(localPlans);
     } catch (e) {
       console.log("Error getting plans:", e);
     }
@@ -27,7 +27,7 @@ export default function Plans() {
 
   const checkUsersActivePlan = (localPlans: Plan[]) => {
     localPlans.forEach(plan => {
-      if(plan.id === userPlanId) {
+      if(plan.id === user.plan.planId) {
         plan.active = true
       }
     });
@@ -35,7 +35,7 @@ export default function Plans() {
 
   useEffect(() => {
     getPlans();
-  }, [userPlanId]);
+  }, [user]);
   return (
     <main className="flex flex-col">
       <div className="flex flex-col items-center mt-8 text-center">

@@ -6,12 +6,12 @@ import { auth, useUserAuth } from "../../hooks/userAuth";
 const ProtectedRoute = ({ children, onSetUser }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { getUserPlanId } = useUserAuth()
+  const { getUser } = useUserAuth()
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        getUserPlanId()
+        getUser()
         onSetUser(user)
         if(pathname === "/login" || pathname === "/signup" || pathname === "/password-reset") {
           router.push('/recipe')

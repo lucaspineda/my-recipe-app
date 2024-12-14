@@ -12,3 +12,9 @@ export interface UserPlan {
   cost: number;
   updatedat: Date;
 }
+
+export interface User {
+  email: string;
+  plan: UserPlan;
+  lastLoginAt: Date
+}

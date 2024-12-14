@@ -16,7 +16,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { doc, setDoc } from "firebase/firestore";
-import { Plan, UserPlan } from "../types";
+import { Plan, User as UserDB } from "../types";
 import { useUserStore } from "../store/user";
 
 const firebaseConfig = {
@@ -41,16 +41,15 @@ export const useUserAuth = () => {
     useState<boolean>(false);
 
   const auth = getAuth();
-  const { setUserPlanId } = useUserStore();
+  const { setUser } = useUserStore();
 
-  const getUserPlanId = async () => {
+  const getUser = async () => {
     const docRef = doc(db, "users", auth.currentUser.uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const plan: UserPlan = docSnap.data().plan;
-      setUserPlanId(plan?.planId);
+      const user = docSnap.data();
+      setUser(user as UserDB);
     } else {
-      // docSnap.data() will be undefined in this case
       console.log("No such document!");
     }
   };
@@ -169,7 +168,7 @@ export const useUserAuth = () => {
     }
   };
   return {
-    getUserPlanId,
+    getUser,
     signUpWithEmail,
     signUpWithEmailLoading,
     signInWithEmail,

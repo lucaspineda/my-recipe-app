@@ -1,11 +1,12 @@
 import { create } from 'zustand'
+import { User } from '../types';
 
 interface UserStore {
-  userPlanId?: number;
-  setUserPlanId: (userPlanId: number) => void
+  user?: User;
+  setUser: (user: User) => void
 }
 
 export const useUserStore = create<UserStore>((set) => ({
-  userPlanId: null,
-  setUserPlanId: (userPlanId) => set(() => ({ userPlanId })),
+  user: null,
+  setUser: (user) => set(() => ({ user })),
 }))

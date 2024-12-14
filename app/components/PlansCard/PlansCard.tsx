@@ -1,8 +1,8 @@
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import { auth, db } from "../../hooks/userAuth";
 import Button from "../Button/Button";
-import { Plan } from "../../types";
+import { Plan, User } from "../../types";
 import { useUserStore } from "../../store/user";
 
 interface PlansCardProps {
@@ -11,7 +11,7 @@ interface PlansCardProps {
 
 export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
-  const { setUserPlanId, userPlanId } = useUserStore();
+  const { setUser, user } = useUserStore();
 
   const handlePlanSelecting = async () => {
     setLoading(true);
@@ -22,7 +22,9 @@ export default function PlansCard({ plan }: PlansCardProps) {
         cost: plan.cost,
       },
     });
-    setUserPlanId(plan.id);
+    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const userReturn = userDoc.data();
+    setUser(userReturn as User);
     setLoading(false);
   };
   return (
@@ -30,7 +32,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
       <div className="flex flex-col bg-white rounded-md py-4 px-8">
         <div className="flex content-center mb-2 justify-between">
           <h3 className="">{plan.name}</h3>
-          {plan.recommended && !plan.active && userPlanId !== 3 && (
+          {plan.recommended && !plan.active && user.plan.planId !== 3 && (
             <span
               className="bg-white border-secondary border text-secondary px-1 w-min rounded-md
               self-center text-sm"
