@@ -15,12 +15,14 @@ export default function PlansCard({ plan }: PlansCardProps) {
 
   const handlePlanSelecting = async () => {
     setLoading(true);
+    console.log(plan, 'plan')
     await updateDoc(doc(db, "users", auth.currentUser.uid), {
       plan: {
         planId: plan.id,
         updatedAt: serverTimestamp(),
         cost: plan.cost,
-        name: plan.name
+        name: plan.name,
+        recipesCount: plan.recipeCount ?? null,
       },
     });
     const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));

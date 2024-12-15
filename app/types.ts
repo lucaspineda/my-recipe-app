@@ -5,6 +5,7 @@ export interface Plan {
   name: string;
   recommended: boolean;
   active?: boolean;
+  recipeCount?: number;
 }
 
 export interface UserPlan {
@@ -12,6 +13,7 @@ export interface UserPlan {
   cost: number;
   updatedat: Date;
   name: string;
+  recipesCount?: number;
 }
 
 export interface User {

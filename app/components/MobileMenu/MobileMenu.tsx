@@ -5,28 +5,24 @@ import {
   IconUser,
   IconShoppingBag,
 } from "@tabler/icons-react";
-import {
-  signOut,
-  getAuth,
-} from "firebase/auth";
+import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../../store/user";
 
-
 export default function MobileMenu({ toggleMenu }) {
-  const router = useRouter()
-  const auth = getAuth()
+  const router = useRouter();
+  const auth = getAuth();
 
-  const { user } = useUserStore()
+  const { user } = useUserStore();
 
   const handleSignout = () => {
-    router.push('/')
+    router.push("/");
     signOut(auth).then(() => {
-      toggleMenu()
-      router.push('/')
-      console.log('user is signed out')
-    })
-  }
+      toggleMenu();
+      router.push("/");
+      console.log("user is signed out");
+    });
+  };
   return (
     <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-10">
       <Image
@@ -47,6 +43,9 @@ export default function MobileMenu({ toggleMenu }) {
         />
         <h2 className="mt-4 text-lg font-semibold">Lucas Pineda</h2>
         <span>Plano: {user.plan.name}</span>
+        {user.plan.planId !== 3 && (
+          <span>{user.plan.recipesCount} receitas restantes</span>
+        )}
       </div>
       <nav className="mt-8">
         <ul className="flex flex-col gap-8">
@@ -83,7 +82,6 @@ export default function MobileMenu({ toggleMenu }) {
         </ul>
       </nav>
       <button
-        href="/signup"
         className="bg-secondary py-1 px-2 text-white rounded-2xl
                 shadow-lg text-center absolute bottom-4 right-4 text-sm"
         onClick={handleSignout}
