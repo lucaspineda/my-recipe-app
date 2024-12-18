@@ -41,7 +41,7 @@ export const MealForm = forwardRef(({}, ref) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUserStore();
-  const recipesCount = user.plan.recipesCount;
+  const recipesCount = user?.plan.recipesCount;
 
   const mealOptions = [
     {
@@ -132,6 +132,8 @@ export const MealForm = forwardRef(({}, ref) => {
   if (recipeLoading) {
     return <Loading />;
   }
+
+  if(!user) return null
 
   return (
     <>
