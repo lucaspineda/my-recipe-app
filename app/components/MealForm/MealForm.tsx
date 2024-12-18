@@ -9,6 +9,9 @@ import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
 import { auth } from "../../hooks/userAuth";
 import { getIdToken } from "firebase/auth";
+import { AlertCircle } from "lucide-react";
+import { Tooltip } from "react-tooltip";
+import { useUserStore } from "../../store/user";
 
 export const MealForm = forwardRef(({}, ref) => {
   const {
@@ -37,6 +40,8 @@ export const MealForm = forwardRef(({}, ref) => {
   const [ingredients, setIngredients] = useState(storeIngredients || "");
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useUserStore();
+  const recipesCount = user.plan.recipesCount;
 
   const mealOptions = [
     {
@@ -79,8 +84,6 @@ export const MealForm = forwardRef(({}, ref) => {
     e.preventDefault();
 
     if (!auth.currentUser) {
-      // send ingredients and recipe to store
-      // send user to sign up
       updateIngredients(ingredients);
       updateMealOption(optionMeal);
       router.push("/signup");
@@ -99,7 +102,7 @@ export const MealForm = forwardRef(({}, ref) => {
     }
 
     setRecipeLoading(true);
-    const newToken = await getIdToken(auth.currentUser)
+    const newToken = await getIdToken(auth.currentUser);
 
     try {
       const response = await fetch("http://localhost:3003/gemini", {
@@ -155,7 +158,7 @@ export const MealForm = forwardRef(({}, ref) => {
           <label className="secondary-header py-3">
             Selecione qual refeição irá preparar
           </label>
-          <div className="relative">
+          <div className="relative mb-12">
             <select
               id="countries"
               className="global-input focus:ring-blue-500 focus:border-blue-500"
@@ -175,11 +178,21 @@ export const MealForm = forwardRef(({}, ref) => {
               alt="Arow Down Icon"
             />
           </div>
-          <Button
-            className="mt-12"
-            onClick={handleGetRecipe}
-            text="Gerar Receita"
-          >
+          <div className="flex items-center gap-2 mb-4">
+            <AlertCircle
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Hello world!"
+              color="#f6e8d3"
+              fill="black"
+              size={42}
+            />
+            <Tooltip id="my-tooltip" place={"top"} />
+            <p>
+              Você ainda pode gerar 2 receitas. Faça um upgrade para continuar
+              usando.
+            </p>
+          </div>
+          <Button onClick={handleGetRecipe} text="Gerar Receita">
             Gerar Receita
           </Button>
         </form>
