@@ -133,8 +133,6 @@ export const MealForm = forwardRef(({}, ref) => {
     return <Loading />;
   }
 
-  if(!user) return null
-
   return (
     <>
       {!showRecipe && (
