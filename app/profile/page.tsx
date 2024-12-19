@@ -16,6 +16,12 @@ const Profile = () => {
   const toggleChangePassword = () => {
     setChangePassword(!changePassword);
   };
+
+  if (!user) {
+    return null
+  }
+
+  const remainingDays = user?.plan?.updatedAt.toDate().getUTCDate()
   return (
     <main className="container flex flex-col items-start mt-8 mx-auto">
       <h1 className="self-center">Perfil</h1>
@@ -40,6 +46,7 @@ const Profile = () => {
           <div>
             <p className="font-bold">Plano</p>
             <p>{user.plan.name}</p>
+            <p>{user.plan.recipesCount} receitas restantes (Renova em {remainingDays.toString()} dias)</p>
           </div>
           <Link
             href={"/plans"}
