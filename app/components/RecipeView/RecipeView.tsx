@@ -22,54 +22,52 @@ export default function RecipeView() {
   return (
     <>
       {showRecipe && (
-        <section>
+        <section className="max-w-4xl mx-auto p-6 rounded-lg ">
           <div>
-            <h1 className="mt-8">{title}</h1>
-            <p>{introduction}</p>
+            <h1 className="text-secondary text-3xl font-bold text-center mt-8">{title}</h1>
+            <p className="text-gray-900 mt-4 text-lg">{introduction}</p>
             <br />
 
-            <h3>
-              <strong>Ingredientes:</strong>
-            </h3>
+            <div className="mt-8">
+              <h3 className="text-secondary text-2xl font-semibold">Ingredientes:</h3>
+              <ul className="list-disc pl-6 mt-4 text-lg text-gray-900">
+                {ingredients.map((ingredient, index) => (
+                  <li key={index} className="mt-2">
+                    {ingredient.nome || ingredient.item} - {ingredient.quantidade}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <ul>
-              {ingredients.map((ingredients, index) => (
-                <li key={index}>
-                  {" "}
-                  • {ingredients.nome || ingredients.item} -{" "}
-                  {ingredients.quantidade}
-                </li>
-              ))}
-            </ul>
-            <br />
+            <div className="mt-8">
+              <h3 className="text-secondary text-2xl font-semibold">Modo de Preparo:</h3>
+              <ol className="list-decimal pl-6 mt-4 text-lg text-gray-900">
+                {preparationMethod.map((step, index) => (
+                  <li key={index} className="mt-2">{step}</li>
+                ))}
+              </ol>
+            </div>
 
-            <h3>
-              <strong>Modo de Preparo:</strong>
-            </h3>
-            <ul>
-              {preparationMethod.map((step, index) => (
-                <li key={index}>{step}</li>
-              ))}
-            </ul>
+            <div className="mt-8">
+              <h3 className="text-secondary text-2xl font-semibold">Observações:</h3>
+              <ul className="list-disc pl-6 mt-4 text-lg text-gray-900 italic">
+                {observations.map((obs, index) => (
+                  <li key={index} className="mt-2"> {obs}</li>
+                ))}
+              </ul>
+            </div>
 
-            <br />
-            <h3>
-              <strong>Observações:</strong>
-            </h3>
-            <ul>
-              {observations.map((obs, index) => (
-                <li key={index}> - {obs}</li>
-              ))}
-            </ul>
           </div>
-
-          <Button
-            className="mt-12"
-            onClick={handleGetOtherRecipe}
-            text="Gerar outra receita"
-          />
-        </section>
-      )}
+          <div className="mt-12 text-center">
+            <Button
+              className="mt-12 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-900 transition duration-300"
+              onClick={handleGetOtherRecipe}
+              text="Gerar outra receita"
+            />
+          </div>
+        </section >
+      )
+      }
     </>
   );
 }
