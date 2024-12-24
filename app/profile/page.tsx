@@ -52,7 +52,7 @@ const Profile = () => {
         </div>
         <div>
           <p className="font-bold">Email</p>
-          <p>lucas.pineda@hotmail.com</p>
+          <p>{user.email}</p>
         </div>
         <div className="flex w-full justify-between">
           <div>
@@ -65,7 +65,7 @@ const Profile = () => {
           </div>
           <Link
             href={"/plans"}
-            className="text-secondary font-semibold no-underline text-left w-min"
+            className="text-secondary font-semibold no-underline text-left nowrap"
           >
             Mudar Plano
           </Link>
