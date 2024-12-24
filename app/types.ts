@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import { FieldValue, Timestamp } from "firebase/firestore";
 
 export interface Plan {
   id: number;
@@ -13,7 +13,7 @@ export interface Plan {
 export interface UserPlan {
   planId: number;
   cost: number;
-  updatedAt: Timestamp;
+  updatedAt: Timestamp | FieldValue;
   name: string;
   recipesCount?: number;
 }
@@ -22,4 +22,5 @@ export interface User {
   email: string;
   plan: UserPlan;
   lastLoginAt: Date;
+  name?: string;
 }

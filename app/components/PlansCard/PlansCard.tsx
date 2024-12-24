@@ -15,7 +15,6 @@ export default function PlansCard({ plan }: PlansCardProps) {
 
   const handlePlanSelecting = async () => {
     setLoading(true);
-    console.log(plan, 'plan')
     await updateDoc(doc(db, "users", auth.currentUser.uid), {
       plan: {
         planId: plan.id,

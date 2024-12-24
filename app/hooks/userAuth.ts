@@ -16,7 +16,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { doc, setDoc } from "firebase/firestore";
-import { Plan, User as UserDB } from "../types";
+import { User as UserDB, UserPlan } from "../types";
 import { useUserStore } from "../store/user";
 
 const firebaseConfig = {
@@ -28,17 +28,17 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+const FreePlan: UserPlan = {
+  recipesCount: 3,
+  planId: 1,
+  updatedAt: serverTimestamp(),
+  name: "Básico",
+  cost: 0,
+};
+
 export const useUserAuth = () => {
   const [error, setError] = useState<string>("");
-  const [signUpWithEmailLoading, setSignUpWithEmailLoading] =
-    useState<boolean>(false);
-  const [signInWithEmailLoading, setSignInWithEmailLoading] =
-    useState<boolean>(false);
-  // const [saveNewPasswordLoading, setSaveNewPasswordLoading] = useState<boolean>(false);
-  const [reauthenticateLoading, setReauthenticateLoading] =
-    useState<boolean>(false);
-  const [passwordRecoverLoading, setPasswordRecoverLoading] =
-    useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const auth = getAuth();
   const { setUser } = useUserStore();
@@ -54,10 +54,26 @@ export const useUserAuth = () => {
     }
   };
 
+  const updateUser = async (user) => {
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    setLoading(true);
+    try {
+      await updateDoc(docRef, user);
+      return true;
+    } catch (e) {
+      setError("Erro ao atualizar usuário");
+      console.log("Erro ao atualizar usuário", e);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const createUserInDB = async (email) => {
     await setDoc(doc(db, "users", auth.currentUser.uid), {
       email,
       createdAt: serverTimestamp(),
+      plan: FreePlan,
     });
   };
 
@@ -69,7 +85,7 @@ export const useUserAuth = () => {
   };
 
   const signUpWithEmail = async (email, password, router) => {
-    setSignUpWithEmailLoading(true);
+    setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -88,7 +104,7 @@ export const useUserAuth = () => {
       setError("Erro ao cadastrar");
       console.log("erro ao cadastrar usuário");
     } finally {
-      setSignUpWithEmailLoading(false);
+      setLoading(false);
     }
   };
 
@@ -97,7 +113,7 @@ export const useUserAuth = () => {
     password: string,
     router?: AppRouterInstance
   ) => {
-    setSignInWithEmailLoading(true);
+    setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -115,7 +131,7 @@ export const useUserAuth = () => {
       console.log("dados incorretos 1");
       setError("Dados incorretos");
     } finally {
-      setSignInWithEmailLoading(false);
+      setLoading(false);
     }
   };
 
@@ -137,7 +153,7 @@ export const useUserAuth = () => {
     currentPassword,
     newPassword
   ) => {
-    setReauthenticateLoading(true);
+    setLoading(true);
     try {
       const userLocal = await signInWithEmail(user.email, currentPassword);
       if (userLocal) {
@@ -150,12 +166,12 @@ export const useUserAuth = () => {
       console.log("Erro ao salvar nova senha");
       setError("Erro ao atualizar senha");
     } finally {
-      setReauthenticateLoading(false);
+      setLoading(false);
     }
   };
 
   const sendPasswordRecoverEmail = async (email) => {
-    setPasswordRecoverLoading(true);
+    setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
       return true;
@@ -164,19 +180,18 @@ export const useUserAuth = () => {
       setError("Erro ao enviar email");
       return false;
     } finally {
-      setPasswordRecoverLoading(false);
+      setLoading(false);
     }
   };
   return {
+    updateUser,
     getUser,
     signUpWithEmail,
-    signUpWithEmailLoading,
+    setLoading,
     signInWithEmail,
-    signInWithEmailLoading,
     reauthenticateAndSaveNewPassword,
-    reauthenticateLoading,
     sendPasswordRecoverEmail,
-    passwordRecoverLoading,
     error,
+    loading
   };
 };

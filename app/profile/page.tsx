@@ -5,11 +5,12 @@ import EditProfileField from "../components/EditProfileField/EditProfileField";
 import Link from "next/link";
 import ChangePassword from "../components/ChangePassword/ChangePassword";
 import { useUserStore } from "../store/user";
+import { Timestamp } from "firebase/firestore";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);
   const [changePassword, setChangePassword] = useState<boolean>(false);
-  const {user} = useUserStore()
+  const { user } = useUserStore();
   const handleEditNameBtnClick = () => {
     setEditName(!editName);
   };
@@ -17,11 +18,15 @@ const Profile = () => {
     setChangePassword(!changePassword);
   };
 
+  const handleEditNameOpen = () => {
+    setEditName(false);
+  };
+
   if (!user) {
-    return null
+    return null;
   }
 
-  const remainingDays = user?.plan?.updatedAt.toDate().getUTCDate()
+  const remainingDays = user?.plan?.updatedAt instanceof Timestamp ? user.plan.updatedAt.toDate().getUTCDate() : 0;
   return (
     <main className="container flex flex-col items-start mt-8 mx-auto">
       <h1 className="self-center">Perfil</h1>
@@ -36,7 +41,14 @@ const Profile = () => {
               {!editName ? "Editar" : "Cancelar"}
             </button>
           </div>
-          {!editName ? <p>Lucas Pineda</p> : <EditProfileField />}
+          {!editName ? (
+            <p>{user.name}</p>
+          ) : (
+            <EditProfileField
+              handleOpen={handleEditNameOpen}
+              value={user.name}
+            />
+          )}
         </div>
         <div>
           <p className="font-bold">Email</p>
@@ -46,17 +58,23 @@ const Profile = () => {
           <div>
             <p className="font-bold">Plano</p>
             <p>{user.plan.name}</p>
-            <p>{user.plan.recipesCount} receitas restantes (Renova em {remainingDays.toString()} dias)</p>
+            <p>
+              {user.plan.recipesCount} receitas restantes (Renova em{" "}
+              {remainingDays.toString()} dias)
+            </p>
           </div>
           <Link
             href={"/plans"}
-            className="text-secondary font-semibold no-underline"
+            className="text-secondary font-semibold no-underline text-left w-min"
           >
             Mudar Plano
           </Link>
         </div>
         {!changePassword ? (
-          <button onClick={toggleChangePassword} className="text-secondary font-semibold w-fit">
+          <button
+            onClick={toggleChangePassword}
+            className="text-secondary font-semibold w-fit"
+          >
             Mudar senha
           </button>
         ) : (
