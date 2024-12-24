@@ -7,13 +7,15 @@ import { useRouter } from "next/navigation";
 import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
-import { auth } from "../../hooks/userAuth";
+import { auth, db } from "../../hooks/userAuth";
 import { getIdToken } from "firebase/auth";
 import { AlertCircle } from "lucide-react";
 import { Tooltip } from "react-tooltip";
 import { useUserStore } from "../../store/user";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import Link from "next/link";
 
-export const MealForm = forwardRef(({}, ref) => {
+export const MealForm = forwardRef(({ }, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -26,14 +28,6 @@ export const MealForm = forwardRef(({}, ref) => {
     setShowRecipe,
   } = useRecipeStore();
 
-  // const db = getFirestore();
-
-  // setDoc(doc(db, "cities", "LA"), {
-  //   name: "Los Angelesss",
-  //   state: "CA",
-  //   country: "USA",
-  // });
-
   // const [recipe, setRecipe] = useState("");
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
@@ -41,7 +35,10 @@ export const MealForm = forwardRef(({}, ref) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUserStore();
-  const recipesCount = user?.plan.recipesCount;
+
+  let count = user?.plan?.recipesCount
+
+  const [countRecipes, setCountRecipes] = useState(count)
 
   const mealOptions = [
     {
@@ -120,6 +117,19 @@ export const MealForm = forwardRef(({}, ref) => {
       const responseJson = await response.json();
       setRecipe(responseJson);
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
+
+      // contador de receitas
+      const newRecipesCount = countRecipes - 1
+
+      setCountRecipes(newRecipesCount)
+
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        plan: {
+          updatedAt: serverTimestamp(),
+          recipesCount: newRecipesCount
+        },
+      });
+
     } catch (error) {
       return console.log(error);
     } finally {
@@ -133,7 +143,7 @@ export const MealForm = forwardRef(({}, ref) => {
     return <Loading />;
   }
 
-  if(!user) return null
+  if (!user) return null
 
   return (
     <>
@@ -180,23 +190,50 @@ export const MealForm = forwardRef(({}, ref) => {
               alt="Arow Down Icon"
             />
           </div>
-          <div className="flex items-center gap-2 mb-4">
-            <AlertCircle
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content="Hello world!"
-              color="#f6e8d3"
-              fill="black"
-              size={42}
-            />
-            <Tooltip id="my-tooltip" place={"top"} />
-            <p>
-              Você ainda pode gerar 2 receitas. Faça um upgrade para continuar
-              usando.
-            </p>
-          </div>
-          <Button onClick={handleGetRecipe} text="Gerar Receita">
-            Gerar Receita
-          </Button>
+          {countRecipes > 0 ? (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content="Hello world!"
+                  color="#f6e8d3"
+                  fill="black"
+                  size={42}
+                />
+                <Tooltip id="my-tooltip" place={"top"} />
+                <p>
+                  Você ainda pode gerar {countRecipes} receitas. Faça um upgrade para continuar
+                  usando.
+                </p>
+              </div>
+              <Button onClick={handleGetRecipe} text="Gerar Receita">
+                Gerar Receita
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content="Hello world!"
+                  color="#f6e8d3"
+                  fill="black"
+                  size={42}
+                />
+                <Tooltip id="my-tooltip" place={"top"} />
+                <p>
+                  Você atingiu o limite de receitas. Faça um upgrade para continuar
+                  usando.
+                </p>
+              </div>       
+              <Link
+                className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
+                href={"/plans"}
+              >
+                Upgrade
+              </Link>
+            </>
+          )}
         </form>
       )}
       {showRecipe && <RecipeView />}
