@@ -12,7 +12,8 @@ import { getIdToken } from "firebase/auth";
 import { AlertCircle } from "lucide-react";
 import { Tooltip } from "react-tooltip";
 import { useUserStore } from "../../store/user";
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import Link from "next/link";
 
 export const MealForm = forwardRef(({ }, ref) => {
   const {
@@ -76,17 +77,6 @@ export const MealForm = forwardRef(({ }, ref) => {
     setIngredients(event.target.value);
   };
 
-  const handleUpdateRecipesCount = async () => { // TEMPORARIO
-    setCountRecipes(1)
-
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      plan: {
-        updatedAt: serverTimestamp(),
-        recipesCount: 1
-      },
-    });
-  }
-
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
@@ -129,11 +119,7 @@ export const MealForm = forwardRef(({ }, ref) => {
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
 
       // contador de receitas
-      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-
-      const recipesCount = userDoc.data().plan.recipesCount
-
-      const newRecipesCount = recipesCount - 1
+      const newRecipesCount = countRecipes - 1
 
       setCountRecipes(newRecipesCount)
 
@@ -204,7 +190,6 @@ export const MealForm = forwardRef(({ }, ref) => {
               alt="Arow Down Icon"
             />
           </div>
-
           {countRecipes > 0 ? (
             <>
               <div className="flex items-center gap-2 mb-4">
@@ -240,18 +225,13 @@ export const MealForm = forwardRef(({ }, ref) => {
                   Você atingiu o limite de receitas. Faça um upgrade para continuar
                   usando.
                 </p>
-              </div>
-              {/* 
-              <Button text="Upgrade" onClick={() =>
-                router.push("/plans")
-              }>
+              </div>       
+              <Link
+                className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
+                href={"/plans"}
+              >
                 Upgrade
-              </Button> */}
-              <div>
-                <Button text="Upgrade2" onClick={handleUpdateRecipesCount}>
-                  Upgrade2
-                </Button>
-              </div>
+              </Link>
             </>
           )}
         </form>
