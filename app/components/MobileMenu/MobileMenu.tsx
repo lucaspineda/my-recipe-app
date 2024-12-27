@@ -41,7 +41,7 @@ export default function MobileMenu({ toggleMenu }) {
           width={80}
           height={80}
         />
-        <h2 className="mt-4 text-lg font-semibold">Lucas Pineda</h2>
+        <h2 className="mt-4 text-lg font-semibold">{user.name || user.email}</h2>
         <span>Plano: {user.plan.name}</span>
         {user.plan.planId !== 3 && (
           <span>{user.plan.recipesCount} receitas restantes</span>
