@@ -23,6 +23,8 @@ export default function MobileMenu({ toggleMenu }) {
       console.log("user is signed out");
     });
   };
+
+  if (!user) return null;
   return (
     <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-10">
       <Image
