@@ -78,7 +78,7 @@ export const useUserAuth = () => {
   };
 
   const registerLoginInDB = async (email) => {
-    await setDoc(doc(db, "users", auth.currentUser.uid), {
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
       email,
       lastLoginAt: serverTimestamp(),
     });
