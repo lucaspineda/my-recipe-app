@@ -70,7 +70,7 @@ export default function Plans() {
         </p>
         <div className="flex gap-4 mt-4">
           <Button text="Cancelar" className="bg-red-500" />
-          <Button text="Voltar" />
+          <Button text="Voltar" onClick={() => setModalOpen(false)}/>
         </div>
       </Modal>
     </main>
