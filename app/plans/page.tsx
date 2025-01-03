@@ -1,14 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import PlansCard from "../components/PlansCard/PlansCard";
+import PlansCard from "../components/Card/PlansCard";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
 import { Plan } from "../types";
 import { useUserStore } from "../store/user";
+import Card from "../components/Card/Card";
+import Modal from "../components/Modal/Modal";
+import Button from "../components/Button/Button";
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const { user } = useUserStore()
+  const { user } = useUserStore();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const getPlans = async () => {
     try {
@@ -26,9 +30,9 @@ export default function Plans() {
   };
 
   const checkUsersActivePlan = (localPlans: Plan[]) => {
-    localPlans.forEach(plan => {
-      if(plan.id === user.plan.planId) {
-        plan.active = true
+    localPlans.forEach((plan) => {
+      if (plan.id === user.plan.planId) {
+        plan.active = true;
       }
     });
   };
@@ -44,12 +48,31 @@ export default function Plans() {
       </div>
       <section className="flex flex-col gap-8 mt-4">
         {plans.map((plan) => (
-          <PlansCard
-            key={plan.id}
-            plan={plan}
-          />
+          <PlansCard key={plan.id} plan={plan} />
         ))}
+        <Card
+          buttonColor="bg-red-600"
+          buttonText="Cancelar"
+          handleButtonClick={() => setModalOpen(true)}
+        >
+          <p className="font-medium mb-2">Cancelar plano</p>
+          <p className="font-normal">
+            Ao cancelar seu plano você entrará para o plano básico e perderá as
+            funcionalidades dos planos pagos
+          </p>
+        </Card>
       </section>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <p className="font-medium">Confirmar Cancelamento de Plano</p>
+        <p className="font-normal mt-2">
+          Tem certeza que deseja cancelar seu plano? Você ainda terá acesso as
+          funcionalidades do seu plano até dia 05/10/2024
+        </p>
+        <div className="flex gap-4 mt-4">
+          <Button text="Cancelar" className="bg-red-500" />
+          <Button text="Voltar" />
+        </div>
+      </Modal>
     </main>
   );
 }

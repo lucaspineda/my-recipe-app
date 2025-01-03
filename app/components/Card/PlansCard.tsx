@@ -57,7 +57,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
           </span>
           <span>/ Mês</span>
         </div>
-        <p className="mb-6 mt-2">{plan.description}</p>
+        <p className="mb-6 mt-2 font-normal">{plan.description}</p>
         {!plan.active && (
           <Button
             text="Escolher"
