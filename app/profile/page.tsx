@@ -25,7 +25,7 @@ const Profile = () => {
   if (!user) {
     return null;
   }
-
+  // TODO: get remaining days from expiration date
   const remainingDays = user?.plan?.updatedAt instanceof Timestamp ? user.plan.updatedAt.toDate().getUTCDate() : 0;
   return (
     <main className="container flex flex-col items-start mt-8 mx-auto">

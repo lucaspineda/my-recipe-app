@@ -9,13 +9,13 @@ interface ButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
 export default function Button({
   text,
   loading,
-  className,
+  className = "bg-secondary",
   ...rest
 }: ButtonProps) {
   return (
     <button
-      className={`flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
-        font-semibold  ${className}`}
+      className={`flex justify-center gap-2 w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)
+        font-semibold ${className}`}
       disabled={loading}
       {...rest}
     >

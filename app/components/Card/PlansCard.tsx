@@ -15,10 +15,14 @@ export default function PlansCard({ plan }: PlansCardProps) {
 
   const handlePlanSelecting = async () => {
     setLoading(true);
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+
     await updateDoc(doc(db, "users", auth.currentUser.uid), {
       plan: {
         planId: plan.id,
-        updatedAt: serverTimestamp(),
+        startedAt: serverTimestamp(),
+        expiresAt: expiresAt,
         cost: plan.cost,
         name: plan.name,
         recipesCount: plan.recipeCount ?? null,
