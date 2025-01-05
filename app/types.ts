@@ -13,7 +13,8 @@ export interface Plan {
 export interface UserPlan {
   planId: number;
   cost: number;
-  updatedAt: Timestamp | FieldValue;
+  startedAt: Timestamp | FieldValue;
+  expiresAt: Timestamp | FieldValue;
   name: string;
   recipesCount?: number;
 }

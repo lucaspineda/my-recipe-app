@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import PlansCard from "../components/Card/PlansCard";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
 import { Plan } from "../types";
 import { useUserStore } from "../store/user";
@@ -37,9 +37,24 @@ export default function Plans() {
     });
   };
 
+  const handlePlanCanceling = async () => {
+
+  }
+
+  const expirationDate = user?.plan.expiresAt instanceof Timestamp ? user.plan.expiresAt.toDate() : null;
+  const formattedDate = expirationDate?.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   useEffect(() => {
-    getPlans();
+    if (user) {
+      getPlans();
+    }
   }, [user]);
+
+  if (!user) return null;
   return (
     <main className="flex flex-col">
       <div className="flex flex-col items-center mt-8 text-center">
@@ -50,27 +65,29 @@ export default function Plans() {
         {plans.map((plan) => (
           <PlansCard key={plan.id} plan={plan} />
         ))}
-        <Card
-          buttonColor="bg-red-600"
-          buttonText="Cancelar"
-          handleButtonClick={() => setModalOpen(true)}
-        >
-          <p className="font-medium mb-2">Cancelar plano</p>
-          <p className="font-normal">
-            Ao cancelar seu plano você entrará para o plano básico e perderá as
-            funcionalidades dos planos pagos
-          </p>
-        </Card>
+        {user.plan.planId !== 1 && (
+          <Card
+            buttonColor="bg-red-600"
+            buttonText="Cancelar"
+            handleButtonClick={() => setModalOpen(true)}
+          >
+            <p className="font-medium mb-2">Cancelar plano</p>
+            <p className="font-normal">
+              Ao cancelar seu plano você entrará para o plano básico e perderá
+              as funcionalidades dos planos pagos
+            </p>
+          </Card>
+        )}
       </section>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <p className="font-medium">Confirmar Cancelamento de Plano</p>
         <p className="font-normal mt-2">
           Tem certeza que deseja cancelar seu plano? Você ainda terá acesso as
-          funcionalidades do seu plano até dia 05/10/2024
+          funcionalidades do seu plano até dia {formattedDate}
         </p>
         <div className="flex gap-4 mt-4">
-          <Button text="Cancelar" className="bg-red-500" />
-          <Button text="Voltar" onClick={() => setModalOpen(false)}/>
+          <Button text="Cancelar Plano" className="bg-red-500" onClick={handlePlanCanceling} />
+          <Button text="Voltar" onClick={() => setModalOpen(false)} />
         </div>
       </Modal>
     </main>
