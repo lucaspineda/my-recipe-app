@@ -1,18 +1,23 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import PlansCard from "../components/Card/PlansCard";
-import { collection, getDocs, Timestamp } from "firebase/firestore";
-import { db } from "../hooks/userAuth";
+import { collection, doc, getDocs, Timestamp, updateDoc } from "firebase/firestore";
+import { auth, db, useUserAuth } from "../hooks/userAuth";
 import { Plan } from "../types";
 import { useUserStore } from "../store/user";
 import Card from "../components/Card/Card";
 import Modal from "../components/Modal/Modal";
 import Button from "../components/Button/Button";
+import { formatDate } from "../utils/date";
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const { user } = useUserStore();
   const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { getUser } = useUserAuth();
+
+  console.log(user, 'userr')
 
   const getPlans = async () => {
     try {
@@ -38,15 +43,24 @@ export default function Plans() {
   };
 
   const handlePlanCanceling = async () => {
-
+    setLoading(true);
+    try {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        plan: {
+          ...user.plan,
+          toBeCanceled: true,
+        },
+      });
+      await getUser();
+    } catch (e) {
+      console.log("Error canceling plan:", e);
+    } finally {
+      setLoading(false);
+      setModalOpen(false);
+    }
   }
 
-  const expirationDate = user?.plan.expiresAt instanceof Timestamp ? user.plan.expiresAt.toDate() : null;
-  const formattedDate = expirationDate?.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const formattedDate = formatDate(user?.plan.expiresAt as Timestamp)
 
   useEffect(() => {
     if (user) {
@@ -65,7 +79,7 @@ export default function Plans() {
         {plans.map((plan) => (
           <PlansCard key={plan.id} plan={plan} />
         ))}
-        {user.plan.planId !== 1 && (
+        {user.plan.planId !== 1 && !user.plan.toBeCanceled && (
           <Card
             buttonColor="bg-red-600"
             buttonText="Cancelar"
@@ -78,6 +92,10 @@ export default function Plans() {
             </p>
           </Card>
         )}
+        {user.plan.toBeCanceled && (
+          <div>Será cacelado em 3 dias</div>
+          
+        )}
       </section>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <p className="font-medium">Confirmar Cancelamento de Plano</p>
@@ -86,7 +104,7 @@ export default function Plans() {
           funcionalidades do seu plano até dia {formattedDate}
         </p>
         <div className="flex gap-4 mt-4">
-          <Button text="Cancelar Plano" className="bg-red-500" onClick={handlePlanCanceling} />
+          <Button text="Cancelar Plano" className="bg-red-500" loading={loading} onClick={handlePlanCanceling} />
           <Button text="Voltar" onClick={() => setModalOpen(false)} />
         </div>
       </Modal>

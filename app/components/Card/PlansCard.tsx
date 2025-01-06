@@ -1,9 +1,10 @@
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore";
 import { useState } from "react";
 import { auth, db } from "../../hooks/userAuth";
 import Button from "../Button/Button";
 import { Plan, User } from "../../types";
 import { useUserStore } from "../../store/user";
+import { formatDate } from "../../utils/date";
 
 interface PlansCardProps {
   plan: Plan;
@@ -12,6 +13,7 @@ interface PlansCardProps {
 export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
   const { setUser, user } = useUserStore();
+  const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
 
   const handlePlanSelecting = async () => {
     setLoading(true);
@@ -33,6 +35,8 @@ export default function PlansCard({ plan }: PlansCardProps) {
     setUser(userReturn as User);
     setLoading(false);
   };
+
+  const isPlanToBeExpired = plan.active && user.plan.toBeCanceled
   return (
     <>
       <div className="flex flex-col bg-white rounded-md py-4 px-8">
@@ -62,7 +66,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
           <span>/ Mês</span>
         </div>
         <p className="mb-6 mt-2 font-normal">{plan.description}</p>
-        {!plan.active && (
+        {!plan.active && plan.id > user.plan.planId && (
           <Button
             text="Escolher"
             loading={loading}
@@ -71,6 +75,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
             onClick={handlePlanSelecting}
           />
         )}
+        {isPlanToBeExpired && <div>Expira em {expirationDate}</div>}
       </div>
     </>
   );
