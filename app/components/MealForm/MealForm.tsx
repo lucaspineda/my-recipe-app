@@ -15,7 +15,7 @@ import { useUserStore } from "../../store/user";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 
-export const MealForm = forwardRef(({ }, ref) => {
+export const MealForm = forwardRef(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -36,9 +36,9 @@ export const MealForm = forwardRef(({ }, ref) => {
   const router = useRouter();
   const { user } = useUserStore();
 
-  let count = user?.plan?.recipesCount
+  let count = user?.plan?.recipesCount;
 
-  const [countRecipes, setCountRecipes] = useState(count)
+  const [countRecipes, setCountRecipes] = useState(count);
 
   const mealOptions = [
     {
@@ -119,17 +119,16 @@ export const MealForm = forwardRef(({ }, ref) => {
       setRecipeMealOption(mealMap[responseJson.optionMeal]);
 
       // contador de receitas
-      const newRecipesCount = countRecipes - 1
+      const newRecipesCount = countRecipes - 1;
 
-      setCountRecipes(newRecipesCount)
+      setCountRecipes(newRecipesCount);
 
       await updateDoc(doc(db, "users", auth.currentUser.uid), {
         plan: {
           updatedAt: serverTimestamp(),
-          recipesCount: newRecipesCount
+          recipesCount: newRecipesCount,
         },
       });
-
     } catch (error) {
       return console.log(error);
     } finally {
@@ -188,49 +187,53 @@ export const MealForm = forwardRef(({ }, ref) => {
               alt="Arow Down Icon"
             />
           </div>
-          {countRecipes > 0 ? (
+          {user?.plan.planId !== 3 && (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <AlertCircle
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content="Hello world!"
-                  color="#f6e8d3"
-                  fill="black"
-                  size={42}
-                />
-                <Tooltip id="my-tooltip" place={"top"} />
-                <p>
-                  Você ainda pode gerar {countRecipes} receitas. Faça um upgrade para continuar
-                  usando.
-                </p>
+                {user?.plan.recipesCount < 3 && user?.plan.recipesCount > 0 && (
+                  <>
+                    <AlertCircle
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content="Hello world!"
+                      color="#f6e8d3"
+                      fill="black"
+                      size={42}
+                    />
+                    <p>
+                      Você ainda pode gerar {user.plan.recipesCount} receitas.
+                      Faça um <Link className="text-black" href="/plans">upgrade</Link> para continuar usando.
+                    </p>
+                  </>
+                )}
+                {user?.plan.recipesCount === 0 && (
+                  <>
+                    <AlertCircle
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content="Hello world!"
+                      color="#f6e8d3"
+                      fill="black"
+                      size={42}
+                    />
+                    <p>
+                      Você atingiu o limite de receitas. Faça um upgrade para
+                      continuar usando.
+                    </p>
+                  </>
+                )}
               </div>
-              <Button onClick={handleGetRecipe} text="Gerar Receita">
-                Gerar Receita
-              </Button>
             </>
+          )}
+          {user?.plan.recipesCount === 0 ? (
+            <Link
+              className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
+              href={"/plans"}
+            >
+              Upgrade
+            </Link>
           ) : (
-            <>
-              <div className="flex items-center gap-2 mb-4">
-                <AlertCircle
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content="Hello world!"
-                  color="#f6e8d3"
-                  fill="black"
-                  size={42}
-                />
-                <Tooltip id="my-tooltip" place={"top"} />
-                <p>
-                  Você atingiu o limite de receitas. Faça um upgrade para continuar
-                  usando.
-                </p>
-              </div>       
-              <Link
-                className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
-                href={"/plans"}
-              >
-                Upgrade
-              </Link>
-            </>
+            <Button onClick={handleGetRecipe} text="Gerar Receita">
+              Gerar Receita
+            </Button>
           )}
         </form>
       )}
