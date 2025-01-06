@@ -5,7 +5,7 @@ interface ButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   text: string;
   loading?: boolean;
 }
-
+// Todo: Refactor to have a color prop
 export default function Button({
   text,
   loading,
