@@ -92,10 +92,6 @@ export default function Plans() {
             </p>
           </Card>
         )}
-        {user.plan.toBeCanceled && (
-          <div>Será cacelado em 3 dias</div>
-          
-        )}
       </section>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         <p className="font-medium">Confirmar Cancelamento de Plano</p>
