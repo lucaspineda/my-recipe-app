@@ -6,6 +6,7 @@ import Link from "next/link";
 import ChangePassword from "../components/ChangePassword/ChangePassword";
 import { useUserStore } from "../store/user";
 import { Timestamp } from "firebase/firestore";
+import { getRemainingDays } from "../utils/date";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);
@@ -25,8 +26,9 @@ const Profile = () => {
   if (!user) {
     return null;
   }
-  // TODO: get remaining days from expiration date
-  const remainingDays = user?.plan?.updatedAt instanceof Timestamp ? user.plan.updatedAt.toDate().getUTCDate() : 0;
+
+  const remainingDays = getRemainingDays(user?.plan.expiresAt as Timestamp);
+
   return (
     <main className="container flex flex-col items-start mt-8 mx-auto">
       <h1 className="self-center">Perfil</h1>
@@ -54,21 +56,25 @@ const Profile = () => {
           <p className="font-bold">Email</p>
           <p>{user.email}</p>
         </div>
-        <div className="flex w-full justify-between">
-          <div>
-            <p className="font-bold">Plano</p>
-            <p>{user.plan.name}</p>
+        <div>
+          <div className="flex w-full justify-between">
+            <div>
+              <p className="font-bold">Plano</p>
+              <p>{user.plan.name}</p>
+            </div>
+            <Link
+              href={"/plans"}
+              className="text-secondary font-semibold no-underline text-left nowrap"
+            >
+              Mudar Plano
+            </Link>
+          </div>
+          {user.plan.planId == 2 && (
             <p>
               {user.plan.recipesCount} receitas restantes (Renova em{" "}
               {remainingDays.toString()} dias)
             </p>
-          </div>
-          <Link
-            href={"/plans"}
-            className="text-secondary font-semibold no-underline text-left nowrap"
-          >
-            Mudar Plano
-          </Link>
+          )}
         </div>
         {!changePassword ? (
           <button

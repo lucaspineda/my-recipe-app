@@ -130,7 +130,7 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
               {changePasswordError}
             </span>
           )}
-          <Button text="Salvar" className="mt-4"></Button>
+          <Button text="Salvar" className="mt-4 bg-secondary"></Button>
         </div>
       </form>
     </div>

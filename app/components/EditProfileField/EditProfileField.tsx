@@ -27,7 +27,7 @@ const EditProfileField = ({ handleOpen, ...rest }: EditProfileFieldProps) => {
       <Input value={value} onChange={(e) => setValue(e.target.value)} />
       {error && <span className="text-red-700 text-sm m-2">{error}</span>}
       <Button
-        className="mt-4"
+        className="mt-4 bg-secondary"
         text="Salvar"
         onClick={handleUpdateUsername}
         loading={loading}
