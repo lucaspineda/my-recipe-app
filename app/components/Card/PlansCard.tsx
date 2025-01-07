@@ -1,4 +1,10 @@
-import { doc, getDoc, serverTimestamp, Timestamp, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { useState } from "react";
 import { auth, db } from "../../hooks/userAuth";
 import Button from "../Button/Button";
@@ -36,7 +42,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
     setLoading(false);
   };
 
-  const isPlanToBeExpired = plan.active && user.plan.toBeCanceled
+  const isPlanToBeExpired = plan.active && user.plan.toBeCanceled;
   return (
     <>
       <div className="flex flex-col bg-white rounded-md py-4 px-8">
@@ -70,7 +76,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
           <Button
             text="Escolher"
             loading={loading}
-            className="bg-secondary py-2 px-4 w-min text-white rounded-md
+            className="py-2 px-4 w-min text-white rounded-md
         border-none shadow-lg self-center"
             onClick={handlePlanSelecting}
           />

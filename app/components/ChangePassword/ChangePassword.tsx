@@ -51,7 +51,7 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
       password
     );
     if (userAuthenticated) {
-      console.log(userAuthenticated, userAuthenticated)
+      console.log(userAuthenticated, userAuthenticated);
       toggleChangePassword();
     }
   };
@@ -130,7 +130,10 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
               {changePasswordError}
             </span>
           )}
-          <Button text="Salvar" className="mt-4 bg-secondary"></Button>
+          <Button
+            text="Salvar"
+            className="mt-4"
+          />
         </div>
       </form>
     </div>

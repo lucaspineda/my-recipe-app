@@ -27,7 +27,7 @@ const Profile = () => {
     return null;
   }
 
-  const remainingDays = getRemainingDays(user?.plan.expiresAt as Timestamp);
+  const remainingDays = user?.plan.expiresAt ? getRemainingDays(user?.plan.expiresAt as Timestamp) : null
 
   return (
     <main className="container flex flex-col items-start mt-8 mx-auto">
@@ -49,6 +49,7 @@ const Profile = () => {
             <EditProfileField
               handleOpen={handleEditNameOpen}
               value={user.name}
+              placeholder="Insira seu nome"
             />
           )}
         </div>

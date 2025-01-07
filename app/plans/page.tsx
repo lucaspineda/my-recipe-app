@@ -100,7 +100,7 @@ export default function Plans() {
           funcionalidades do seu plano até dia {formattedDate}
         </p>
         <div className="flex gap-4 mt-4">
-          <Button text="Cancelar Plano" className="bg-red-500" loading={loading} onClick={handlePlanCanceling} />
+          <Button text="Cancelar Plano" color="bg-red-500" loading={loading} onClick={handlePlanCanceling} />
           <Button text="Voltar" onClick={() => setModalOpen(false)} />
         </div>
       </Modal>

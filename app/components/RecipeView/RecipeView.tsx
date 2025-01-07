@@ -60,7 +60,7 @@ export default function RecipeView() {
           </div>
           <div className="mt-12 text-center">
             <Button
-              className="mt-12 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-900 transition duration-300 bg-secondary"
+              className="mt-12 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-900 transition duration-300"
               onClick={handleGetOtherRecipe}
               text="Gerar outra receita"
             />

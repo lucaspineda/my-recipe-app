@@ -23,7 +23,8 @@ export default function Card({
         <Button
           text={buttonText}
           loading={false}
-          className={`${buttonColor} mt-6 py-2 px-4 w-min text-white rounded-md border-none shadow-lg self-center`}
+          className={`mt-6 py-2 px-4 w-min text-white rounded-md border-none shadow-lg self-center`}
+          color={buttonColor}
           onClick={handleCancelPlan}
         />
       </div>

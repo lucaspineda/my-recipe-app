@@ -8,7 +8,7 @@ import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
 import { auth, db } from "../../hooks/userAuth";
-import { getIdToken } from "firebase/auth";
+import { getIdToken, signOut } from "firebase/auth";
 import { AlertCircle } from "lucide-react";
 import { Tooltip } from "react-tooltip";
 import { useUserStore } from "../../store/user";
@@ -201,7 +201,11 @@ export const MealForm = forwardRef(({}, ref) => {
                     />
                     <p>
                       Você ainda pode gerar {user.plan.recipesCount} receitas.
-                      Faça um <Link className="text-black" href="/plans">upgrade</Link> para continuar usando.
+                      Faça um{" "}
+                      <Link className="text-black" href="/plans">
+                        upgrade
+                      </Link>{" "}
+                      para continuar usando.
                     </p>
                   </>
                 )}
@@ -231,7 +235,10 @@ export const MealForm = forwardRef(({}, ref) => {
               Upgrade
             </Link>
           ) : (
-            <Button onClick={handleGetRecipe} text="Gerar Receita">
+            <Button
+              onClick={handleGetRecipe}
+              text="Gerar Receita"
+            >
               Gerar Receita
             </Button>
           )}
