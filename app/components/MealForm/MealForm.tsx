@@ -14,7 +14,6 @@ import { Tooltip } from "react-tooltip";
 import { useUserStore } from "../../store/user";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
-import WhatsAppButton from "../WhatsApp/WhatsApp";
 
 export const MealForm = forwardRef(({ }, ref) => {
   const {
@@ -246,7 +245,6 @@ export const MealForm = forwardRef(({ }, ref) => {
         </form>
       )}
       {showRecipe && <RecipeView />}
-      <WhatsAppButton />
     </>
   );
 });
