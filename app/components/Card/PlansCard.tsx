@@ -11,6 +11,8 @@ import Button from "../Button/Button";
 import { Plan, User } from "../../types";
 import { useUserStore } from "../../store/user";
 import { formatDate } from "../../utils/date";
+import axios from "axios";
+import { headers } from "next/headers";
 
 interface PlansCardProps {
   plan: Plan;
@@ -20,6 +22,17 @@ export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
   const { setUser, user } = useUserStore();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
+
+  const subscribe = async () => {
+    await axios.post("http://localhost:3003/subscribe",
+    {},
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: (await auth.currentUser.getIdToken()).toString(),
+      },
+    });
+  }
 
   const handlePlanSelecting = async () => {
     setLoading(true);
@@ -78,7 +91,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
             loading={loading}
             className="py-2 px-4 w-min text-white rounded-md
         border-none shadow-lg self-center"
-            onClick={handlePlanSelecting}
+            onClick={subscribe}
           />
         )}
         {isPlanToBeExpired && <div>Expira em {expirationDate}</div>}
