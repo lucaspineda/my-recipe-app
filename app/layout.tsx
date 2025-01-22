@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.tsx";
 import { IconMenu2 } from "@tabler/icons-react";
 import "./globals.css";
 import { useRecipeStore } from "./store/recipe.ts";
+import axios from "axios";
 IconMenu2;
 const rubik = Rubik({ subsets: ["latin"] });
 
@@ -13,25 +14,26 @@ export default function RootLayout({ children }) {
   // Todo: retrive loggendIn data from auth system
   const [isLoggedIn, setIsloggedIn] = useState(true);
   const [openMenu, setOpenMenu] = useState(false);
-  const {
-    recipeLoading,
-  } = useRecipeStore();
-
+  const { recipeLoading } = useRecipeStore();
 
   const toggleMenu = () => {
     setOpenMenu(!openMenu);
   };
 
-
-  const [user, setUser] = useState()
+  const [user, setUser] = useState();
 
   const onSetUser = (user) => {
-    setUser(user)
-  }
+    setUser(user);
+  };
+
+  const testAuth = () => {
+    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/test");
+  };
 
   return (
     <html lang="en">
       <body className={rubik.className}>
+        <button onClick={testAuth}>test</button>
         <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
           {isLoggedIn && user && !recipeLoading && (
             <IconMenu2
