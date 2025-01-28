@@ -14,10 +14,10 @@ export default function Signup() {
 
   const schema = z.object({
     email: z.string().email("Email é obrigatório"),
-    password: z.string("Senha é obrigatório").min(1, "Senha é obrigatório"),
+    password: z.string({ required_error: "Senha é obrigatório" }).min(1, "Senha é obrigatório"),
   });
 
-  const { signUpWithEmail, signUpWithEmailLoading, error: signUpError } = useUserAuth();
+  const { signUpWithEmail, loading, error: signUpError } = useUserAuth();
 
   const {
     register,
@@ -50,7 +50,7 @@ export default function Signup() {
           />
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.email?.message}
+              {typeof errors?.email?.message === "string" && errors?.email?.message}
             </span>
           )}
           <input
@@ -62,13 +62,13 @@ export default function Signup() {
           />
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
-              {errors?.password?.message}
+              {typeof errors?.password?.message === "string" && errors?.password?.message}
             </span>
           )}
           {signUpError && (
             <span className="text-red-700 text-sm m-2">{signUpError}</span>
           )}
-          <Button className="mt-8" text="Cadastrar" loading={signUpWithEmailLoading}></Button>
+          <Button className="mt-8" text="Cadastrar" loading={loading}></Button>
         </form>
         <span className="text-xs mt-4">
           Clicando no botão, você concorda com nossos Termos de Serviço e

@@ -11,7 +11,7 @@ import Button from "../components/Button/Button";
 
 const schema = z.object({
   email: z.string().email("Email é obrigatório"),
-  password: z.string("Senha é obrigatório").min(1, "Senha é obrigatório"),
+  password: z.string().min(1, { message: "Senha é obrigatório" }),
 });
 
 export default function Login() {

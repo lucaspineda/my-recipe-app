@@ -17,7 +17,7 @@ export default function PasswordReset() {
 
   const {
     sendPasswordRecoverEmail,
-    passwordRecoverLoading,
+    loading,
     error: passwordRecoverError,
   } = useUserAuth();
 
@@ -63,7 +63,7 @@ export default function PasswordReset() {
           {emailSent && (
             <span className="text-sm m-2">Email enviado, <Link href="/login">voltar para o Login</Link></span>
           )}
-          <Button loading={passwordRecoverLoading} text="Recuperar senha" />
+          <Button loading={loading} text="Recuperar senha" />
         </form>
         <span className="text-xs mt-4 text-center block">
           Resetou a senha?&nbsp;
