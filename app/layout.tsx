@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
 import { Rubik } from "next/font/google";
-import MobileMenu from "./components/MobileMenu/MobileMenu.tsx";
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.tsx";
+import MobileMenu from "./components/MobileMenu/MobileMenu";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import { IconMenu2 } from "@tabler/icons-react";
 import "./globals.css";
-import { useRecipeStore } from "./store/recipe.ts";
+import { useRecipeStore } from "./store/recipe";
 import axios from "axios";
+import { getAuth } from "firebase/auth";
 IconMenu2;
 const rubik = Rubik({ subsets: ["latin"] });
 
@@ -26,8 +27,13 @@ export default function RootLayout({ children }) {
     setUser(user);
   };
 
-  const testAuth = () => {
-    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/test");
+  const testAuth = async () => {
+    const accessToken = await getAuth().currentUser.getIdToken()
+    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/test", {
+      headers: {
+      authorization: accessToken,
+      },
+    });
   };
 
   return (
