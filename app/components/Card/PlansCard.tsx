@@ -1,3 +1,5 @@
+'use client'
+
 import {
   doc,
   getDoc,
@@ -11,6 +13,9 @@ import Button from "../Button/Button";
 import { Plan, User } from "../../types";
 import { useUserStore } from "../../store/user";
 import { formatDate } from "../../utils/date";
+import axios from "axios";
+import { headers } from "next/headers";
+import { useRouter } from "next/navigation";
 
 interface PlansCardProps {
   plan: Plan;
@@ -19,26 +24,49 @@ interface PlansCardProps {
 export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
   const { setUser, user } = useUserStore();
+  const router = useRouter();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
+
+  const subscribe = async () => {
+    const response = await axios.post(
+      "http://localhost:3003/subscribe",
+      {
+        plan: plan,
+        uid: auth.currentUser.uid,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: (await auth.currentUser.getIdToken()).toString(),
+        },
+      }
+    );
+    return response.data;
+  };
 
   const handlePlanSelecting = async () => {
     setLoading(true);
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      plan: {
-        planId: plan.id,
-        startedAt: serverTimestamp(),
-        expiresAt: expiresAt,
-        cost: plan.cost,
-        name: plan.name,
-        recipesCount: plan.recipeCount ?? null,
-      },
-    });
-    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    const userReturn = userDoc.data();
-    setUser(userReturn as User);
+    // await updateDoc(doc(db, "users", auth.currentUser.uid), {
+    //   plan: {
+    //     planId: plan.id,
+    //     startedAt: serverTimestamp(),
+    //     expiresAt: expiresAt,
+    //     cost: plan.cost,
+    //     name: plan.name,
+    //     recipesCount: plan.recipeCount ?? null,
+    //   },
+    // });
+    
+    // const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    // const userReturn = userDoc.data();
+    // setUser(userReturn as User);
+    const response = await subscribe();
+    const redirectLink = response.url
+    router.push(redirectLink);
+
     setLoading(false);
   };
 

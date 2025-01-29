@@ -15,7 +15,7 @@ import { useUserStore } from "../../store/user";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 
-export const MealForm = forwardRef(({ }, ref) => {
+export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -92,7 +92,7 @@ export const MealForm = forwardRef(({ }, ref) => {
       setIngredients("");
     }
 
-    const token = auth.currentUser?.accessToken;
+    const token = await getIdToken(auth.currentUser);
 
     if (!token) {
       return console.log("unauthorized");
@@ -156,8 +156,6 @@ export const MealForm = forwardRef(({ }, ref) => {
             id="Ingredients"
             className="global-input focus:ring-blue-500 focus:border-blue-500"
             placeholder="Digite Seus Ingredientes"
-            imgsource="/images/fork-knife.svg"
-            imgalt="Icone de faca"
             value={ingredients}
             onChange={handleChangeIngredients}
           />
