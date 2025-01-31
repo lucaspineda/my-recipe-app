@@ -13,7 +13,7 @@ export default function Signup() {
   const router = useRouter();
 
   const schema = z.object({
-    email: z.string().email("Email é obrigatório"),
+    email: z.string().email("Email não é válido"),
     password: z.string({ required_error: "Senha é obrigatório" }).min(1, "Senha é obrigatório"),
   });
 
@@ -22,7 +22,7 @@ export default function Signup() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     resolver: zodResolver(schema),
   });
@@ -48,7 +48,7 @@ export default function Signup() {
             type="string"
             placeholder="Digite seu e-mail"
           />
-          {errors?.password?.message && (
+          {errors?.email?.message && (
             <span className="text-red-700 text-sm m-2">
               {typeof errors?.email?.message === "string" && errors?.email?.message}
             </span>
