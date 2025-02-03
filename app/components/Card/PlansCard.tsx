@@ -29,14 +29,13 @@ export default function PlansCard({ plan }: PlansCardProps) {
 
   const subscribe = async () => {
     const response = await axios.post(
-      "http://localhost:3003/subscribe",
+      process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/subscribe",
       {
-        plan: plan,
+        plan,
         uid: auth.currentUser.uid,
       },
       {
         headers: {
-          "Content-Type": "application/json",
           Authorization: (await auth.currentUser.getIdToken()).toString(),
         },
       }
@@ -48,21 +47,6 @@ export default function PlansCard({ plan }: PlansCardProps) {
     setLoading(true);
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-    // await updateDoc(doc(db, "users", auth.currentUser.uid), {
-    //   plan: {
-    //     planId: plan.id,
-    //     startedAt: serverTimestamp(),
-    //     expiresAt: expiresAt,
-    //     cost: plan.cost,
-    //     name: plan.name,
-    //     recipesCount: plan.recipeCount ?? null,
-    //   },
-    // });
-    
-    // const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    // const userReturn = userDoc.data();
-    // setUser(userReturn as User);
     const response = await subscribe();
     const redirectLink = response.url
     router.push(redirectLink);
