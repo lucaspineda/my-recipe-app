@@ -9,6 +9,7 @@ import { useRecipeStore } from "./store/recipe";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 IconMenu2;
+import WhatsAppButton from "./components/WhatsApp/WhatsApp.jsx";
 const rubik = Rubik({ subsets: ["latin"] });
 
 export default function RootLayout({ children }) {
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
           )}
           {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
+          <WhatsAppButton/>
         </ProtectedRoute>
       </body>
     </html>
