@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
 
   const testAuth = async () => {
     const accessToken = await getAuth().currentUser.getIdToken()
-    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/test", {
+    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/teste", {
       headers: {
       authorization: accessToken,
       },
