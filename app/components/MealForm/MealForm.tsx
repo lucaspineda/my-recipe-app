@@ -102,7 +102,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     const newToken = await getIdToken(auth.currentUser);
 
     try {
-      const response = await fetch("http://localhost:3003/gemini", {
+      const response = await fetch(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/gemini", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
