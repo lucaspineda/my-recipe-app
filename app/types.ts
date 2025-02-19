@@ -16,7 +16,7 @@ export interface UserPlan {
   startedAt: Timestamp | FieldValue;
   expiresAt?: Timestamp | FieldValue;
   name: string;
-  recipesCount?: number;
+  recipeCount?: number;
   toBeCanceled?: boolean;
 }
 

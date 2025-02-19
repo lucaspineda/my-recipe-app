@@ -46,7 +46,7 @@ export default function MobileMenu({ toggleMenu }) {
         <h2 className="mt-4 text-lg font-semibold">{user.name || user.email}</h2>
         <span>Plano: {user.plan.name}</span>
         {user.plan.planId !== 3 && (
-          <span>{user.plan.recipesCount} receitas restantes</span>
+          <span>{user.plan.recipeCount} receitas restantes</span>
         )}
       </div>
       <nav className="mt-8">

@@ -72,7 +72,7 @@ const Profile = () => {
           </div>
           {user.plan.planId == 2 && (
             <p>
-              {user.plan.recipesCount} receitas restantes (Renova em{" "}
+              {user.plan.recipeCount} receitas restantes (Renova em{" "}
               {remainingDays.toString()} dias)
             </p>
           )}

@@ -29,7 +29,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 const FreePlan: UserPlan = {
-  recipesCount: 3,
+  recipeCount: 3,
   planId: 1,
   startedAt: serverTimestamp(),
   name: "Básico",

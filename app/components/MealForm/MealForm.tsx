@@ -36,7 +36,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const router = useRouter();
   const { user } = useUserStore();
 
-  let count = user?.plan?.recipesCount;
+  let count = user?.plan?.recipeCount;
 
   const [countRecipes, setCountRecipes] = useState(count);
 
@@ -188,7 +188,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           {user?.plan.planId !== 3 && (
             <>
               <div className="flex items-center gap-2 mb-4">
-                {user?.plan.recipesCount < 3 && user?.plan.recipesCount > 0 && (
+                {user?.plan.recipeCount < 3 && user?.plan.recipeCount > 0 && (
                   <>
                     <AlertCircle
                       data-tooltip-id="my-tooltip"
@@ -198,7 +198,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                       size={42}
                     />
                     <p>
-                      Você ainda pode gerar {user.plan.recipesCount} receitas.
+                      Você ainda pode gerar {user.plan.recipeCount} receitas.
                       Faça um{" "}
                       <Link className="text-black" href="/plans">
                         upgrade
@@ -207,7 +207,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                     </p>
                   </>
                 )}
-                {user?.plan.recipesCount === 0 && (
+                {user?.plan.recipeCount === 0 && (
                   <>
                     <AlertCircle
                       data-tooltip-id="my-tooltip"
@@ -225,7 +225,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
               </div>
             </>
           )}
-          {user?.plan.recipesCount === 0 ? (
+          {user?.plan.recipeCount === 0 ? (
             <Link
               className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
               href={"/plans"}
