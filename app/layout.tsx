@@ -28,19 +28,9 @@ export default function RootLayout({ children }) {
     setUser(user);
   };
 
-  const testAuth = async () => {
-    const accessToken = await getAuth().currentUser.getIdToken()
-    axios.get(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/teste", {
-      headers: {
-      authorization: accessToken,
-      },
-    });
-  };
-
   return (
     <html lang="en">
       <body className={rubik.className}>
-        <button onClick={testAuth}>test</button>
         <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
           {isLoggedIn && user && !recipeLoading && (
             <IconMenu2
