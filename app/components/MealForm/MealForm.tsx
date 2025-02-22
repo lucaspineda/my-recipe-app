@@ -8,12 +8,12 @@ import Loading from "../Loading/Loading";
 import RecipeView from "../RecipeView/RecipeView";
 import Button from "../Button/Button";
 import { auth, db } from "../../hooks/userAuth";
-import { getIdToken, signOut } from "firebase/auth";
+import { getIdToken } from "firebase/auth";
 import { AlertCircle } from "lucide-react";
-import { Tooltip } from "react-tooltip";
 import { useUserStore } from "../../store/user";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
+import axios from "axios";
 
 export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
@@ -80,18 +80,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    if (!auth.currentUser) {
-      updateIngredients(ingredients);
-      updateMealOption(optionMeal);
-      router.push("/signup");
-      return;
-    } else {
-      updateIngredients(null);
-      updateMealOption(null);
-      setShowRecipe(true);
-      setIngredients("");
-    }
-
     const token = await getIdToken(auth.currentUser);
 
     if (!token) {
@@ -99,24 +87,28 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     }
 
     setRecipeLoading(true);
-    const newToken = await getIdToken(auth.currentUser);
 
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/gemini", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: newToken,
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini`,
+        {
           optionMeal: optionMeal,
           ingredients: ingredients,
-        }),
-      });
-
-      const responseJson = await response.json();
-      setRecipe(responseJson);
-      setRecipeMealOption(mealMap[responseJson.optionMeal]);
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+      
+      updateIngredients(null);
+      updateMealOption(null);
+      setShowRecipe(true);
+      setIngredients("");
+      setRecipe(response.data);
+      setRecipeMealOption(mealMap[response.data.optionMeal]);
 
       // contador de receitas
       const newRecipesCount = countRecipes - 1;
