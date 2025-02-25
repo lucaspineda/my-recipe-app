@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, MouseEvent } from "react";
+import React, { ChangeEvent, useState, MouseEvent, useEffect } from "react";
 import Image from "next/image";
 import { forwardRef } from "react";
 import { usePathname } from "next/navigation";
@@ -14,8 +14,10 @@ import { useUserStore } from "../../store/user";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 import axios from "axios";
+import { Bounce, ToastContainer, toast } from 'react-toastify';
 
-export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
+
+export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -28,7 +30,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     setShowRecipe,
   } = useRecipeStore();
 
-  // const [recipe, setRecipe] = useState("");
+  const [error, setError] = useState(false);
   const [optionMeal, setOptionMeal] = useState("almoco");
   const [recipeMealOption, setRecipeMealOption] = useState("");
   const [ingredients, setIngredients] = useState(storeIngredients || "");
@@ -39,6 +41,18 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   let count = user?.plan?.recipeCount;
 
   const [countRecipes, setCountRecipes] = useState(count);
+
+  const notify = () => toast.error("Ocorreu um erro ao gerar a receita");
+
+
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => {
+        notify();
+      }, 100);
+      setError(null)
+    }
+  }, [error]);
 
   const mealOptions = [
     {
@@ -102,7 +116,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           },
         }
       );
-      
       updateIngredients(null);
       updateMealOption(null);
       setShowRecipe(true);
@@ -122,6 +135,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         },
       });
     } catch (error) {
+      setRecipeLoading(false);
+      setError(true)
+
       return console.log(error);
     } finally {
       setTimeout(() => {
@@ -136,6 +152,20 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        transition={Bounce}
+      />
+
       {!showRecipe && (
         <form className="w-full flex flex-col text-left" ref={ref}>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
