@@ -152,20 +152,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-        transition={Bounce}
-      />
-
       {!showRecipe && (
         <form className="w-full flex flex-col text-left" ref={ref}>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">

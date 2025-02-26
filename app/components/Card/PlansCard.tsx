@@ -16,6 +16,7 @@ import { formatDate } from "../../utils/date";
 import axios from "axios";
 import { headers } from "next/headers";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 interface PlansCardProps {
   plan: Plan;
@@ -26,6 +27,8 @@ export default function PlansCard({ plan }: PlansCardProps) {
   const { setUser, user } = useUserStore();
   const router = useRouter();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
+
+  const notify = () => toast.error("Ocorreu um erro ao assinar o plano");
 
   const subscribe = async () => {
     const response = await axios.post(
@@ -44,14 +47,18 @@ export default function PlansCard({ plan }: PlansCardProps) {
   };
 
   const handlePlanSelecting = async () => {
-    setLoading(true);
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
-    const response = await subscribe();
-    const redirectLink = response.url
-    router.push(redirectLink);
-
-    setLoading(false);
+    try {
+      setLoading(true);
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      const response = await subscribe();
+      const redirectLink = response.url
+      router.push(redirectLink);
+    } catch (error) {
+      notify();
+    } finally {
+      setLoading(false)
+    }
   };
 
   const isPlanToBeExpired = plan.active && user.plan.toBeCanceled;

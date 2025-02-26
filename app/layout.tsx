@@ -10,6 +10,7 @@ import axios from "axios";
 import { getAuth } from "firebase/auth";
 IconMenu2;
 import WhatsAppButton from "./components/WhatsApp/WhatsApp.jsx";
+import { Bounce, ToastContainer } from "react-toastify";
 const rubik = Rubik({ subsets: ["latin"] });
 
 export default function RootLayout({ children }) {
@@ -32,6 +33,19 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={rubik.className}>
         <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick={false}
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+            transition={Bounce}
+          />
           {isLoggedIn && user && !recipeLoading && (
             <IconMenu2
               className="absolute top-4 right-4 z-10"
@@ -42,7 +56,7 @@ export default function RootLayout({ children }) {
           )}
           {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
-          <WhatsAppButton/>
+          <WhatsAppButton />
         </ProtectedRoute>
       </body>
     </html>
