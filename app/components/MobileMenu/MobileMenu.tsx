@@ -85,7 +85,7 @@ export default function MobileMenu({ toggleMenu }) {
       </nav>
       <button
         className="bg-secondary py-1 px-2 text-white rounded-2xl
-                shadow-lg text-center absolute bottom-4 right-4 text-sm"
+                shadow-lg text-center absolute bottom-4 left-4 text-sm"
         onClick={handleSignout}
       >
         Sair
