@@ -15,7 +15,16 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 import axios from "axios";
 import { Bounce, ToastContainer, toast } from 'react-toastify';
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {mealOptions, mealMap} from "./data";
 
+
+const schema = z.object({
+  ingredients: z.string().min(3, "Adicione pelo menos 1 ingrediente"),
+  mealType: z.string().min(1,  "Selecione o tipo de refeição" ),
+});
 
 export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   const {
@@ -44,6 +53,14 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
 
   const notify = () => toast.error("Ocorreu um erro ao gerar a receita");
 
+    const {
+      register,
+      handleSubmit,
+      formState: { errors },
+    } = useForm({
+      resolver: zodResolver(schema),
+    });
+
 
   useEffect(() => {
     if (error) {
@@ -54,31 +71,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
     }
   }, [error]);
 
-  const mealOptions = [
-    {
-      text: "Almoço",
-      value: "almoco",
-    },
-    {
-      text: "Café da Manhã",
-      value: "cafe",
-    },
-    {
-      text: "Lanche",
-      value: "lanche",
-    },
-    {
-      text: "Janta",
-      value: "janta",
-    },
-  ];
 
-  const mealMap = {
-    almoco: "Almoço",
-    cafe: "Café da Manhã",
-    lanche: "Lanche",
-    janta: "Janta",
-  };
 
   const handleChangeMeal = (event) => {
     const optionMeal = mealOptions.find(
@@ -92,7 +85,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+    // e.preventDefault();
 
     const token = await getIdToken(auth.currentUser);
 
@@ -153,7 +146,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   return (
     <>
       {!showRecipe && (
-        <form className="w-full flex flex-col text-left" ref={ref}>
+        <form onSubmit={handleSubmit(handleGetRecipe)} className="w-full flex flex-col text-left" ref={ref}>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
             1
           </div>
@@ -161,12 +154,16 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
             Adicione ingredientes que você possuí em casa
           </label>
           <input
+          {...register("ingredients")}
             id="Ingredients"
             className="global-input focus:ring-blue-500 focus:border-blue-500"
             placeholder="Digite Seus Ingredientes"
             value={ingredients}
             onChange={handleChangeIngredients}
           />
+            <span className="text-red-700 text-sm m-2">
+              {errors?.ingredients?.message.toString()}
+            </span>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
             2
           </div>
@@ -175,6 +172,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
           </label>
           <div className="relative mb-12">
             <select
+          {...register("mealType")}
+
               id="countries"
               className="global-input focus:ring-blue-500 focus:border-blue-500"
               onChange={handleChangeMeal}
@@ -185,6 +184,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
                 </option>
               ))}
             </select>
+            <span className="text-red-700 text-sm m-2">
+              {errors?.mealType?.message.toString()}
+            </span>
             <Image
               src="/images/arrow-down.svg"
               className="top-4 right-4 absolute h-4 w-auto"
@@ -242,7 +244,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
             </Link>
           ) : (
             <Button
-              onClick={handleGetRecipe}
               text="Gerar Receita"
             >
               Gerar Receita
