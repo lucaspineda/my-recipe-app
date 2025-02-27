@@ -18,12 +18,12 @@ import { Bounce, ToastContainer, toast } from 'react-toastify';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {mealOptions, mealMap} from "./data";
+import { mealOptions, mealMap } from "./data";
 
 
 const schema = z.object({
   ingredients: z.string().min(3, "Adicione pelo menos 1 ingrediente"),
-  mealType: z.string().min(1,  "Selecione o tipo de refeição" ),
+  mealType: z.string().min(1, "Selecione o tipo de refeição"),
 });
 
 export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
@@ -53,13 +53,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
 
   const notify = () => toast.error("Ocorreu um erro ao gerar a receita");
 
-    const {
-      register,
-      handleSubmit,
-      formState: { errors },
-    } = useForm({
-      resolver: zodResolver(schema),
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
 
 
   useEffect(() => {
@@ -85,7 +85,12 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
-    // e.preventDefault();
+    if (!auth.currentUser) {
+      updateIngredients(ingredients);
+      updateMealOption(optionMeal);
+      router.push("/signup");
+      return;
+    }
 
     const token = await getIdToken(auth.currentUser);
 
@@ -151,19 +156,24 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
             1
           </div>
           <label className="secondary-header py-3">
-            Adicione ingredientes que você possuí em casa
+            Liste os ingredientes que você possuí em casa
           </label>
           <input
-          {...register("ingredients")}
+            {...register("ingredients")}
             id="Ingredients"
             className="global-input focus:ring-blue-500 focus:border-blue-500"
             placeholder="Digite Seus Ingredientes"
             value={ingredients}
             onChange={handleChangeIngredients}
           />
-            <span className="text-red-700 text-sm m-2">
-              {errors?.ingredients?.message.toString()}
-            </span>
+          <span className="text-sm mt-4">
+            Separe os seus ingrediente por vírgula
+            <br />
+            Ex: Arroz, ovo, presunto, queijo
+          </span>
+          <span className="text-red-700 text-sm m-2">
+            {errors?.ingredients?.message.toString()}
+          </span>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
             2
           </div>
@@ -172,7 +182,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
           </label>
           <div className="relative mb-12">
             <select
-          {...register("mealType")}
+              {...register("mealType")}
 
               id="countries"
               className="global-input focus:ring-blue-500 focus:border-blue-500"
