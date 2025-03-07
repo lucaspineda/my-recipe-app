@@ -33,7 +33,7 @@ export default function Signup() {
   };
 
   return (
-    <main className="flex flex-col text-center h-screen justify-center">
+    <main className="flex flex-col text-center h-screen justify-center w-full max-w-[420px] justify-self-center">
       <div className="flex flex-col">
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Crie sua conta</h2>

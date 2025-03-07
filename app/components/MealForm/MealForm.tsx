@@ -151,7 +151,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   return (
     <>
       {!showRecipe && (
-        <form onSubmit={handleSubmit(handleGetRecipe)} className="w-full flex flex-col text-left" ref={ref}>
+        <form onSubmit={handleSubmit(handleGetRecipe)} className="w-full flex flex-col text-left max-w-[720px]" ref={ref}>
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
             1
           </div>
