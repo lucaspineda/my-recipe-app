@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   updatePassword,
   User,
+  signOut,
 } from "firebase/auth";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { initializeApp } from "firebase/app";
@@ -50,7 +51,8 @@ export const useUserAuth = () => {
       const user = docSnap.data();
       setUser(user as UserDB);
     } else {
-      console.log("No such document!");
+      console.log("No such user document!");
+      signOut(auth)
     }
   };
 

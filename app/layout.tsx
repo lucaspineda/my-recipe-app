@@ -29,6 +29,10 @@ export default function RootLayout({ children }) {
     setUser(user);
   };
 
+  const handleIconClick = () => {
+    toggleMenu();
+  };
+
   return (
     <html lang="en">
       <body className={rubik.className}>
@@ -51,7 +55,7 @@ export default function RootLayout({ children }) {
               className="absolute top-4 right-4 z-10"
               size={30}
               stroke={2}
-              onClick={() => setOpenMenu(true)}
+              onClick={handleIconClick}
             />
           )}
           {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
