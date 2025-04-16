@@ -1,17 +1,18 @@
-"use client";
-import { useState } from "react";
-import { Rubik } from "next/font/google";
-import MobileMenu from "./components/MobileMenu/MobileMenu";
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
-import { IconMenu2 } from "@tabler/icons-react";
-import "./globals.css";
-import { useRecipeStore } from "./store/recipe";
-import axios from "axios";
-import { getAuth } from "firebase/auth";
+'use client';
+import { useState } from 'react';
+import { Rubik } from 'next/font/google';
+import MobileMenu from './components/MobileMenu/MobileMenu';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import { IconMenu2 } from '@tabler/icons-react';
+import './globals.css';
+import { useRecipeStore } from './store/recipe';
+import axios from 'axios';
+import { getAuth } from 'firebase/auth';
 IconMenu2;
-import WhatsAppButton from "./components/WhatsApp/WhatsApp.jsx";
-import { Bounce, ToastContainer } from "react-toastify";
-const rubik = Rubik({ subsets: ["latin"] });
+import WhatsAppButton from './components/WhatsApp/WhatsApp.jsx';
+import { Bounce, ToastContainer } from 'react-toastify';
+import DesktopMenu from './components/DesktopMenu/DesktopMenu';
+const rubik = Rubik({ subsets: ['latin'] });
 
 export default function RootLayout({ children }) {
   // Todo: retrive loggendIn data from auth system
@@ -50,13 +51,11 @@ export default function RootLayout({ children }) {
             theme="colored"
             transition={Bounce}
           />
+          <div className="hidden lg:block">
+            <DesktopMenu />
+          </div>
           {isLoggedIn && user && !recipeLoading && (
-            <IconMenu2
-              className="absolute top-4 right-4 z-10"
-              size={30}
-              stroke={2}
-              onClick={handleIconClick}
-            />
+            <IconMenu2 className="absolute top-4 right-4 z-10 lg:hidden" size={30} stroke={2} onClick={handleIconClick} />
           )}
           {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
