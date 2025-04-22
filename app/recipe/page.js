@@ -5,7 +5,7 @@ import React from "react";
 
 const RecipePage = () => {
 
-  return <div>
+  return <div className="flex justify-center">
     <MealForm />
   </div>;
 };

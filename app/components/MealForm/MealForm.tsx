@@ -254,7 +254,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
             </Link>
           ) : (
             <Button
-              text="Gerar Receita"
             >
               Gerar Receita
             </Button>

@@ -93,12 +93,13 @@ export default function PlansCard({ plan }: PlansCardProps) {
         <p className="mb-6 mt-2 font-normal">{plan.description}</p>
         {!plan.active && plan.id > user.plan.planId && (
           <Button
-            text="Escolher"
             loading={loading}
             className="py-2 px-4 w-min text-white rounded-md
         border-none shadow-lg self-center"
             onClick={handlePlanSelecting}
-          />
+          >
+            Escolher
+          </Button>
         )}
         {isPlanToBeExpired && <div>Expira em {expirationDate}</div>}
       </div>

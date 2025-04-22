@@ -68,7 +68,9 @@ export default function Signup() {
           {signUpError && (
             <span className="text-red-700 text-sm m-2">{signUpError}</span>
           )}
-          <Button className="mt-8" text="Cadastrar" loading={loading}></Button>
+          <Button className="mt-8" loading={loading}>
+            Cadastrar
+          </Button>
         </form>
         <span className="text-xs mt-4">
           Clicando no botão, você concorda com nossos Termos de Serviço e

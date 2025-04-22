@@ -63,7 +63,9 @@ export default function PasswordReset() {
           {emailSent && (
             <span className="text-sm m-2">Email enviado, <Link href="/login">voltar para o Login</Link></span>
           )}
-          <Button loading={loading} text="Recuperar senha" />
+          <Button loading={loading}>
+            Recuperar senha
+          </Button>
         </form>
         <span className="text-xs mt-4 text-center block">
           Resetou a senha?&nbsp;

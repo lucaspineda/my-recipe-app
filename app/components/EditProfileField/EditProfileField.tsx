@@ -32,10 +32,11 @@ const EditProfileField = ({ handleOpen, ...rest }: EditProfileFieldProps) => {
       {error && <span className="text-red-700 text-sm m-2">{error}</span>}
       <Button
         className="mt-4"
-        text="Salvar"
         onClick={handleUpdateUsername}
         loading={loading}
-      ></Button>
+      >
+        Salvar
+      </Button>
     </div>
   );
 };

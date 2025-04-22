@@ -51,7 +51,7 @@ export default function RootLayout({ children }) {
             theme="colored"
             transition={Bounce}
           />
-          <div className="hidden lg:block">
+          <div className="hidden sticky z-20 top-0 lg:block">
             <DesktopMenu />
           </div>
           {isLoggedIn && user && !recipeLoading && (

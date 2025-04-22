@@ -26,7 +26,7 @@ export default function Landing() {
           alt="test"
           className="mt-24 z-10 w-auto"
         />
-        <h1 className="font-semibold mt-16 z-10">ChefinhoIA</h1>
+        <h1 className="font-semibold mt-16 z-10">Chefinho IA</h1>
         <article className="mt-4 w-80 z-10 md:w-[420px] md:text-lg">
           <p>
             Crie receitas incríveis com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!

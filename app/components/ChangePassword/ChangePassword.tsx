@@ -131,9 +131,10 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
             </span>
           )}
           <Button
-            text="Salvar"
             className="mt-4"
-          />
+          >
+            Salvar
+          </Button>
         </div>
       </form>
     </div>

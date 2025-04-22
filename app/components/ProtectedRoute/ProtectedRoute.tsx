@@ -12,12 +12,11 @@ const ProtectedRoute = ({ children, onSetUser }) => {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      console.log(user, 'userr');
       if (user) {
         getUser();
         onSetUser(user);
 
-        if (pathname === '/login' || pathname === '/signup' || pathname === '/password-reset') {
+        if (pathname === '/login' || pathname === '/signup' || pathname === '/password-reset' || pathname === '/') {
           router.push('/recipe');
         }
       }

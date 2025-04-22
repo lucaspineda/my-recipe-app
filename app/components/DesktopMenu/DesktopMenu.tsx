@@ -4,6 +4,7 @@ import { Utensils } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import Button from '../Button/Button';
 
 export default function DesktopMenu() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function DesktopMenu() {
     <header className="flex justify-between items-center bg-[#f6e8d3] p-4 shadow-md text-base">
       <p className="flex items-center gap-2 text-lg">
         <Utensils className="text-red text-tertiary w-5 h-5" />
-        Chefinho IA
+        <Link href='/' className='no-underline text-black'>Chefinho IA</Link>
       </p>
       {user ? (
         <nav className="text-black">
@@ -34,7 +35,7 @@ export default function DesktopMenu() {
             </li>
             <li>
               <Link className="no-underline text-black font-normal" href="/plans">
-                Plano
+                Meu Plano
               </Link>
             </li>
             <li>
@@ -51,21 +52,18 @@ export default function DesktopMenu() {
         </nav>
       ) : (
         <nav className="text-black">
-          <ul className="flex gap-4">
-            <li>
-              <Link className="no-underline text-black font-normal" href="/">
-                Início
-              </Link>
-            </li>
-            <li>
-              <Link className="no-underline text-black font-normal" href="/login">
-                Login
-              </Link>
-            </li>
+          <ul className="flex items-center gap-4">
             <li>
               <Link className="no-underline text-black font-normal" href="/signup">
-                Registrar
+                Criar conta
               </Link>
+            </li>
+            <li>
+              <Button className="!py-2 px-4 w-min rounded-md border-none shadow-lg self-center text-sm">
+                <Link className="no-underline text-white font-normal" href="/login">
+                  Login
+                </Link>
+              </Button>
             </li>
           </ul>
         </nav>

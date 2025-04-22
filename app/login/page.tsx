@@ -71,7 +71,7 @@ export default function Login() {
             <span className="text-red-700 text-sm m-2">{signInError}</span>
           )}
           <span className="text-xs mt-2 text-left"></span>
-          <Button text="Entrar" loading={loading}></Button>
+          <Button loading={loading}>Entrar</Button>
         </form>
         <div className="flex flex-col items-center">
           <span className="text-xs mt-4 text-left">

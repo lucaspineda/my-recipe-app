@@ -62,8 +62,9 @@ export default function RecipeView() {
             <Button
               className="mt-12 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-900 transition duration-300"
               onClick={handleGetOtherRecipe}
-              text="Gerar outra receita"
-            />
+            >
+              Gerar outra receita
+            </Button>
           </div>
         </section >
       )
