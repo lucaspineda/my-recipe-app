@@ -118,7 +118,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
       updateMealOption(null);
       setShowRecipe(true);
       setIngredients("");
-      setRecipe(response.data);
+      setRecipe(response.data.response);
       setRecipeMealOption(mealMap[response.data.optionMeal]);
 
       // contador de receitas
