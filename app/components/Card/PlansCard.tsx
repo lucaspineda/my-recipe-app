@@ -1,22 +1,15 @@
-'use client'
+'use client';
 
-import {
-  doc,
-  getDoc,
-  serverTimestamp,
-  Timestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { useState } from "react";
-import { auth, db } from "../../hooks/userAuth";
-import Button from "../Button/Button";
-import { Plan, User } from "../../types";
-import { useUserStore } from "../../store/user";
-import { formatDate } from "../../utils/date";
-import axios from "axios";
-import { headers } from "next/headers";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { doc, getDoc, serverTimestamp, Timestamp, updateDoc } from 'firebase/firestore';
+import { useState } from 'react';
+import { auth, db } from '../../hooks/userAuth';
+import Button from '../Button/Button';
+import { Plan, User } from '../../types';
+import { useUserStore } from '../../store/user';
+import { formatDate } from '../../utils/date';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 interface PlansCardProps {
   plan: Plan;
@@ -28,11 +21,11 @@ export default function PlansCard({ plan }: PlansCardProps) {
   const router = useRouter();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
 
-  const notify = () => toast.error("Ocorreu um erro ao assinar o plano");
+  const notify = () => toast.error('Ocorreu um erro ao assinar o plano');
 
   const subscribe = async () => {
     const response = await axios.post(
-      process.env.NEXT_PUBLIC_SERVER_BASE_URL + "/subscribe",
+      process.env.NEXT_PUBLIC_SERVER_BASE_URL + '/subscribe',
       {
         plan,
         uid: auth.currentUser.uid,
@@ -41,7 +34,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
         headers: {
           Authorization: (await auth.currentUser.getIdToken()).toString(),
         },
-      }
+      },
     );
     return response.data;
   };
@@ -52,12 +45,12 @@ export default function PlansCard({ plan }: PlansCardProps) {
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
       const response = await subscribe();
-      const redirectLink = response.url
+      const redirectLink = response.url;
       router.push(redirectLink);
     } catch (error) {
       notify();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -85,12 +78,15 @@ export default function PlansCard({ plan }: PlansCardProps) {
           )}
         </div>
         <div>
-          <span className="text-2xl font-semibold">
-            R$ {plan?.cost?.toString().replace(".", ",")}
-          </span>
+          <span className="text-2xl font-semibold">R$ {plan?.cost?.toString().replace('.', ',')}</span>
           <span>/ Mês</span>
         </div>
-        <p className="mb-6 mt-2 font-normal">{plan.description}</p>
+        <p className="mb-6 mt-2 font-normal">
+          {plan.description}
+          {user.plan.planId !== 3 && plan.active && (
+            <span className=""> ({user.plan.recipeCount} receitas restantes)</span>
+          )}
+        </p>
         {!plan.active && plan.id > user.plan.planId && (
           <Button
             loading={loading}

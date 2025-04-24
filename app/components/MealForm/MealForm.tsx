@@ -1,32 +1,31 @@
-import React, { ChangeEvent, useState, MouseEvent, useEffect } from "react";
-import Image from "next/image";
-import { forwardRef } from "react";
-import { usePathname } from "next/navigation";
-import { useRecipeStore } from "../../store/recipe";
-import { useRouter } from "next/navigation";
-import Loading from "../Loading/Loading";
-import RecipeView from "../RecipeView/RecipeView";
-import Button from "../Button/Button";
-import { auth, db } from "../../hooks/userAuth";
-import { getIdToken } from "firebase/auth";
-import { AlertCircle } from "lucide-react";
-import { useUserStore } from "../../store/user";
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import Link from "next/link";
-import axios from "axios";
+import React, { ChangeEvent, useState, MouseEvent, useEffect } from 'react';
+import Image from 'next/image';
+import { forwardRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { useRecipeStore } from '../../store/recipe';
+import { useRouter } from 'next/navigation';
+import Loading from '../Loading/Loading';
+import RecipeView from '../RecipeView/RecipeView';
+import Button from '../Button/Button';
+import { auth, db } from '../../hooks/userAuth';
+import { getIdToken } from 'firebase/auth';
+import { AlertCircle } from 'lucide-react';
+import { useUserStore } from '../../store/user';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import Link from 'next/link';
+import axios from 'axios';
 import { Bounce, ToastContainer, toast } from 'react-toastify';
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { mealOptions, mealMap } from "./data";
-
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { mealOptions, mealMap } from './data';
 
 const schema = z.object({
-  ingredients: z.string().min(3, "Adicione pelo menos 1 ingrediente"),
-  mealType: z.string().min(1, "Selecione o tipo de refeição"),
+  ingredients: z.string().min(3, 'Adicione pelo menos 1 ingrediente').max(100, 'Limite de 100 caracteres'),
+  mealType: z.string().min(1, 'Selecione o tipo de refeição'),
 });
 
-export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
+export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
     ingredients: storeIngredients,
     recipeLoading,
@@ -40,18 +39,16 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   } = useRecipeStore();
 
   const [error, setError] = useState(false);
-  const [optionMeal, setOptionMeal] = useState("almoco");
-  const [recipeMealOption, setRecipeMealOption] = useState("");
-  const [ingredients, setIngredients] = useState(storeIngredients || "");
-  const pathname = usePathname();
+  const [optionMeal, setOptionMeal] = useState('almoco');
+  const [recipeMealOption, setRecipeMealOption] = useState('');
+  const [ingredients, setIngredients] = useState(storeIngredients || '');
   const router = useRouter();
   const { user } = useUserStore();
 
   let count = user?.plan?.recipeCount;
+  console.log(count, 'coun t')
 
-  const [countRecipes, setCountRecipes] = useState(count);
-
-  const notify = () => toast.error("Ocorreu um erro ao gerar a receita");
+  const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
 
   const {
     register,
@@ -61,23 +58,18 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
     resolver: zodResolver(schema),
   });
 
-
   useEffect(() => {
     if (error) {
       setTimeout(() => {
         notify();
       }, 100);
-      setError(null)
+      setError(null);
     }
   }, [error]);
 
-
-
   const handleChangeMeal = (event) => {
-    const optionMeal = mealOptions.find(
-      (option) => option.value === event.target.value
-    );
-    setOptionMeal(optionMeal.value ? optionMeal.value : "");
+    const optionMeal = mealOptions.find((option) => option.value === event.target.value);
+    setOptionMeal(optionMeal.value ? optionMeal.value : '');
   };
 
   const handleChangeIngredients = (event) => {
@@ -88,14 +80,14 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
     if (!auth.currentUser) {
       updateIngredients(ingredients);
       updateMealOption(optionMeal);
-      router.push("/signup");
+      router.push('/signup');
       return;
     }
 
     const token = await getIdToken(auth.currentUser);
 
     if (!token) {
-      return console.log("unauthorized");
+      return console.log('unauthorized');
     }
 
     setRecipeLoading(true);
@@ -109,38 +101,33 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
         },
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: token,
           },
-        }
+        },
       );
       updateIngredients(null);
       updateMealOption(null);
       setShowRecipe(true);
-      setIngredients("");
+      setIngredients('');
       setRecipe(response.data.response);
       setRecipeMealOption(mealMap[response.data.optionMeal]);
 
-      // contador de receitas
-      const newRecipesCount = countRecipes - 1;
+      const newRecipeCount = count - 1;
 
-      setCountRecipes(newRecipesCount);
-
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        plan: {
-          updatedAt: serverTimestamp(),
-          recipesCount: newRecipesCount,
-        },
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        'plan.updatedAt': serverTimestamp(),
+        'plan.recipeCount': newRecipeCount,
       });
     } catch (error) {
       setRecipeLoading(false);
-      setError(true)
+      setError(true);
 
       return console.log(error);
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
-      }, 4000);
+      }, 2000);
     }
   };
 
@@ -151,15 +138,15 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   return (
     <>
       {!showRecipe && (
-        <form onSubmit={handleSubmit(handleGetRecipe)} className="w-full flex flex-col text-left max-w-[720px]" ref={ref}>
-          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">
-            1
-          </div>
-          <label className="secondary-header py-3">
-            Liste os ingredientes que você possuí em casa
-          </label>
+        <form
+          onSubmit={handleSubmit(handleGetRecipe)}
+          className="w-full flex flex-col text-left max-w-[720px]"
+          ref={ref}
+        >
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">1</div>
+          <label className="secondary-header py-3">Liste os ingredientes que você possuí em casa</label>
           <input
-            {...register("ingredients")}
+            {...register('ingredients')}
             id="Ingredients"
             className="global-input focus:ring-blue-500 focus:border-blue-500"
             placeholder="Digite Seus Ingredientes"
@@ -171,19 +158,12 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
             <br />
             Ex: Arroz, ovo, presunto, queijo
           </span>
-          <span className="text-red-700 text-sm m-2">
-            {errors?.ingredients?.message.toString()}
-          </span>
-          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">
-            2
-          </div>
-          <label className="secondary-header py-3">
-            Selecione qual refeição irá preparar
-          </label>
+          <span className="text-red-700 text-sm m-2">{errors?.ingredients?.message.toString()}</span>
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">2</div>
+          <label className="secondary-header py-3">Selecione qual refeição irá preparar</label>
           <div className="relative mb-12">
             <select
-              {...register("mealType")}
-
+              {...register('mealType')}
               id="countries"
               className="global-input focus:ring-blue-500 focus:border-blue-500"
               onChange={handleChangeMeal}
@@ -194,9 +174,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
                 </option>
               ))}
             </select>
-            <span className="text-red-700 text-sm m-2">
-              {errors?.mealType?.message.toString()}
-            </span>
+            <span className="text-red-700 text-sm m-2">{errors?.mealType?.message.toString()}</span>
             <Image
               src="/images/arrow-down.svg"
               className="top-4 right-4 absolute h-4 w-auto"
@@ -218,11 +196,10 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
                       size={42}
                     />
                     <p>
-                      Você ainda pode gerar {user.plan.recipeCount} receitas.
-                      Faça um{" "}
+                      Você ainda pode gerar {user.plan.recipeCount} receitas. Faça um{' '}
                       <Link className="text-black" href="/plans">
                         upgrade
-                      </Link>{" "}
+                      </Link>{' '}
                       para continuar usando.
                     </p>
                   </>
@@ -236,10 +213,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
                       fill="black"
                       size={42}
                     />
-                    <p>
-                      Você atingiu o limite de receitas. Faça um upgrade para
-                      continuar usando.
-                    </p>
+                    <p>Você atingiu o limite de receitas. Faça um upgrade para continuar usando.</p>
                   </>
                 )}
               </div>
@@ -248,15 +222,12 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
           {user?.plan.recipeCount === 0 ? (
             <Link
               className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
-              href={"/plans"}
+              href={'/plans'}
             >
               Upgrade
             </Link>
           ) : (
-            <Button
-            >
-              Gerar Receita
-            </Button>
+            <Button>Gerar Receita</Button>
           )}
         </form>
       )}
@@ -265,6 +236,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({ }, ref) => {
   );
 });
 
-MealForm.displayName = "MealForm";
+MealForm.displayName = 'MealForm';
 
 export default MealForm;
