@@ -1,97 +1,48 @@
-import Image from "next/image";
-import Link from "next/link";
-import {
-  IconToolsKitchen2,
-  IconUser,
-  IconShoppingBag,
-} from "@tabler/icons-react";
-import { signOut, getAuth } from "firebase/auth";
-import { useRouter } from "next/navigation";
-import { useUserStore } from "../../store/user";
+import { Utensils } from 'lucide-react';
+import Link from 'next/link';
+import { useUserStore } from '../../store/user';
+import { signOut, getAuth } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import Button from '../Button/Button';
+import { IconMenu2 } from '@tabler/icons-react';
 
-export default function MobileMenu({ toggleMenu }) {
+export interface IAppProps {
+  toggleMenu: () => void;
+}
+
+export default function MobileMenu({toggleMenu}: IAppProps) {
   const router = useRouter();
   const auth = getAuth();
-
   const { user } = useUserStore();
 
-  const handleSignout = () => {
-    router.push("/");
-    signOut(auth).then(() => {
-      toggleMenu();
-      router.push("/");
-      console.log("user is signed out");
-    });
-  };
-
-  console.log('rendered', user)
-
-  if (!user) return null;
   return (
-    <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-10">
-      <Image
-        className="absolute right-4"
-        src="./images/close-icon.svg"
-        alt="Fechar Menu"
-        width={30}
-        height={30}
-        onClick={toggleMenu}
-      />
-      <div className="flex flex-col items-center mt-12">
-        <Image
-          className=""
-          src="./images/menu-profile.svg"
-          alt="Foto de perfil"
-          width={80}
-          height={80}
-        />
-        <h2 className="mt-4 text-lg font-semibold">{user.name || user.email}</h2>
-        <span>Plano: {user.plan.name}</span>
-        {user.plan.planId !== 3 && (
-          <span>{user.plan.recipeCount} receitas restantes</span>
-        )}
-      </div>
-      <nav className="mt-8">
-        <ul className="flex flex-col gap-8">
-          <li>
-            <Link
-              className="flex items-center gap-1 text-black no-underline"
-              href="/"
-              onClick={toggleMenu}
-            >
-              <IconToolsKitchen2 size={20} stroke={2} />
-              Criar Receitas
-            </Link>
-          </li>
-          <li>
-            <Link
-              className="flex items-center gap-1 text-black no-underline"
-              href="/plans"
-              onClick={toggleMenu}
-            >
-              <IconShoppingBag size={20} stroke={2} />
-              Meu Plano
-            </Link>
-          </li>
-          <li>
-            <Link
-              className="flex items-center gap-1 text-black no-underline"
-              href="/profile"
-              onClick={toggleMenu}
-            >
-              <IconUser size={20} stroke={2} />
-              Perfil
-            </Link>
-          </li>
-        </ul>
-      </nav>
-      <button
-        className="bg-secondary py-1 px-2 text-white rounded-2xl
-                shadow-lg text-center absolute bottom-4 left-4 text-sm"
-        onClick={handleSignout}
-      >
-        Sair
-      </button>
-    </div>
+    <header className="flex justify-between items-center bg-[#f6e8d3] p-4 shadow-md text-base lg:hidden">
+      <p className="flex items-center gap-2 text-lg">
+        <Utensils className="text-red text-tertiary w-5 h-5" />
+        <Link href="/" className="no-underline text-black">
+          Chefinho IA
+        </Link>
+      </p>
+      {user ? (
+        <IconMenu2 className="absolute top-4 right-4 z-10 cursor-pointer" size={30} stroke={2} onClick={toggleMenu} />
+      ) : (
+        <nav className="text-black">
+          <ul className="flex items-center gap-4">
+            <li>
+              <Link className="no-underline text-black font-normal" href="/signup">
+                Criar conta
+              </Link>
+            </li>
+            <li>
+              <Button className="!py-2 px-4 w-min rounded-md border-none shadow-lg self-center text-sm">
+                <Link className="no-underline text-white font-normal" href="/login">
+                  Login
+                </Link>
+              </Button>
+            </li>
+          </ul>
+        </nav>
+      )}
+    </header>
   );
 }

@@ -22,7 +22,7 @@ export default function RecipeView() {
   return (
     <>
       {showRecipe && (
-        <section className="max-w-4xl mx-auto p-6 rounded-lg ">
+        <section className="max-w-[1200px] mx-auto p-6 rounded-lg ">
           <div>
             <h1 className="text-secondary text-3xl font-bold text-center mt-8">{title}</h1>
             <p className="text-gray-900 mt-4 text-lg">{introduction}</p>

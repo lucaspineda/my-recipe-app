@@ -1,17 +1,16 @@
 'use client';
 import { useState } from 'react';
 import { Rubik } from 'next/font/google';
-import MobileMenu from './components/MobileMenu/MobileMenu';
+import MobileMenuOpen from './components/MobileMenu/MobileMenuOpen';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { IconMenu2 } from '@tabler/icons-react';
 import './globals.css';
 import { useRecipeStore } from './store/recipe';
-import axios from 'axios';
-import { getAuth } from 'firebase/auth';
 IconMenu2;
 import WhatsAppButton from './components/WhatsApp/WhatsApp.jsx';
 import { Bounce, ToastContainer } from 'react-toastify';
 import DesktopMenu from './components/DesktopMenu/DesktopMenu';
+import MobileMenu from './components/MobileMenu/MobileMenu';
 const rubik = Rubik({ subsets: ['latin'] });
 
 export default function RootLayout({ children }) {
@@ -54,10 +53,10 @@ export default function RootLayout({ children }) {
           <div className="hidden sticky z-20 top-0 lg:block">
             <DesktopMenu />
           </div>
-          {isLoggedIn && user && !recipeLoading && (
-            <IconMenu2 className="absolute top-4 right-4 z-10 lg:hidden" size={30} stroke={2} onClick={handleIconClick} />
+          {isLoggedIn && user && !recipeLoading && !openMenu && (
+            <MobileMenu toggleMenu={handleIconClick} />
           )}
-          {openMenu && <MobileMenu toggleMenu={toggleMenu} />}
+          {openMenu && <MobileMenuOpen toggleMenu={toggleMenu} />}
           <div className="relative p-5">{children}</div>
           <WhatsAppButton />
         </ProtectedRoute>

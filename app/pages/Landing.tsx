@@ -17,14 +17,14 @@ export default function Landing() {
           width={400}
           height={180}
           alt="landing page decoration"
-          className="absolute left-0 top-0 w-auto md:w-[1200px]"
+          className="absolute left-0 top-[-20px] w-auto md:w-[1200px]"
         />
         <Image
           src="/images/people-cooking.svg"
           width={250}
           height={200}
           alt="test"
-          className="mt-24 z-10 w-auto"
+          className="mt-20 z-10 w-auto"
         />
         <h1 className="font-semibold mt-16 z-10">Chefinho IA</h1>
         <article className="mt-4 w-80 z-10 md:w-[420px] md:text-lg">
