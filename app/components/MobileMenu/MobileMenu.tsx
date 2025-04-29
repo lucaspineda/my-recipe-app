@@ -34,10 +34,11 @@ export default function MobileMenu({toggleMenu}: IAppProps) {
               </Link>
             </li>
             <li>
-              <Button className="!py-2 px-4 w-min rounded-md border-none shadow-lg self-center text-sm">
-                <Link className="no-underline text-white font-normal" href="/login">
-                  Login
-                </Link>
+              <Button
+                className="!py-2 px-4 w-min rounded-md border-none shadow-lg self-center text-sm"
+                onClick={() => router.push('/login')}
+              >
+                Login
               </Button>
             </li>
           </ul>
