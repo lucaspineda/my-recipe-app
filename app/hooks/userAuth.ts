@@ -102,9 +102,13 @@ export const useUserAuth = () => {
       }
 
       return userCredential.user;
-    } catch {
-      setError("Erro ao cadastrar");
-      console.log("erro ao cadastrar usuário");
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        setError("Este e-mail já está cadastrado.");
+      } else {
+        setError("Erro ao cadastrar");
+        console.log(error);
+      }
     } finally {
       setLoading(false);
     }
