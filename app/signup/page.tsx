@@ -72,14 +72,6 @@ export default function Signup() {
             placeholder="Digite sua senha"
             onChange={(e) => {
               setPassword(e.target.value);
-              const event = {
-                ...e,
-                target: {
-                  ...e.target,
-                  value: e.target.value,
-                },
-              };
-              register("password").onChange(event);
             }}
           />
           <ul className="text-sm mt-2 ml-2 space-y-1">
