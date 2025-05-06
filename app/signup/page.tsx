@@ -10,11 +10,22 @@ import { useUserAuth } from "../hooks/userAuth";
 import Button from "../components/Button/Button";
 
 export default function Signup() {
+  const [password, setPassword] = useState("");
+  
+  const checks = {
+    minLength: password.length >= 8,
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+  };
+
   const router = useRouter();
 
   const schema = z.object({
     email: z.string().email("Email não é válido"),
-    password: z.string({ required_error: "Senha é obrigatório" }).min(1, "Senha é obrigatório"),
+    password: z.string({ required_error: "Senha é obrigatório" })
+      .min(8, "A senha deve ter pelo menos 8 caracteres")
+      .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
+      .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
   });
 
   const { signUpWithEmail, loading, error: signUpError } = useUserAuth();
@@ -59,7 +70,30 @@ export default function Signup() {
             id="password"
             type="password"
             placeholder="Digite sua senha"
+            onChange={(e) => {
+              setPassword(e.target.value);
+              const event = {
+                ...e,
+                target: {
+                  ...e.target,
+                  value: e.target.value,
+                },
+              };
+              register("password").onChange(event);
+            }}
           />
+          <ul className="text-sm mt-2 ml-2 space-y-1">
+            <li className={checks.minLength ? "text-green-600" : "text-red-500"}>
+              {checks.minLength ? "✔" : "○"} Pelo menos 8 caracteres
+            </li>
+            <li className={checks.hasUpperCase ? "text-green-600" : "text-red-500"}>
+              {checks.hasUpperCase ? "✔" : "○"} Pelo menos uma letra maiúscula
+            </li>
+            <li className={checks.hasLowerCase ? "text-green-600" : "text-red-500"}>
+              {checks.hasLowerCase ? "✔" : "○"} Pelo menos uma letra minúscula
+            </li>
+          </ul>
+
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
               {typeof errors?.password?.message === "string" && errors?.password?.message}
