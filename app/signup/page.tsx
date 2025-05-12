@@ -11,7 +11,8 @@ import Button from "../components/Button/Button";
 
 export default function Signup() {
   const [password, setPassword] = useState("");
-  
+  const [passwordChecks, setPasswordChecks] = useState(false);
+
   const checks = {
     minLength: password.length >= 8,
     hasUpperCase: /[A-Z]/.test(password),
@@ -72,20 +73,22 @@ export default function Signup() {
             placeholder="Digite sua senha"
             onChange={(e) => {
               setPassword(e.target.value);
+              setPasswordChecks(true);
             }}
           />
-          <ul className="text-sm mt-2 ml-2 space-y-1">
-            <li className={checks.minLength ? "text-green-600" : "text-red-500"}>
-              {checks.minLength ? "✔" : "○"} Pelo menos 8 caracteres
-            </li>
-            <li className={checks.hasUpperCase ? "text-green-600" : "text-red-500"}>
-              {checks.hasUpperCase ? "✔" : "○"} Pelo menos uma letra maiúscula
-            </li>
-            <li className={checks.hasLowerCase ? "text-green-600" : "text-red-500"}>
-              {checks.hasLowerCase ? "✔" : "○"} Pelo menos uma letra minúscula
-            </li>
-          </ul>
-
+          {passwordChecks && (
+            <ul className="text-sm mt-2 ml-2 space-y-1">
+              <li className={checks.minLength ? "text-green-600" : "text-red-500"}>
+                {checks.minLength ? "✔" : "○"} Pelo menos 8 caracteres
+              </li>
+              <li className={checks.hasUpperCase ? "text-green-600" : "text-red-500"}>
+                {checks.hasUpperCase ? "✔" : "○"} Pelo menos uma letra maiúscula
+              </li>
+              <li className={checks.hasLowerCase ? "text-green-600" : "text-red-500"}>
+                {checks.hasLowerCase ? "✔" : "○"} Pelo menos uma letra minúscula
+              </li>
+            </ul>
+          )}
           {errors?.password?.message && (
             <span className="text-red-700 text-sm m-2">
               {typeof errors?.password?.message === "string" && errors?.password?.message}

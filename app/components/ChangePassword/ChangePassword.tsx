@@ -17,18 +17,19 @@ const ChangePassword = ({ toggleChangePassword }: ChangePasswordProps) => {
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmationPassword, setConfirmationPassword] = useState<string>("");
+  const passwordValidation = z.string()
+    .min(8, "A senha deve ter pelo menos 8 caracteres")
+    .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
+    .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula");
+
   const schema = z.object({
-    password: z.string().min(6, "No mínimo 6 caracteres"),
-    confirmPassword: z
-      .string()
-      .min(6, "No mínimo 6 caracteres")
-      .refine(
-        (val) => {
-          return val === password;
-        },
-        { message: "As senhas devem ser iguais" }
-      ),
-  });
+      password: passwordValidation,
+      confirmPassword: passwordValidation,
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"], // Indica qual campo será marcado com erro
+      message: "As senhas devem ser iguais",
+    });
 
   const auth = getAuth();
   const user = auth.currentUser;
