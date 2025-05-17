@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { auth, useUserAuth } from '../../hooks/userAuth';
 import { useUserStore } from '../../store/user';
 
-const ProtectedRoute = ({ children, onSetUser }) => {
+const ProtectedRoute = ({ children, onSetUser }: { children: React.ReactNode; onSetUser?: (user: any) => void }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { getUser } = useUserAuth();

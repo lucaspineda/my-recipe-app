@@ -16,7 +16,7 @@ export default function MobileMenu({toggleMenu}: IAppProps) {
   const { user } = useUserStore();
 
   return (
-    <header className="flex justify-between items-center bg-[#f6e8d3] p-4 shadow-md text-base lg:hidden">
+    <header className="flex justify-between items-center bg-[#f6e8d3] p-3 shadow-md text-base">
       <p className="flex items-center gap-2 text-lg">
         <Utensils className="text-red text-tertiary w-5 h-5" />
         <Link href="/" className="no-underline text-black">

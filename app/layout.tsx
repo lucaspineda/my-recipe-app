@@ -1,71 +1,37 @@
-'use client';
-import { useState } from 'react';
-import { Rubik } from 'next/font/google';
-import MobileMenuOpen from './components/MobileMenu/MobileMenuOpen';
-import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-import { IconMenu2 } from '@tabler/icons-react';
+// app/layout.tsx
 import './globals.css';
-import { useRecipeStore } from './store/recipe';
-IconMenu2;
-import WhatsAppButton from './components/WhatsApp/WhatsApp.jsx';
-import { Bounce, ToastContainer } from 'react-toastify';
-import DesktopMenu from './components/DesktopMenu/DesktopMenu';
-import MobileMenu from './components/MobileMenu/MobileMenu';
+import { Rubik } from 'next/font/google';
+import ClientWrapper from './components/ClientWrapper';
 const rubik = Rubik({ subsets: ['latin'] });
+import { Metadata } from 'next';
+import Head from 'next/head';
+
+export const metadata = {
+  title: 'Chefinho IA - Seu assistente para criar receitas com inteligência artificial',
+  description: 'Crie receitas com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!',
+  openGraph: {
+    title: 'Chefinho IA',
+    description: 'Receitas inteligentes com IA para o seu dia a dia.',
+    url: 'https://www.chefinhoia.com.br/',
+    type: 'website',
+    images: ['https://www.chefinhoia.com.br/og-image.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Chefinho IA',
+    description: 'Descubra receitas personalizadas com inteligência artificial.',
+    images: ['https://www.chefinhoia.com.br/og-image.png'],
+  },
+  icons: {
+    icon: '/icon.ico',
+  },
+};
 
 export default function RootLayout({ children }) {
-  // Todo: retrive loggendIn data from auth system
-  const [isLoggedIn, setIsloggedIn] = useState(true);
-  const [openMenu, setOpenMenu] = useState(false);
-  const { recipeLoading } = useRecipeStore();
-
-  const toggleMenu = () => {
-    setOpenMenu(!openMenu);
-  };
-
-  const [user, setUser] = useState();
-
-  const onSetUser = (user) => {
-    setUser(user);
-  };
-
-  const handleIconClick = () => {
-    toggleMenu();
-  };
-
   return (
-    <html lang="en">
-      <head>
-        <link
-          rel="icon"
-          href={`data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍🍳</text></svg>`}
-        />
-      </head>
+    <html lang="pt-BR">
       <body className={rubik.className}>
-        <ProtectedRoute onSetUser={(user) => onSetUser(user)}>
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick={false}
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-            transition={Bounce}
-          />
-          <div className="hidden sticky z-20 top-0 lg:block">
-            <DesktopMenu />
-          </div>
-          {isLoggedIn && user && !recipeLoading && !openMenu && (
-            <MobileMenu toggleMenu={handleIconClick} />
-          )}
-          {openMenu && <MobileMenuOpen toggleMenu={toggleMenu} />}
-          <div className="relative p-5">{children}</div>
-          <WhatsAppButton />
-        </ProtectedRoute>
+        <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
   );
