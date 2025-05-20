@@ -46,7 +46,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const { user } = useUserStore();
 
   let count = user?.plan?.recipeCount;
-  console.log(count, 'coun t')
 
   const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
 
