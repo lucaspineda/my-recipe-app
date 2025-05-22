@@ -26,7 +26,7 @@ export const metadata = {
     images: ['https://www.chefinhoia.com.br/og-image.png'],
   },
   icons: {
-    icon: '/icon.ico',
+    icon: '/favicon.ico',
   },
 };
 
