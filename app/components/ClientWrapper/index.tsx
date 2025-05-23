@@ -1,14 +1,13 @@
-// components/ClientWrapper/index.tsx
 'use client';
 
 import { useState } from 'react';
 import { Bounce, ToastContainer } from 'react-toastify';
-import { useRecipeStore } from '../../store/recipe';
 import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
 import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
 import WhatsAppButton from '../WhatsApp/WhatsApp';
+import Clarity from '@microsoft/clarity';
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [openMenu, setOpenMenu] = useState(false);
@@ -18,6 +17,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const handleIconClick = () => {
     toggleMenu();
   };
+  const projectId = 'rnup5ef83c';
+
+  Clarity.init(projectId);
 
   return (
     <ProtectedRoute>

@@ -3,14 +3,13 @@ import './globals.css';
 import { Rubik } from 'next/font/google';
 import ClientWrapper from './components/ClientWrapper';
 const rubik = Rubik({ subsets: ['latin'] });
-import { GoogleAnalytics } from '@next/third-parties/google'
-import { GoogleTagManager } from '@next/third-parties/google'
-
-import { Metadata } from 'next';
+import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleTagManager } from '@next/third-parties/google';
 
 export const metadata = {
   title: 'Chefinho IA - Criador de receitas com IA',
-  keywords: 'receitas, inteligência artificial, IA, comida, culinária, receitas personalizadas, comidas saudáveis, receita para almoço, receita para jantar, receitas fáceis, receitas rápidas',
+  keywords:
+    'receitas, inteligência artificial, IA, comida, culinária, receitas personalizadas, comidas saudáveis, receita para almoço, receita para jantar, receitas fáceis, receitas rápidas',
   description: 'Crie receitas com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!',
   openGraph: {
     title: 'Chefinho IA',

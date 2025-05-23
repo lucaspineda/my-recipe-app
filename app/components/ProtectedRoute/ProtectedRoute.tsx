@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { auth, useUserAuth } from '../../hooks/userAuth';
 import { useUserStore } from '../../store/user';
 
-const ProtectedRoute = ({ children, onSetUser }: { children: React.ReactNode; onSetUser?: (user: any) => void }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { getUser } = useUserAuth();
@@ -14,7 +14,6 @@ const ProtectedRoute = ({ children, onSetUser }: { children: React.ReactNode; on
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         getUser();
-        onSetUser(user);
 
         if (pathname === '/login' || pathname === '/signup' || pathname === '/password-reset' || pathname === '/') {
           router.push('/recipe');
@@ -30,7 +29,7 @@ const ProtectedRoute = ({ children, onSetUser }: { children: React.ReactNode; on
     return () => {
       unsubscribe();
     };
-  }, [onSetUser, pathname, router]);
+  }, [pathname, router]);
 
   return <div>{children}</div>;
 };
