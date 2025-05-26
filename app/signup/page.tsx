@@ -59,8 +59,9 @@ export default function Signup() {
             {...register("email")}
             className="global-input"
             id="login"
-            type="string"
+            type="text"
             placeholder="Digite seu e-mail"
+            data-clarity-unmask="true"
           />
           {errors?.email?.message && (
             <span className="text-red-700 text-sm m-2">
@@ -74,6 +75,7 @@ export default function Signup() {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Digite sua senha"
+              data-clarity-mask="true"
               onChange={(e) => {
                 setPassword(e.target.value);
                 setPasswordChecks(true);

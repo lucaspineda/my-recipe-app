@@ -151,6 +151,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
             placeholder="Digite Seus Ingredientes"
             value={ingredients}
             onChange={handleChangeIngredients}
+            data-clarity-unmask="true"
+            type='text'
           />
           <span className="text-sm mt-4">
             Separe os seus ingrediente por vírgula

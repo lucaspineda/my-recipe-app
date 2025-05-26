@@ -27,6 +27,7 @@ const EditProfileField = ({ handleOpen, ...rest }: EditProfileFieldProps) => {
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        data-clarity-unmask="true"
         {...rest}
       />
       {error && <span className="text-red-700 text-sm m-2">{error}</span>}

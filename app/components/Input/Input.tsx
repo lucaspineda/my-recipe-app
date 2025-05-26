@@ -1,6 +1,6 @@
-import Image from "next/image";
-import React, { forwardRef } from "react";
-import { InputHTMLAttributes } from "react";
+import Image from 'next/image';
+import React, { forwardRef } from 'react';
+import { InputHTMLAttributes } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   imgSource?: string;
@@ -12,11 +12,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative">
         <input
-          ref={ref} // Forward the ref here
+          ref={ref}
           onChange={onChange}
           className={`global-input ${className}`}
           id={id}
-          type="dtring" // Use "text" instead of "string"
+          type="string"
+          data-clarity-unmask="true"
           placeholder={placeholder}
           {...rest}
         />
@@ -27,7 +28,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input'; // Set a display name for debugging
