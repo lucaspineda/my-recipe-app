@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useState, MouseEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { forwardRef } from 'react';
-import { usePathname } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
 import { useRouter } from 'next/navigation';
 import Loading from '../Loading/Loading';
@@ -14,7 +13,7 @@ import { useUserStore } from '../../store/user';
 import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import axios from 'axios';
-import { Bounce, ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,9 +42,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [recipeMealOption, setRecipeMealOption] = useState('');
   const [ingredients, setIngredients] = useState(storeIngredients || '');
   const router = useRouter();
-  const { user } = useUserStore();
-
-  let count = user?.plan?.recipeCount;
+  const { user, updateRecipesCount } = useUserStore();
 
   const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
 
@@ -112,12 +109,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       setRecipe(response.data.response);
       setRecipeMealOption(mealMap[response.data.optionMeal]);
 
-      const newRecipeCount = count - 1;
+      const newRecipeCount = user.plan.recipeCount - 1;
 
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
         'plan.updatedAt': serverTimestamp(),
         'plan.recipeCount': newRecipeCount,
       });
+      updateRecipesCount(newRecipeCount);
     } catch (error) {
       setRecipeLoading(false);
       setError(true);
@@ -126,7 +124,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     } finally {
       setTimeout(() => {
         setRecipeLoading(false);
-      }, 2000);
+      }, 500);
     }
   };
 
@@ -214,7 +212,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                       fill="black"
                       size={42}
                     />
-                    <p>Você atingiu o limite de receitas. Faça um upgrade para continuar usando.</p>
+                    <p>Você atingiu o limite de receitas. Escolha um plano para continuar usando.</p>
                   </>
                 )}
               </div>
@@ -225,7 +223,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
               className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
               href={'/plans'}
             >
-              Upgrade
+              Escolha um plano
             </Link>
           ) : (
             <Button>Gerar Receita</Button>
