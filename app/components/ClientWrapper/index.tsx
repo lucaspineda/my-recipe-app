@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bounce, ToastContainer } from 'react-toastify';
 import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
@@ -8,8 +8,16 @@ import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
 import WhatsAppButton from '../WhatsApp/WhatsApp';
 import Clarity from '@microsoft/clarity';
+import TagManager from 'react-gtm-module';
 
+const tagManagerArgs = {
+  gtmId: 'GTM-T7SJQKP2',
+};
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    console.log('init gtm')
+    TagManager.initialize(tagManagerArgs);
+  }, []);
   const [openMenu, setOpenMenu] = useState(false);
 
   const toggleMenu = () => setOpenMenu(!openMenu);
