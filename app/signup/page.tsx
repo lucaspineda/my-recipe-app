@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useUserAuth } from "../hooks/userAuth";
 import Button from "../components/Button/Button";
 import { Eye, EyeOff } from "lucide-react";
+import GoogleSignInButton from "../components/GoogleButton/GoogleButton";
+import { auth } from '../hooks/userAuth';
 
 export default function Signup() {
   const [password, setPassword] = useState("");
@@ -51,6 +53,16 @@ export default function Signup() {
       <div className="flex flex-col">
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Crie sua conta</h2>
+        <GoogleSignInButton
+          auth={auth}
+        >
+        </GoogleSignInButton>
+        <div className="flex items-center my-4">
+          <hr className="flex-grow border-t border-gray-400" />
+          <span className="mx-4 text-sm text-gray-700">Ou continuar com e-mail</span>
+          <hr className="flex-grow border-t border-gray-400" />
+        </div>
+
         <form
           onSubmit={handleSubmit(handleSignUpWithEmail)}
           className="flex flex-col text-left"
