@@ -5,6 +5,7 @@ import ClientWrapper from './components/ClientWrapper';
 const rubik = Rubik({ subsets: ['latin'] });
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { GoogleTagManager } from '@next/third-parties/google';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export const metadata = {
   title: 'Chefinho IA - Criador de receitas com IA',
@@ -33,7 +34,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body className={rubik.className}>
-        <ClientWrapper>{children}</ClientWrapper>
+        <GoogleOAuthProvider clientId={process.env.GOOGLE_OAUTH_PROVIDER_CLIENT_ID}>
+          <ClientWrapper>{children}</ClientWrapper>
+        </GoogleOAuthProvider>
       </body>
       <GoogleAnalytics gaId="G-CX5QCT2T50" />
       <GoogleTagManager gtmId="AW-1707145258" />
