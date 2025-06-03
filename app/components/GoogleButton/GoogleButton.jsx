@@ -21,17 +21,27 @@ export default function GoogleSignInButton({ auth }) {
       const credential = GoogleAuthProvider.credential(null, accessToken);
       const userCredential = await signInWithCredential(auth, credential);
       const user = userCredential.user;
+      console.log('Usuário autenticado com sucesso:', user);
 
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists()) {
-        console.log('Usuário não encontrado no Firestore, criando novo usuário...');
-        await createUserInDB(user.email);
+      // Aguarda até que auth.currentUser esteja disponível
+      let tentativas = 0;
+      while (!auth.currentUser && tentativas < 10) {
+        await new Promise((res) => setTimeout(res, 100));
+        tentativas++;
       }
+
+      // Só chama se auth.currentUser estiver disponível
+      if (auth.currentUser) {
+        await createUserInDB(user.email);
+      } else {
+        console.log('auth.currentUser ainda está null após o login');
+        notify();
+      }
+
       return userCredential;
     } catch (error) {
       console.error('signInWithGoogleAccessToken error:', error);
       notify();
-
     } finally {
       setLoading(false);
     }
