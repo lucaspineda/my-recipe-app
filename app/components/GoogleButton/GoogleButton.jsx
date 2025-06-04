@@ -4,15 +4,16 @@ import GoogleIcon from './GoogleIcon';
 import { useGoogleLogin } from '@react-oauth/google';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useUserAuth } from '../../hooks/userAuth';
-import { doc, getDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import { db } from '../../hooks/userAuth';
 import { toast } from 'react-toastify';
+import { getAuth } from 'firebase/auth';
 
 const notify = () => toast.error('Erro ao entrar com o Google. Tente novamente.');
 
-export default function GoogleSignInButton({ auth }) {
-  const { createUserInDB } = useUserAuth();
+export default function GoogleSignInButton() {
+    const auth = getAuth();
+  
+  const { getUserByUid, createUserInDBByUid, getUser } = useUserAuth();
   const [loading, setLoading] = useState(false);
 
   const signInWithGoogleAccessToken = async (accessToken) => {
@@ -20,24 +21,17 @@ export default function GoogleSignInButton({ auth }) {
     try {
       const credential = GoogleAuthProvider.credential(null, accessToken);
       const userCredential = await signInWithCredential(auth, credential);
+      console.log(userCredential, 'userCredential')
       const user = userCredential.user;
-      console.log('Usuário autenticado com sucesso:', user);
-
-      // Aguarda até que auth.currentUser esteja disponível
-      let tentativas = 0;
-      while (!auth.currentUser && tentativas < 10) {
-        await new Promise((res) => setTimeout(res, 100));
-        tentativas++;
-      }
-
-      // Só chama se auth.currentUser estiver disponível
-      if (auth.currentUser) {
-        await createUserInDB(user.email);
+      const userExists = await getUserByUid(user.uid) || false;
+      if (!userExists) {
+        await createUserInDBByUid(user.email, user.uid);
       } else {
-        console.log('auth.currentUser ainda está null após o login');
-        notify();
+        console.log('Usuário já existe no banco de dados:', user.email);
       }
-
+      // TODO: need to refactor and remove duplicate getUser functions calls
+      getUser()
+      console.log('Usuário autenticado com sucesso:', user.email);
       return userCredential;
     } catch (error) {
       console.error('signInWithGoogleAccessToken error:', error);
@@ -70,7 +64,7 @@ export default function GoogleSignInButton({ auth }) {
         <i>
           <GoogleIcon />
         </i>
-        <span className="text-gray-500">
+        <span className="text-gray-800">
           {loading ? 'Entrando...' : 'Entrar com o Google'}
         </span>
       </button>

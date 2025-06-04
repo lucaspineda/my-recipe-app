@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body className={rubik.className}>
-        <GoogleOAuthProvider clientId={process.env.GOOGLE_OAUTH_PROVIDER_CLIENT_ID}>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID}>
           <ClientWrapper>{children}</ClientWrapper>
         </GoogleOAuthProvider>
       </body>
