@@ -6,7 +6,6 @@ import {
   signInWithEmailAndPassword,
   updatePassword,
   User,
-  signOut,
 } from "firebase/auth";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { initializeApp } from "firebase/app";
@@ -52,7 +51,19 @@ export const useUserAuth = () => {
       setUser(user as UserDB);
     } else {
       console.log("No such user document!");
-      signOut(auth)
+      // signOut(auth)
+    }
+  };
+
+  const getUserByUid = async (uid: string) => {
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const user = docSnap.data();
+      return user;
+    } else {
+      console.log("No such user document!!");
+      return null;
     }
   };
 
@@ -71,12 +82,23 @@ export const useUserAuth = () => {
     }
   };
 
+  // TODO: Refatorar para não usar o auth.currentUser.uid
   const createUserInDB = async (email) => {
     await setDoc(doc(db, "users", auth.currentUser.uid), {
       email,
       createdAt: serverTimestamp(),
       plan: FreePlan,
     });
+    console.log("Usuário criado no Firestore com sucesso");
+  };
+
+  const createUserInDBByUid = async (email, uid) => {
+    await setDoc(doc(db, "users", uid), {
+      email,
+      createdAt: serverTimestamp(),
+      plan: FreePlan,
+    });
+    console.log("Usuário criado no Firestore com sucesso");
   };
 
   const registerLoginInDB = async (email) => {
@@ -198,6 +220,9 @@ export const useUserAuth = () => {
     reauthenticateAndSaveNewPassword,
     sendPasswordRecoverEmail,
     error,
-    loading
+    loading,
+    createUserInDB,
+    getUserByUid,
+    createUserInDBByUid,
   };
 };
