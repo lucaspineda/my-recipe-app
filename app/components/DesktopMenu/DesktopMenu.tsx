@@ -2,6 +2,7 @@ import Link from 'next/link';
 import * as React from 'react';
 import { Utensils } from 'lucide-react';
 import { useUserStore } from '../../store/user';
+import { useRecipeStore } from '../../store/recipe';
 import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../Button/Button';
@@ -10,10 +11,12 @@ export default function DesktopMenu() {
   const router = useRouter();
   const auth = getAuth();
   const { user } = useUserStore();
+  const { setShowRecipe } = useRecipeStore();
 
   const handleSignout = () => {
     router.push('/');
     signOut(auth).then(() => {
+      setShowRecipe(false);
       router.push('/');
       console.log('user is signed out');
     });
