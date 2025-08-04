@@ -18,9 +18,10 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mealOptions, mealMap } from './data';
+import IngredientsInput from '../IngredientsInput';
 
 const schema = z.object({
-  ingredients: z.string().min(3, 'Adicione pelo menos 1 ingrediente').max(100, 'Limite de 100 caracteres'),
+  ingredients: z.array(z.string()).min(1, 'Adicione pelo menos 1 ingrediente'),
   mealType: z.string().min(1, 'Selecione o tipo de refeição'),
 });
 
@@ -40,7 +41,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [error, setError] = useState(false);
   const [optionMeal, setOptionMeal] = useState('almoco');
   const [recipeMealOption, setRecipeMealOption] = useState('');
-  const [ingredients, setIngredients] = useState(storeIngredients || '');
+  const [ingredients, setIngredients] = useState<string[]>([]);
   const router = useRouter();
   const { user, updateRecipesCount } = useUserStore();
 
@@ -68,13 +69,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     setOptionMeal(optionMeal.value ? optionMeal.value : '');
   };
 
-  const handleChangeIngredients = (event) => {
-    setIngredients(event.target.value);
+  const handleIngredientsChange = (newIngredients: string[]) => {
+    setIngredients(newIngredients);
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
     if (!auth.currentUser) {
-      updateIngredients(ingredients);
+      updateIngredients(ingredients.join(', '));
       updateMealOption(optionMeal);
       router.push('/signup');
       return;
@@ -93,7 +94,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini`,
         {
           optionMeal: optionMeal,
-          ingredients: ingredients,
+          ingredients: ingredients.join(', '),
         },
         {
           headers: {
@@ -105,7 +106,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       updateIngredients(null);
       updateMealOption(null);
       setShowRecipe(true);
-      setIngredients('');
+      setIngredients([]);
       setRecipe(response.data.response);
       setRecipeMealOption(mealMap[response.data.optionMeal]);
 
@@ -142,22 +143,15 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         >
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">1</div>
           <label className="secondary-header py-3">Liste os ingredientes que você possuí em casa</label>
-          <input
-            {...register('ingredients')}
-            id="Ingredients"
-            className="global-input focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Digite Seus Ingredientes"
-            value={ingredients}
-            onChange={handleChangeIngredients}
-            data-clarity-unmask="true"
-            type='text'
+          <IngredientsInput
+            selectedIngredients={ingredients}
+            onIngredientsChange={handleIngredientsChange}
+            placeholder="Digite um ingrediente..."
+            className="mb-4"
           />
-          <span className="text-sm mt-4">
-            Separe os seus ingrediente por vírgula
-            <br />
-            Ex: Arroz, ovo, presunto, queijo
-          </span>
-          <span className="text-red-700 text-sm m-2">{errors?.ingredients?.message.toString()}</span>
+          {errors?.ingredients?.message && (
+            <span className="text-red-700 text-sm mt-2">{errors?.ingredients?.message.toString()}</span>
+          )}
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">2</div>
           <label className="secondary-header py-3">Selecione qual refeição irá preparar</label>
           <div className="relative mb-12">
@@ -173,7 +167,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                 </option>
               ))}
             </select>
-            <span className="text-red-700 text-sm m-2">{errors?.mealType?.message.toString()}</span>
+            {errors?.mealType?.message && (
+              <span className="text-red-700 text-sm mt-2">{errors?.mealType?.message.toString()}</span>
+            )}
             <Image
               src="/images/arrow-down.svg"
               className="top-4 right-4 absolute h-4 w-auto"
@@ -228,6 +224,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           ) : (
             <Button>Gerar Receita</Button>
           )}
+          
+          {/* Hidden input para react-hook-form */}
+          <input
+            {...register('ingredients')}
+            type="hidden"
+            value={ingredients}
+          />
         </form>
       )}
       {showRecipe && <RecipeView />}
