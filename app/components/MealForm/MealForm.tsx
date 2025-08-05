@@ -21,7 +21,7 @@ import { mealOptions, mealMap } from './data';
 import IngredientsInput from '../IngredientsInput';
 
 const schema = z.object({
-  ingredients: z.array(z.string()).min(1, 'Adicione pelo menos 1 ingrediente'),
+  ingredients: z.string().min(1, 'Adicione pelo menos 1 ingrediente'),
   mealType: z.string().min(1, 'Selecione o tipo de refeição'),
 });
 
@@ -50,6 +50,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -71,6 +72,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
 
   const handleIngredientsChange = (newIngredients: string[]) => {
     setIngredients(newIngredients);
+    // Atualiza o valor no react-hook-form para validação
+    setValue('ingredients', newIngredients.length > 0 ? newIngredients.join(', ') : '');
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -229,7 +232,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           <input
             {...register('ingredients')}
             type="hidden"
-            value={ingredients}
+            value={ingredients.join(', ')}
           />
         </form>
       )}
