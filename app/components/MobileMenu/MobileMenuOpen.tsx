@@ -4,6 +4,7 @@ import {
   IconToolsKitchen2,
   IconUser,
   IconShoppingBag,
+  IconHeadphones,
 } from "@tabler/icons-react";
 import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -82,6 +83,18 @@ export default function MobileMenuOpen({ toggleMenu }) {
               <IconUser size={20} stroke={2} />
               Perfil
             </Link>
+          </li>
+          <li>
+            <a
+              href="https://wa.me/5511976783992"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-black no-underline"
+              onClick={toggleMenu}
+            >
+              <IconHeadphones size={20} stroke={2} />
+              Suporte
+            </a>
           </li>
         </ul>
       </nav>

@@ -53,6 +53,16 @@ export default function DesktopMenu() {
                 Sair
               </p>
             </li>
+            <li>
+              <a 
+                href="https://wa.me/5511976783992" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="no-underline text-black font-normal"
+              >
+                Suporte
+              </a>
+            </li>
           </ul>
         </nav>
       ) : (
