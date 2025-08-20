@@ -7,15 +7,17 @@ interface SuggestionsListProps {
 }
 
 export default function SuggestionsList({ suggestions, inputValue, onSelect, onAddCustom, isVisible }: SuggestionsListProps) {
+  const safeInputValue = inputValue || '';
+  
   if (!isVisible || suggestions.length === 0) {
     // Show "adicionar" option even when no suggestions match
-    if (!inputValue.trim()) {
+    if (!safeInputValue.trim()) {
       return null;
     }
   }
 
-  const hasExactMatch = suggestions.some(s => s.toLowerCase() === inputValue.toLowerCase());
-  const showAddCustom = inputValue.trim() && !hasExactMatch;
+  const hasExactMatch = suggestions.some(s => s.toLowerCase() === safeInputValue.toLowerCase());
+  const showAddCustom = safeInputValue.trim() && !hasExactMatch;
 
   return (
     <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
@@ -35,10 +37,10 @@ export default function SuggestionsList({ suggestions, inputValue, onSelect, onA
           key="add-custom"
           type="button"
           className="w-full text-left px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-t border-gray-100 text-secondary font-medium transition-colors"
-          onClick={() => onAddCustom(inputValue.trim())}
+          onClick={() => onAddCustom(safeInputValue.trim())}
           onMouseDown={(e) => e.preventDefault()}
         >
-          + Adicionar "{inputValue.trim()}"
+          + Adicionar "{safeInputValue.trim()}"
         </button>
       )}
     </div>
