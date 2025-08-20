@@ -49,11 +49,6 @@ export default function DesktopMenu() {
               </Link>
             </li>
             <li>
-              <p className="no-underline text-black font-normal cursor-pointer" onClick={handleSignout}>
-                Sair
-              </p>
-            </li>
-            <li>
               <a 
                 href="https://wa.me/5511976783992" 
                 target="_blank" 
@@ -62,6 +57,11 @@ export default function DesktopMenu() {
               >
                 Suporte
               </a>
+            </li>
+            <li>
+              <p className="no-underline text-black font-normal cursor-pointer" onClick={handleSignout}>
+                Sair
+              </p>
             </li>
           </ul>
         </nav>
