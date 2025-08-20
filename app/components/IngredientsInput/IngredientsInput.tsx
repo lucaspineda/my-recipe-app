@@ -25,6 +25,7 @@ export default function IngredientsInput({
   useEffect(() => {
     if (inputValue.trim().length === 0) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -36,15 +37,21 @@ export default function IngredientsInput({
       .slice(0, 5);
 
     setSuggestions(filtered);
+    setShowSuggestions(true);
   }, [inputValue, selectedIngredients]);
 
   const addIngredient = (ingredient: string) => {
-    if (!selectedIngredients.includes(ingredient)) {
-      onIngredientsChange([...selectedIngredients, ingredient]);
+    const trimmedIngredient = ingredient.trim();
+    if (trimmedIngredient && !selectedIngredients.includes(trimmedIngredient)) {
+      onIngredientsChange([...selectedIngredients, trimmedIngredient]);
     }
     setInputValue('');
     setShowSuggestions(false);
     inputRef.current?.focus();
+  };
+
+  const addCustomIngredient = (ingredient: string) => {
+    addIngredient(ingredient);
   };
 
   const removeIngredient = (ingredient: string) => {
@@ -53,7 +60,6 @@ export default function IngredientsInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-    setShowSuggestions(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,6 +67,9 @@ export default function IngredientsInput({
       e.preventDefault();
       if (suggestions.length > 0) {
         addIngredient(suggestions[0]);
+      } else if (inputValue.trim()) {
+        // Se não há sugestões, adiciona o valor digitado como ingrediente customizado
+        addCustomIngredient(inputValue.trim());
       }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
@@ -68,7 +77,7 @@ export default function IngredientsInput({
   };
 
   const handleFocus = () => {
-    if (suggestions.length > 0) {
+    if (inputValue.trim()) {
       setShowSuggestions(true);
     }
   };
@@ -99,7 +108,9 @@ export default function IngredientsInput({
         
         <SuggestionsList
           suggestions={suggestions}
+          inputValue={inputValue}
           onSelect={addIngredient}
+          onAddCustom={addCustomIngredient}
           isVisible={showSuggestions}
         />
       </div>
@@ -119,7 +130,7 @@ export default function IngredientsInput({
 
       {/* Helper Text */}
       <p className="text-sm text-gray-600 mt-2">
-        Digite para buscar ingredientes. Pressione Enter ou clique para adicionar.
+        Digite para buscar ingredientes ou adicionar ingredientes personalizados. Pressione Enter ou clique para adicionar.
       </p>
     </div>
   );
