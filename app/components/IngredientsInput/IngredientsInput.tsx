@@ -23,21 +23,15 @@ export default function IngredientsInput({
 
   // Filtra sugestões baseado no input
   useEffect(() => {
-    if (inputValue.trim().length === 0) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
     const filtered = INGREDIENTES
-      .filter(ingredient => 
-        ingredient.toLowerCase().includes(inputValue.toLowerCase()) &&
-        !selectedIngredients.includes(ingredient)
-      )
-      .slice(0, 5);
+      .filter(ingredient => {
+        const matchesInput = inputValue.trim().length === 0 || 
+          ingredient.toLowerCase().includes(inputValue.toLowerCase());
+        return matchesInput && !selectedIngredients.includes(ingredient);
+      })
+      .slice(0, 8); // Aumentei para 8 para mostrar mais opções quando não há filtro
 
     setSuggestions(filtered);
-    setShowSuggestions(true);
   }, [inputValue, selectedIngredients]);
 
   const addIngredient = (ingredient: string) => {
@@ -77,9 +71,7 @@ export default function IngredientsInput({
   };
 
   const handleFocus = () => {
-    if (inputValue.trim()) {
-      setShowSuggestions(true);
-    }
+    setShowSuggestions(true);
   };
 
   const handleBlur = () => {
