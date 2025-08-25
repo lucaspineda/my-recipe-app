@@ -21,7 +21,7 @@ import { mealOptions, mealMap } from './data';
 import IngredientsInput from '../IngredientsInput';
 
 const schema = z.object({
-  ingredients: z.string().min(1, 'Adicione pelo menos 1 ingrediente'),
+  ingredients: z.string(),
   mealType: z.string().min(1, 'Selecione o tipo de refeição'),
 });
 

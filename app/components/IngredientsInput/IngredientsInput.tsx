@@ -21,30 +21,30 @@ export default function IngredientsInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filtra sugestões baseado no input
   useEffect(() => {
-    if (inputValue.trim().length === 0) {
-      setSuggestions([]);
-      return;
-    }
-
     const filtered = INGREDIENTES
-      .filter(ingredient => 
-        ingredient.toLowerCase().includes(inputValue.toLowerCase()) &&
-        !selectedIngredients.includes(ingredient)
-      )
-      .slice(0, 5);
+      .filter(ingredient => {
+        const matchesInput = inputValue.trim().length === 0 || 
+          ingredient.toLowerCase().includes(inputValue.toLowerCase());
+        return matchesInput && !selectedIngredients.includes(ingredient);
+      })
+      .slice(0, 8);
 
     setSuggestions(filtered);
   }, [inputValue, selectedIngredients]);
 
   const addIngredient = (ingredient: string) => {
-    if (!selectedIngredients.includes(ingredient)) {
-      onIngredientsChange([...selectedIngredients, ingredient]);
+    const trimmedIngredient = ingredient.trim();
+    if (trimmedIngredient && !selectedIngredients.includes(trimmedIngredient)) {
+      onIngredientsChange([...selectedIngredients, trimmedIngredient]);
     }
     setInputValue('');
     setShowSuggestions(false);
     inputRef.current?.focus();
+  };
+
+  const addCustomIngredient = (ingredient: string) => {
+    addIngredient(ingredient);
   };
 
   const removeIngredient = (ingredient: string) => {
@@ -53,7 +53,6 @@ export default function IngredientsInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-    setShowSuggestions(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,6 +60,8 @@ export default function IngredientsInput({
       e.preventDefault();
       if (suggestions.length > 0) {
         addIngredient(suggestions[0]);
+      } else if (inputValue.trim()) {
+        addCustomIngredient(inputValue.trim());
       }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
@@ -68,9 +69,7 @@ export default function IngredientsInput({
   };
 
   const handleFocus = () => {
-    if (suggestions.length > 0) {
-      setShowSuggestions(true);
-    }
+    setShowSuggestions(true);
   };
 
   const handleBlur = () => {
@@ -99,7 +98,9 @@ export default function IngredientsInput({
         
         <SuggestionsList
           suggestions={suggestions}
+          inputValue={inputValue}
           onSelect={addIngredient}
+          onAddCustom={addCustomIngredient}
           isVisible={showSuggestions}
         />
       </div>
@@ -119,7 +120,7 @@ export default function IngredientsInput({
 
       {/* Helper Text */}
       <p className="text-sm text-gray-600 mt-2">
-        Digite para buscar ingredientes. Pressione Enter ou clique para adicionar.
+        Digite para buscar ingredientes ou adicionar ingredientes personalizados. Pressione Enter ou clique para adicionar.
       </p>
     </div>
   );
