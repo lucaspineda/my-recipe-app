@@ -40,7 +40,7 @@ export default function SuggestionsList({ suggestions, inputValue, onSelect, onA
           onClick={() => onAddCustom(safeInputValue.trim())}
           onMouseDown={(e) => e.preventDefault()}
         >
-          + Adicionar "{safeInputValue.trim()}"
+          + Adicionar &quot;{safeInputValue.trim()}&quot;
         </button>
       )}
     </div>

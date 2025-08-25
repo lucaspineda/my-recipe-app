@@ -14,7 +14,7 @@ const features = [
   {
     icon: Clock,
     title: "Rápido e Prático",
-    description: "Gere receitas completas em menos de 2 minutos, com instruções claras e detalhadas"
+    description: "Gere receitas completas em menos de 10 segundos, com instruções claras e detalhadas"
   },
   {
     icon: Heart,
