@@ -10,7 +10,6 @@ export default function SuggestionsList({ suggestions, inputValue, onSelect, onA
   const safeInputValue = inputValue || '';
   
   if (!isVisible || suggestions.length === 0) {
-    // Show "adicionar" option even when no suggestions match
     if (!safeInputValue.trim()) {
       return null;
     }

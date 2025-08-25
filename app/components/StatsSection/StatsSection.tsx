@@ -15,7 +15,7 @@ const stats = [
   },
   {
     icon: Clock,
-    number: "2 min",
+    number: "10 seg",
     label: "Tempo Médio",
     description: "Para gerar uma receita completa"
   },

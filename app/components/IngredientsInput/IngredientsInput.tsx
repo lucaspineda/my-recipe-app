@@ -21,7 +21,6 @@ export default function IngredientsInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Filtra sugestões baseado no input
   useEffect(() => {
     const filtered = INGREDIENTES
       .filter(ingredient => {
@@ -29,7 +28,7 @@ export default function IngredientsInput({
           ingredient.toLowerCase().includes(inputValue.toLowerCase());
         return matchesInput && !selectedIngredients.includes(ingredient);
       })
-      .slice(0, 8); // Aumentei para 8 para mostrar mais opções quando não há filtro
+      .slice(0, 8);
 
     setSuggestions(filtered);
   }, [inputValue, selectedIngredients]);
@@ -62,7 +61,6 @@ export default function IngredientsInput({
       if (suggestions.length > 0) {
         addIngredient(suggestions[0]);
       } else if (inputValue.trim()) {
-        // Se não há sugestões, adiciona o valor digitado como ingrediente customizado
         addCustomIngredient(inputValue.trim());
       }
     } else if (e.key === 'Escape') {

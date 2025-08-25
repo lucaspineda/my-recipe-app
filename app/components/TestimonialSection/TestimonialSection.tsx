@@ -87,7 +87,6 @@ export default function TestimonialSection() {
         ))}
       </div>
 
-      {/* Avatares dos usuários */}
       <div className="flex justify-center items-center mt-12 gap-4">
         <div className="flex -space-x-2">
           {[...Array(6)].map((_, i) => (

@@ -51,33 +51,24 @@ export default function HowItWorksSection() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {steps.map((step, index) => (
           <div key={index} className="relative">
-            {/* Linha conectora (apenas para desktop) */}
-            {index < steps.length - 1 && (
-              <div className="hidden md:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-secondary to-tertiary transform translate-x-4 z-0"></div>
-            )}
             
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative z-10">
-              {/* Número do passo */}
               <div className="bg-tertiary text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-6 mx-auto">
                 {step.number}
               </div>
 
-              {/* Ícone */}
               <div className="bg-secondary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
                 <step.icon className="w-8 h-8 text-secondary" />
               </div>
 
-              {/* Título */}
               <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
                 {step.title}
               </h3>
 
-              {/* Descrição principal */}
               <p className="text-gray-600 text-center mb-6 leading-relaxed">
                 {step.description}
               </p>
 
-              {/* Detalhes */}
               <ul className="space-y-2">
                 {step.details.map((detail, detailIndex) => (
                   <li key={detailIndex} className="flex items-start text-sm text-gray-600">
@@ -91,7 +82,6 @@ export default function HowItWorksSection() {
         ))}
       </div>
 
-      {/* Call to action */}
       <div className="text-center mt-12">
         <div className="bg-gradient-to-r from-secondary to-tertiary p-8 rounded-2xl text-white">
           <h3 className="text-2xl font-bold mb-4">

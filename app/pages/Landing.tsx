@@ -45,16 +45,12 @@ export default function Landing() {
         </button>
       </main>
       
-      {/* Seção de Estatísticas */}
       <StatsSection />
       
-      {/* Seção de Funcionalidades */}
       <FeaturesSection />
       
-      {/* Seção Como Funciona */}
       <HowItWorksSection />
       
-      {/* Seção de Depoimentos */}
       <TestimonialSection />
       
       <div data-meal-form>
