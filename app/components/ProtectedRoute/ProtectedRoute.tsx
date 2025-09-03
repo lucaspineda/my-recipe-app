@@ -29,6 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
     return () => {
       unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, router]);
 
   return <div>{children}</div>;

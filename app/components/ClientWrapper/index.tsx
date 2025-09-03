@@ -6,7 +6,6 @@ import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
 import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
-import WhatsAppButton from '../WhatsApp/WhatsApp';
 import Clarity from '@microsoft/clarity';
 import TagManager from 'react-gtm-module';
 
@@ -52,7 +51,6 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       </div>
       {openMenu && <MobileMenuOpen toggleMenu={toggleMenu} />}
       <div className="relative p-5">{children}</div>
-      <WhatsAppButton />
     </ProtectedRoute>
   );
 }

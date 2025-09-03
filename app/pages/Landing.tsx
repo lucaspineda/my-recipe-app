@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import MealForm from "../components/MealForm/MealForm";
-import { useRef } from 'react'
+import { useRef } from 'react';
+import TestimonialSection from "../components/TestimonialSection/TestimonialSection";
+import StatsSection from "../components/StatsSection/StatsSection";
+import FeaturesSection from "../components/FeaturesSection/FeaturesSection";
+import HowItWorksSection from "../components/HowItWorksSection/HowItWorksSection";
 
 export default function Landing() {
   const targetRef = useRef(null);
@@ -40,7 +44,18 @@ export default function Landing() {
           Começar
         </button>
       </main>
-      <MealForm ref={targetRef} />
+      
+      <StatsSection />
+      
+      <FeaturesSection />
+      
+      <HowItWorksSection />
+      
+      <TestimonialSection />
+      
+      <div data-meal-form>
+        <MealForm ref={targetRef} />
+      </div>
     </div>
   );
 }
