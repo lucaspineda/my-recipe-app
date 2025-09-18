@@ -29,7 +29,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
 
   if (!user) return null;
   return (
-    <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-10">
+    <div className="mobile-menu flex flex-col fixed w-screen h-screen bg-black z-30 top-0">
       <Image
         className="absolute right-4"
         src="./images/close-icon.svg"
