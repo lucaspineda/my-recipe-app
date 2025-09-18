@@ -110,7 +110,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             </div>
             <div className="flex gap-2 ml-4">
               <Button
-                variant={saved ? "default" : "outline"}
+                variant={saved ? "saved" : "noSaved"}
                 size="icon"
                 onClick={handleSave}
                 disabled={isLoading}
@@ -122,7 +122,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
                 )}
               </Button>
               <Button
-                variant="outline"
+                variant="orange"
                 size="icon"
                 onClick={() => setShareDialogOpen(true)}
               >
@@ -131,13 +131,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
+          <div className="flex flex-wrap gap-4 mt-4">
+            <Badge  className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
               prep time
             </Badge>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
+            <Badge  className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
               1 porção
             </Badge>
           </div>
@@ -210,7 +210,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             <Button
               onClick={handleSave}
               disabled={isLoading}
-              className="flex-1 bg-[#4CAF50] text-white font-semibold hover:bg-[#388E3C] transition-colors"
+              variant="secondary"
+              className="flex-1  text-white font-semibold transition-colors"
             >
               {saved ? <Bookmark className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
               {saved ? "Salva" : "Salvar Receita"}
@@ -228,10 +229,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
       {/* Modal de compartilhar */}
     <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-recipe-orange text-white">
+  <DialogContent className="sm:max-w-md bg-white text-black">
     <DialogHeader>
-      <DialogTitle className="text-white">Compartilhar Receita</DialogTitle>
-      <DialogDescription className="text-white/90">
+      <DialogTitle className="text-black">Compartilhar Receita</DialogTitle>
+      <DialogDescription className="text-black/90">
         Escolha como você deseja compartilhar esta receita deliciosa.
       </DialogDescription>
     </DialogHeader>
@@ -240,7 +241,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       {/* Copiar link */}
       <Button
         onClick={() => handleShare("link")}
-        className="bg-white text-recipe-brown hover:bg-gray-200 flex items-center gap-2"
+        className="bg-gray-200 text-recipe-brown hover:bg-gray-300 flex items-center gap-2"
       >
         <Link className="w-4 h-4" />
         Copiar Link
