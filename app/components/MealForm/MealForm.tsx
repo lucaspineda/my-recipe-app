@@ -219,13 +219,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           )}
           {user?.plan.recipeCount === 0 ? (
             <Link
-              className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
+              className="mb-20 flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
               href={'/plans'}
             >
               Escolha um plano
             </Link>
           ) : (
-            <Button>Gerar Receita</Button>
+            <Button className='mb-20'>Gerar Receita</Button>
           )}
           
           {/* Hidden input para react-hook-form */}
