@@ -25,13 +25,17 @@ const firebaseConfig = {
   projectId: "recipe-app-1bbdc",
 };
 export const app = initializeApp(firebaseConfig);
+import { browserLocalPersistence, setPersistence } from 'firebase/auth';
 export const auth = getAuth(app);
+// Enable persistent auth state
+setPersistence(auth, browserLocalPersistence);
 export const db = getFirestore(app);
 
 const FreePlan: UserPlan = {
   recipeCount: 3,
   planId: 1,
   startedAt: serverTimestamp(),
+ 
   name: "Básico",
   cost: 0,
 };
