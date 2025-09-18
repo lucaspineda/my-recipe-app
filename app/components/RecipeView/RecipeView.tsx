@@ -132,11 +132,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-4 mt-4">
-            <Badge  className="flex items-center gap-1">
+            <Badge className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               prep time
             </Badge>
-            <Badge  className="flex items-center gap-1">
+            <Badge className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               1 porção
             </Badge>
@@ -211,7 +211,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               onClick={handleSave}
               disabled={isLoading}
               variant="secondary"
-              className="flex-1  text-white font-semibold transition-colors"
+              className="flex-1 text-white font-semibold transition-colors"
             >
               {saved ? <Bookmark className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
               {saved ? "Salva" : "Salvar Receita"}
@@ -223,59 +223,67 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               <Share2 className="w-4 h-4" />
               Compartilhar
             </Button>
+
+            <Button
+              variant="secondary"
+              className="flex-1 text-white font-semibold transition-colors"
+              onClick={handleGetOtherRecipe}
+            >
+              Gerar outra receita
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Modal de compartilhar */}
-    <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-  <DialogContent className="sm:max-w-md bg-white text-black">
-    <DialogHeader>
-      <DialogTitle className="text-black">Compartilhar Receita</DialogTitle>
-      <DialogDescription className="text-black/90">
-        Escolha como você deseja compartilhar esta receita deliciosa.
-      </DialogDescription>
-    </DialogHeader>
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black">Compartilhar Receita</DialogTitle>
+            <DialogDescription className="text-black/90">
+              Escolha como você deseja compartilhar esta receita deliciosa.
+            </DialogDescription>
+          </DialogHeader>
 
-    <div className="grid grid-cols-2 gap-3 py-4">
-      {/* Copiar link */}
-      <Button
-        onClick={() => handleShare("link")}
-        className="bg-gray-200 text-recipe-brown hover:bg-gray-300 flex items-center gap-2"
-      >
-        <Link className="w-4 h-4" />
-        Copiar Link
-      </Button>
+          <div className="grid grid-cols-2 gap-3 py-4">
+            {/* Copiar link */}
+            <Button
+              onClick={() => handleShare("link")}
+              className="bg-gray-200 text-recipe-brown hover:bg-gray-300 flex items-center gap-2"
+            >
+              <Link className="w-4 h-4" />
+              Copiar Link
+            </Button>
 
-      {/* WhatsApp */}
-      <Button
-        onClick={() => handleShare("whatsapp")}
-        className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-2"
-      >
-        <MessageCircle className="w-4 h-4" />
-        WhatsApp
-      </Button>
+            {/* WhatsApp */}
+            <Button
+              onClick={() => handleShare("whatsapp")}
+              className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
+            </Button>
 
-      {/* Facebook */}
-      <Button
-        onClick={() => handleShare("facebook")}
-        className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
-      >
-        <Facebook className="w-4 h-4" />
-        Facebook
-      </Button>
+            {/* Facebook */}
+            <Button
+              onClick={() => handleShare("facebook")}
+              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Facebook className="w-4 h-4" />
+              Facebook
+            </Button>
 
-      {/* Twitter */}
-      <Button
-        onClick={() => handleShare("twitter")}
-        className="bg-sky-500 text-white hover:bg-sky-600 flex items-center gap-2"
-      >
-        <Twitter className="w-4 h-4" />
-        Twitter
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+            {/* Twitter */}
+            <Button
+              onClick={() => handleShare("twitter")}
+              className="bg-sky-500 text-white hover:bg-sky-600 flex items-center gap-2"
+            >
+              <Twitter className="w-4 h-4" />
+              Twitter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </>
   );
