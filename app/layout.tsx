@@ -6,6 +6,7 @@ const rubik = Rubik({ subsets: ['latin'] });
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Footer from './components/Footer/Footer';
 
 export const metadata = {
   title: 'Chefinho IA - Criador de receitas com IA',
@@ -33,9 +34,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className={rubik.className}>
+      <body className={`${rubik.className} flex flex-col min-h-screen`}>
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID}>
           <ClientWrapper>{children}</ClientWrapper>
+          <Footer />
         </GoogleOAuthProvider>
       </body>
       <GoogleAnalytics gaId="G-CX5QCT2T50" />

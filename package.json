@@ -12,6 +12,7 @@
     "set-project": "gcloud config set run/region us-central1 && gcloud config set project recipe-app-1bbdc"
   },
   "dependencies": {
+    "@greatsumini/react-facebook-login": "^3.4.0",
     "@hookform/resolvers": "^3.9.0",
     "@lottiefiles/dotlottie-react": "^0.9.0",
     "@microsoft/clarity": "^1.0.0",

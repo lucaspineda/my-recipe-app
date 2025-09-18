@@ -2,7 +2,7 @@ import React, { ChangeEvent, useState, MouseEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { forwardRef } from 'react';
 import { useRecipeStore } from '../../store/recipe';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Loading from '../Loading/Loading';
 import RecipeView from '../RecipeView/RecipeView';
 import Button from '../Button/Button';
@@ -43,6 +43,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [recipeMealOption, setRecipeMealOption] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, updateRecipesCount } = useUserStore();
 
   const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
@@ -65,6 +66,16 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    const savedIngredients = localStorage.getItem('ingredients');
+    if (savedIngredients && pathname === '/recipe') {
+      const parsedIngredients = JSON.parse(savedIngredients);
+      setIngredients(parsedIngredients);
+      setValue('ingredients', parsedIngredients.length > 0 ? parsedIngredients.join(', ') : '');
+      localStorage.removeItem('ingredients');
+    }
+  }, [pathname, setValue]);
+
   const handleChangeMeal = (event) => {
     const optionMeal = mealOptions.find((option) => option.value === event.target.value);
     setOptionMeal(optionMeal.value ? optionMeal.value : '');
@@ -72,8 +83,10 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
 
   const handleIngredientsChange = (newIngredients: string[]) => {
     setIngredients(newIngredients);
-    // Atualiza o valor no react-hook-form para validação
     setValue('ingredients', newIngredients.length > 0 ? newIngredients.join(', ') : '');
+    if(pathname === '/') {
+      localStorage.setItem('ingredients', JSON.stringify(newIngredients));
+    }
   };
 
   const handleGetRecipe = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -219,13 +232,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           )}
           {user?.plan.recipeCount === 0 ? (
             <Link
-              className="flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
+              className="mb-20 flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
               href={'/plans'}
             >
               Escolha um plano
             </Link>
           ) : (
-            <Button>Gerar Receita</Button>
+            <Button className='mb-20'>Gerar Receita</Button>
           )}
           
           {/* Hidden input para react-hook-form */}

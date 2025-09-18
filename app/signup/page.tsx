@@ -11,6 +11,7 @@ import Button from '../components/Button/Button';
 import { Eye, EyeOff } from 'lucide-react';
 import TagManager from 'react-gtm-module';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
+import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
 
 export default function Signup() {
   const [password, setPassword] = useState('');
@@ -62,6 +63,7 @@ export default function Signup() {
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Crie sua conta</h2>
         <GoogleSignInButton />
+        <FacebookSignInButton />
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-400" />
           <span className="mx-4 text-sm text-gray-700">Ou continuar com e-mail</span>

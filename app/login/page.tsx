@@ -9,6 +9,7 @@ import * as z from 'zod';
 import { useUserAuth } from '../hooks/userAuth';
 import Button from '../components/Button/Button';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
+import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
 
 const schema = z.object({
   email: z.string().email('Email é obrigatório'),
@@ -36,7 +37,10 @@ export default function Login() {
       <div>
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Faça seu login</h2>
-        <GoogleSignInButton />
+        <div className="space-y-2">
+          <GoogleSignInButton />
+          <FacebookSignInButton />
+        </div>
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-400" />
           <span className="mx-4 text-sm text-gray-700">Ou continuar com e-mail</span>
