@@ -67,6 +67,16 @@ export default function MobileMenuOpen({ toggleMenu }) {
           <li>
             <Link
               className="flex items-center gap-1 text-black no-underline"
+              href="/minhas-receitas"
+              onClick={toggleMenu}
+            >
+              <IconToolsKitchen2 size={20} stroke={2} />
+              Minhas Receitas
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="flex items-center gap-1 text-black no-underline"
               href="/plans"
               onClick={toggleMenu}
             >

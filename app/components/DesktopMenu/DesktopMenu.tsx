@@ -39,6 +39,11 @@ export default function DesktopMenu() {
               </Link>
             </li>
             <li>
+              <Link className="no-underline text-black font-normal" href="/minhas-receitas">
+                Minhas Receitas
+              </Link>
+            </li>
+            <li>
               <Link className="no-underline text-black font-normal" href="/plans">
                 Meu Plano
               </Link>
