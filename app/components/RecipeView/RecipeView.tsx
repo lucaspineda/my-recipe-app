@@ -287,7 +287,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             </Button>
 
             {/* Facebook */}
-            <Button
+            {/* <Button
               onClick={() => handleShare("facebook")}
               className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
             >
@@ -295,14 +295,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               Facebook
             </Button>
 
-            {/* Twitter */}
             <Button
               onClick={() => handleShare("twitter")}
               className="bg-sky-500 text-white hover:bg-sky-600 flex items-center gap-2"
             >
               <Twitter className="w-4 h-4" />
               Twitter
-            </Button>
+            </Button> */}
           </div>
         </DialogContent>
       </Dialog>
