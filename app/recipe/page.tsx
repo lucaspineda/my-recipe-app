@@ -1,5 +1,5 @@
 'use client'
-import MealForm from "../components/MealForm/MealForm.tsx";
+import MealForm from "../components/MealForm/MealForm";
 
 import React from "react";
 

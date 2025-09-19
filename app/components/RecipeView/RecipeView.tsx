@@ -144,38 +144,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               </CardTitle>
               <p className="text-[#5C5C5C] leading-relaxed">{introduction}</p>
             </div>
-            <div className="flex gap-2 ml-4">
-              <Button
-                variant={saved ? "saved" : "noSaved"}
-                size="icon"
-                onClick={handleSave}
-                disabled={isLoading}
-              >
-                {saved ? (
-                  <Bookmark className="w-4 h-4" />
-                ) : (
-                  <BookmarkPlus className="w-4 h-4" />
-                )}
-              </Button>
-              <Button
-                variant="orange"
-                size="icon"
-                onClick={() => setShareDialogOpen(true)}
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 mt-4">
-            <Badge className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              prep time
-            </Badge>
-            <Badge className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              1 porção
-            </Badge>
           </div>
         </CardHeader>
 
@@ -260,7 +228,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <Separator />
 
           {/* Botões principais */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2 md:flex-row">
             <Button
               onClick={handleSave}
               disabled={isLoading}
