@@ -1,12 +1,12 @@
-import { useRecipeStore } from "../../store/recipe";
-import { MouseEvent, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { useToast } from "../../hooks/use-toast";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { useUserStore } from '../../store/user'
+import { useRecipeStore } from '../../store/recipe';
+import { MouseEvent, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { useToast } from '../../hooks/use-toast';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useUserStore } from '../../store/user';
 import { auth, db } from '../../hooks/userAuth';
 import {
   BookmarkPlus,
@@ -19,14 +19,8 @@ import {
   Facebook,
   Twitter,
   MessageCircle,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+} from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 
 interface RecipeCardProps {
   isSaved?: boolean;
@@ -34,11 +28,7 @@ interface RecipeCardProps {
   onShare?: (recipeId: string, platform: string) => Promise<void>;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({
-  onSave,
-  onShare,
-  isSaved = false,
-}) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [saved, setSaved] = useState(isSaved);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -55,7 +45,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   };
 
   // Parse JSON vindo da store
-  let newRecipe = recipe.replace(/```json|```/g, "").trim();
+  let newRecipe = recipe.replace(/```json|```/g, '').trim();
   let newRecipeObject = JSON.parse(newRecipe);
 
   const title = newRecipeObject?.titulo;
@@ -64,35 +54,32 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const preparationMethod = newRecipeObject?.modoDePreparo || [];
   const observations = newRecipeObject?.observacoes || [];
 
-  const recipeForSave = { title, introduction, ingredients, preparationMethod, observations }
+  const recipeForSave = { title, introduction, ingredients, preparationMethod, observations };
   const promptImage = `
   Gere a imagem de um prato delicioso, onde o título é ${title}. 
   A imagem deve estar bem iluminada, como se fosse para o marketing de restaurante, 
   e os itens do prato devem estar bem apresentados, para fácil identificação. 
   Os ingredientes da receita, que devem aparecer na imagem, são: 
-  ${ingredients.map((ing) => ing).join(", ")}.
+  ${ingredients.map((ing) => ing).join(', ')}.
 `;
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-
-      saveRecipe(recipeForSave)
+      saveRecipe(recipeForSave);
       if (onSave) {
         // await onSave(newRecipeObject.id);
       }
       setSaved(!saved);
       toast({
-        title: saved ? "Receita removida" : "Receita salva!",
-        description: saved
-          ? "A receita foi removida dos seus favoritos."
-          : "A receita foi salva nos seus favoritos.",
+        title: saved ? 'Receita removida' : 'Receita salva!',
+        description: saved ? 'A receita foi removida dos seus favoritos.' : 'A receita foi salva nos seus favoritos.',
       });
     } catch {
       toast({
-        title: "Erro",
-        description: "Não foi possível salvar a receita. Tente novamente.",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível salvar a receita. Tente novamente.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -101,24 +88,35 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
   const handleShare = async (platform: string) => {
     try {
-      if (onShare) {
-        // await onShare(newRecipeObject.id, platform);
-      }
       setShareDialogOpen(false);
+      if (platform === 'whatsapp') {
+        const currentUrl = window.location.href;
+        const message = `Veja esta receita que criei no Chefinho IA: ${recipe.title}\n\nPara ver a receita clique no link: ${currentUrl}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+      if (platform === 'link') {
+        const url = window.location.href;
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: 'Link copiado',
+          description: 'O link da receita foi copiado para a área de transferência.',
+        });
+      }
     } catch {
       toast({
-        title: "Erro",
-        description: "Não foi possível compartilhar a receita.",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Não foi possível compartilhar a receita.',
+        variant: 'destructive',
       });
     }
   };
 
   async function saveRecipe(recipe) {
-    const userId = auth.currentUser.uid
+    const userId = auth.currentUser.uid;
     if (!userId) return;
 
-    const recipeId = await addDoc(collection(db, "recipes"), {
+    const recipeId = await addDoc(collection(db, 'recipes'), {
       title: recipe.title,
       introduction: recipe.introduction,
       ingredients: recipe.ingredients,
@@ -128,10 +126,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       createdAt: serverTimestamp(),
     });
 
-    console.log('receita salva', recipeId.id)
-    return recipeId.id
+    console.log('receita salva', recipeId.id);
+    return recipeId.id;
   }
-
 
   return (
     <>
@@ -139,9 +136,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">
-                {title}
-              </CardTitle>
+              <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">{title}</CardTitle>
               <p className="text-[#5C5C5C] leading-relaxed">{introduction}</p>
             </div>
           </div>
@@ -158,8 +153,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             <img
               src={`https://image.pollinations.ai/prompt/${promptImage}`}
               alt="Imagem da receita"
-              className={`w-[400px] rounded-xl shadow-lg transition-opacity duration-500 ${loadingImg ? "hidden" : "block"
-                }`}
+              className={`w-[400px] rounded-xl shadow-lg transition-opacity duration-500 ${
+                loadingImg ? 'hidden' : 'block'
+              }`}
               onLoad={() => setLoadingImg(false)}
             />
           </div>
@@ -190,9 +186,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
           {/* Modo de preparo */}
           <div>
-            <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">
-              Modo de Preparo:
-            </h3>
+            <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">Modo de Preparo:</h3>
             <ol className="space-y-3">
               {preparationMethod.map((step: string, index: number) => (
                 <li key={index} className="flex gap-3">
@@ -210,9 +204,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             <>
               <Separator />
               <div>
-                <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">
-                  Observações:
-                </h3>
+                <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">Observações:</h3>
                 <ul className="space-y-2">
                   {observations.map((obs: string, index: number) => (
                     <li key={index} className="flex items-start gap-2">
@@ -236,7 +228,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               className="flex-1 text-white font-semibold transition-colors"
             >
               {saved ? <Bookmark className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
-              {saved ? "Salva" : "Salvar Receita"}
+              {saved ? 'Salva' : 'Salvar Receita'}
             </Button>
             <Button
               onClick={() => setShareDialogOpen(true)}
@@ -270,7 +262,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <div className="grid grid-cols-2 gap-3 py-4">
             {/* Copiar link */}
             <Button
-              onClick={() => handleShare("link")}
+              onClick={() => handleShare('link')}
               className="bg-gray-200 text-recipe-brown hover:bg-gray-300 flex items-center gap-2"
             >
               <Link className="w-4 h-4" />
@@ -279,7 +271,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
             {/* WhatsApp */}
             <Button
-              onClick={() => handleShare("whatsapp")}
+              onClick={() => handleShare('whatsapp')}
               className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-2"
             >
               <MessageCircle className="w-4 h-4" />
@@ -305,7 +297,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-
     </>
   );
 };
