@@ -43,6 +43,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const [saved, setSaved] = useState(isSaved);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [loadingImg, setLoadingImg] = useState(true);
 
   const { setShowRecipe, recipe } = useRecipeStore();
 
@@ -64,6 +65,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const observations = newRecipeObject?.observacoes || [];
 
   const recipeForSave = { title, introduction, ingredients, preparationMethod, observations }
+  const promptImage = `
+  Gere a imagem de um prato delicioso, onde o título é ${title}. 
+  A imagem deve estar bem iluminada, como se fosse para o marketing de restaurante, 
+  e os itens do prato devem estar bem apresentados, para fácil identificação. 
+  Os ingredientes da receita, que devem aparecer na imagem, são: 
+  ${ingredients.map((ing) => ing).join(", ")}.
+`;
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -170,6 +178,24 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             </Badge>
           </div>
         </CardHeader>
+
+        <CardContent>
+          <div className="flex justify-center my-6">
+            {loadingImg && (
+              <div className="flex flex-col items-center">
+                <p className="text-gray-600 mb-2">Gerando imagem...</p>
+                <div className="w-8 h-8 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+            <img
+              src={`https://image.pollinations.ai/prompt/${promptImage}`}
+              alt="Imagem da receita"
+              className={`w-[400px] rounded-xl shadow-lg transition-opacity duration-500 ${loadingImg ? "hidden" : "block"
+                }`}
+              onLoad={() => setLoadingImg(false)}
+            />
+          </div>
+        </CardContent>
 
         <CardContent className="space-y-6">
           <Separator />
