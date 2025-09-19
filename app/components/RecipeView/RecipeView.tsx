@@ -5,6 +5,9 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { useToast } from "../../hooks/use-toast";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useUserStore } from '../../store/user'
+import { auth, db } from '../../hooks/userAuth';
 import {
   BookmarkPlus,
   Share2,
@@ -43,6 +46,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
   const { setShowRecipe, recipe } = useRecipeStore();
 
+  const { user } = useUserStore();
+
   const handleGetOtherRecipe = (event: MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     setShowRecipe(false);
@@ -58,9 +63,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const preparationMethod = newRecipeObject?.modoDePreparo || [];
   const observations = newRecipeObject?.observacoes || [];
 
+  const recipeForSave = { title, introduction, ingredients, preparationMethod, observations }
+
   const handleSave = async () => {
     setIsLoading(true);
     try {
+
+      saveRecipe(recipeForSave)
       if (onSave) {
         // await onSave(newRecipeObject.id);
       }
@@ -96,6 +105,25 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       });
     }
   };
+
+  async function saveRecipe(recipe) {
+    const userId = auth.currentUser.uid
+    if (!userId) return;
+
+    const recipeId = await addDoc(collection(db, "recipes"), {
+      title: recipe.title,
+      introduction: recipe.introduction,
+      ingredients: recipe.ingredients,
+      preparationMethod: recipe.preparationMethod,
+      observations: recipe.observations,
+      userId: userId,
+      createdAt: serverTimestamp(),
+    });
+
+    console.log('receita salva', recipeId.id)
+    return recipeId.id
+  }
+
 
   return (
     <>
