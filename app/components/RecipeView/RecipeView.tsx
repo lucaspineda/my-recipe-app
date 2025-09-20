@@ -8,6 +8,8 @@ import { useToast } from '../../hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useUserStore } from '../../store/user';
 import { auth, db } from '../../hooks/userAuth';
+import { useRouter } from 'next/navigation';
+
 import {
   BookmarkPlus,
   Share2,
@@ -32,12 +34,15 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
   const [isLoading, setIsLoading] = useState(false);
   const [saved, setSaved] = useState(isSaved);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const { toast } = useToast();
   const [loadingImg, setLoadingImg] = useState(true);
+  const [idRecipeSaved, setIdRecipeSaved] = useState('')
+  const router = useRouter();
+
 
   const { setShowRecipe, recipe } = useRecipeStore();
 
-  const { user } = useUserStore();
+  const { toast } = useToast();
+
 
   const handleGetOtherRecipe = (event: MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
@@ -56,24 +61,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
 
   const recipeForSave = { title, introduction, ingredients, preparationMethod, observations };
   const promptImage = `
-  Gere a imagem de um prato delicioso, onde o título é ${title}. 
-  A imagem deve estar bem iluminada, como se fosse para o marketing de restaurante, 
-  e os itens do prato devem estar bem apresentados, para fácil identificação. 
-  Os ingredientes da receita, que devem aparecer na imagem, são: 
-  ${ingredients.map((ing) => ing).join(', ')}.
+  Fotografia realista de um prato de comida delicioso chamado "${title}".
+  O prato deve conter somente os seguintes ingredientes bem visíveis e bem apresentados:
+  ${ingredients.join(", ")}.
+  Estilo: fotografia profissional de restaurante, bem iluminada, fundo neutro,
+  ângulo de cima (flat lay), alta resolução.
+  Não adicionar ingredientes extras além dos listados.
 `;
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      saveRecipe(recipeForSave);
-      if (onSave) {
-        // await onSave(newRecipeObject.id);
-      }
-      setSaved(!saved);
+      const recipeId = await saveRecipe(recipeForSave);
+      setIdRecipeSaved(recipeId);
+      setSaved(true); // agora só fica salvo, não alterna
       toast({
-        title: saved ? 'Receita removida' : 'Receita salva!',
-        description: saved ? 'A receita foi removida dos seus favoritos.' : 'A receita foi salva nos seus favoritos.',
+        title: 'Receita salva!',
+        description: 'A receita foi salva nos seus favoritos.',
       });
     } catch {
       toast({
@@ -86,12 +90,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
     }
   };
 
+  const handleRedirect = () => {
+    if (!idRecipeSaved) return;
+    router.push(`/recipe/${idRecipeSaved}`);
+  };
+
   const handleShare = async (platform: string) => {
     try {
       setShareDialogOpen(false);
       if (platform === 'whatsapp') {
         const currentUrl = window.location.href;
-        const message = `Veja esta receita que criei no Chefinho IA: ${recipe.title}\n\nPara ver a receita clique no link: ${currentUrl}`;
+        const message = `Veja esta receita que criei no Chefinho IA: ${recipeForSave.title}\n\nPara ver a receita clique no link: ${currentUrl}`;
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
@@ -127,6 +136,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
     });
 
     console.log('receita salva', recipeId.id);
+    setIdRecipeSaved(recipeId.id)
     return recipeId.id;
   }
 
@@ -153,9 +163,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
             <img
               src={`https://image.pollinations.ai/prompt/${promptImage}`}
               alt="Imagem da receita"
-              className={`w-[400px] rounded-xl shadow-lg transition-opacity duration-500 ${
-                loadingImg ? 'hidden' : 'block'
-              }`}
+              className={`w-[400px] rounded-xl shadow-lg transition-opacity duration-500 ${loadingImg ? 'hidden' : 'block'
+                }`}
               onLoad={() => setLoadingImg(false)}
             />
           </div>
@@ -222,13 +231,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
           {/* Botões principais */}
           <div className="flex flex-col gap-3 pt-2 md:flex-row">
             <Button
-              onClick={handleSave}
+              onClick={saved ? handleRedirect : handleSave}
               disabled={isLoading}
               variant="secondary"
               className="flex-1 text-white font-semibold transition-colors"
             >
               {saved ? <Bookmark className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
-              {saved ? 'Salva' : 'Salvar Receita'}
+              {saved ? 'Minhas Receitas' : 'Salvar Receita'}
             </Button>
             <Button
               onClick={() => setShareDialogOpen(true)}

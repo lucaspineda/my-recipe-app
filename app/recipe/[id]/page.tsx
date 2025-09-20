@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/Recip
 import { DialogHeader } from '../../components/RecipeView/ui/dialog';
 import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useRecipeStore } from '../../store/recipe';
 
 interface Recipe {
   title: string;
@@ -27,17 +28,18 @@ const RecipePage = () => {
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [recipes, setRecipes] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { setShowRecipe, recipe } = useRecipeStore();
 
   const handleShare = async (platform: string) => {
     try {
       setShareDialogOpen(false);
-      if(platform === 'whatsapp') {
+      if (platform === 'whatsapp') {
         const currentUrl = window.location.href;
-        const message = `Veja esta receita que criei no Chefinho IA: ${recipe.title}\n\nPara ver a receita clique no link: ${currentUrl}`;
+        const message = `Veja esta receita que criei no Chefinho IA: ${recipes.title}\n\nPara ver a receita clique no link: ${currentUrl}`;
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
@@ -61,6 +63,7 @@ const RecipePage = () => {
   const handleGetOtherRecipe = async () => {
     try {
       // redirect to /recipe
+      setShowRecipe(false);
       router.push('/recipe');
     } catch {
       toast({
@@ -80,7 +83,7 @@ const RecipePage = () => {
 
         if (recipeSnap.exists()) {
           console.log('Recipe data:', recipeSnap.data());
-          setRecipe(recipeSnap.data() as Recipe);
+          setRecipes(recipeSnap.data() as Recipe);
         } else {
           setError('Recipe not found');
           console.log('No such recipe!');
@@ -111,8 +114,8 @@ const RecipePage = () => {
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">{recipe.title}</CardTitle>
-                <p className="text-[#5C5C5C] leading-relaxed">{recipe.introduction}</p>
+                <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">{recipes.title}</CardTitle>
+                <p className="text-[#5C5C5C] leading-relaxed">{recipes.introduction}</p>
               </div>
             </div>
           </CardHeader>
@@ -127,7 +130,7 @@ const RecipePage = () => {
                 Ingredientes:
               </h3>
               <ul className="space-y-2">
-                {recipe.ingredients.map((ingredient: any, index: number) => (
+                {recipes.ingredients.map((ingredient: any, index: number) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="w-2 h-2 bg-[#F57C00] rounded-full mt-2 shrink-0" />
                     <span className="text-[#5C5C5C]">
@@ -144,7 +147,7 @@ const RecipePage = () => {
             <div>
               <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">Modo de Preparo:</h3>
               <ol className="space-y-3">
-                {recipe.preparationMethod.map((step: string, index: number) => (
+                {recipes.preparationMethod.map((step: string, index: number) => (
                   <li key={index} className="flex gap-3">
                     <span className="flex items-center justify-center w-6 h-6 bg-[#F57C00] text-white rounded-full text-sm font-semibold shrink-0 mt-0.5">
                       {index + 1}
@@ -156,13 +159,13 @@ const RecipePage = () => {
             </div>
 
             {/* Observações */}
-            {recipe.observations.length > 0 && (
+            {recipes.observations.length > 0 && (
               <>
                 <Separator />
                 <div>
                   <h3 className="text-lg font-semibold text-[#2B2B2B] mb-3">Observações:</h3>
                   <ul className="space-y-2">
-                    {recipe.observations.map((obs: string, index: number) => (
+                    {recipes.observations.map((obs: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <span className="w-2 h-2 bg-[#4CAF50] rounded-full mt-2 shrink-0" />
                         <span className="text-[#2E7D32] italic">{obs}</span>
