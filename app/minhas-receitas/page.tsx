@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { collection, query, getDocs, where } from 'firebase/firestore';
+import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
 import { db } from '../hooks/userAuth';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
@@ -52,7 +52,11 @@ export default function MinhasReceitas() {
 
       try {
         const recipesRef = collection(db, 'recipes');
-        const q = query(recipesRef, where('userId', '==', currentUser.uid));
+        const q = query(
+          recipesRef,
+          where('userId', '==', currentUser.uid),
+          orderBy('createdAt', 'desc')
+        );
         const querySnapshot = await getDocs(q);
 
         const fetchedRecipes: Recipe[] = [];
@@ -69,7 +73,6 @@ export default function MinhasReceitas() {
           });
         });
 
-        fetchedRecipes.sort((a, b) => a.title.localeCompare(b.title));
         setRecipes(fetchedRecipes);
       } catch (err) {
         console.error('Error fetching recipes:', err);
@@ -115,7 +118,7 @@ export default function MinhasReceitas() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center gap-3 mb-6">
             <ChefHat className="w-6 h-6 text-secondary" />
-            <h1 className="text-2xl font-bold text-secondary">Minhas Receitas</h1>
+            <h1 className="text-3xl font-bold text-secondary">Minhas Receitas</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Explore sua coleção pessoal de receitas deliciosas. Cada uma delas foi criada especialmente
