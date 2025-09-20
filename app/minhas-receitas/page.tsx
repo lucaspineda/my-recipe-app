@@ -9,6 +9,7 @@ import { Card } from '../components/RecipeView/ui/card';
 import { ChefHat, Clock, Calendar, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useRecipeStore } from '../store/recipe';
 
 interface Recipe {
   id: string;
@@ -27,6 +28,12 @@ export default function MinhasReceitas() {
   const auth = getAuth();
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
 
+  const { setShowRecipe, recipe } = useRecipeStore();
+
+  const handleRedirect = async () => {
+    setShowRecipe(false)
+  }
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -47,7 +54,7 @@ export default function MinhasReceitas() {
         const recipesRef = collection(db, 'recipes');
         const q = query(recipesRef, where('userId', '==', currentUser.uid));
         const querySnapshot = await getDocs(q);
-        
+
         const fetchedRecipes: Recipe[] = [];
         querySnapshot.forEach((doc) => {
           const recipeData = doc.data();
@@ -111,11 +118,11 @@ export default function MinhasReceitas() {
             <h1 className="text-2xl font-bold text-secondary">Minhas Receitas</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Explore sua coleção pessoal de receitas deliciosas. Cada uma delas foi criada especialmente 
+            Explore sua coleção pessoal de receitas deliciosas. Cada uma delas foi criada especialmente
             para tornar seus momentos na cozinha ainda mais especiais.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recipes.length === 0 ? (
             <div className="col-span-full">
@@ -142,7 +149,7 @@ export default function MinhasReceitas() {
                         <p className="text-gray-600 line-clamp-2 mb-6">
                           {recipe.introduction}
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="flex items-center gap-2 text-gray-500">
                             <ChefHat className="w-4 h-4 text-tertiary" />
@@ -154,7 +161,7 @@ export default function MinhasReceitas() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 pt-6 border-t border-gray-100">
                         <div className="flex items-center justify-between text-tertiary">
                           <span className="font-medium">Ver receita</span>
@@ -170,8 +177,9 @@ export default function MinhasReceitas() {
         </div>
 
         <div className="flex justify-center mt-12">
-          <Link 
+          <Link
             href="/recipe"
+            onClick={handleRedirect}
             className="inline-flex items-center gap-2 bg-secondary text-white px-8 py-4 rounded-lg hover:bg-secondary/90 transition-colors shadow-md hover:shadow-lg no-underline"
           >
             <ChefHat className="w-5 h-5" />

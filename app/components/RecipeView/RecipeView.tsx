@@ -38,11 +38,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
   const [idRecipeSaved, setIdRecipeSaved] = useState('')
   const router = useRouter();
 
-
   const { setShowRecipe, recipe } = useRecipeStore();
 
   const { toast } = useToast();
-
 
   const handleGetOtherRecipe = (event: MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
