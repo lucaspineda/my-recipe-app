@@ -92,7 +92,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
 
   const handleRedirect = () => {
     if (!idRecipeSaved) return;
-    router.push(`/recipe/${idRecipeSaved}`);
+    router.push(`/minhas-receitas`);
   };
 
   const handleShare = async (platform: string) => {
@@ -146,7 +146,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">{title}</CardTitle>
+              <CardTitle className="text-3xl font-bold text-secondary mb-4 flex justify-center">{title}</CardTitle>
               <p className="text-[#5C5C5C] leading-relaxed">{introduction}</p>
             </div>
           </div>
@@ -233,7 +233,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ onSave, onShare, isSaved = fals
             <Button
               onClick={saved ? handleRedirect : handleSave}
               disabled={isLoading}
-              variant="secondary"
+              variant={`${saved ? "saved" : "secondary"}`}
               className="flex-1 text-white font-semibold transition-colors"
             >
               {saved ? <Bookmark className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
