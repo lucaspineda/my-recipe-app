@@ -24,7 +24,7 @@ export default function MobileMenu({toggleMenu}: IAppProps) {
         </Link>
       </p>
       {user ? (
-        <IconMenu2 className="absolute top-4 right-4 z-10 cursor-pointer" size={30} stroke={2} onClick={toggleMenu} />
+        <IconMenu2 className="absolute top-3 right-4 z-10 cursor-pointer" size={30} stroke={2} onClick={toggleMenu} />
       ) : (
         <nav className="text-black">
           <ul className="flex items-center gap-4">

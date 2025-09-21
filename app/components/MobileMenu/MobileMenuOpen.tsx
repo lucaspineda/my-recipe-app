@@ -5,6 +5,7 @@ import {
   IconUser,
   IconShoppingBag,
   IconHeadphones,
+  IconList,
 } from "@tabler/icons-react";
 import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -70,7 +71,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
               href="/minhas-receitas"
               onClick={toggleMenu}
             >
-              <IconToolsKitchen2 size={20} stroke={2} />
+              <IconList size={20} stroke={2} />
               Minhas Receitas
             </Link>
           </li>
