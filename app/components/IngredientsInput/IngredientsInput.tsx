@@ -93,7 +93,6 @@ export default function IngredientsInput({
           onBlur={handleBlur}
           placeholder={placeholder}
           className="global-input focus:ring-2 focus:ring-secondary focus:border-secondary"
-          data-clarity-unmask="true"
         />
         
         <SuggestionsList

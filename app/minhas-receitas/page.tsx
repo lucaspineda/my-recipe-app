@@ -5,10 +5,8 @@ import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
 import { db } from '../hooks/userAuth';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
-import { Card } from '../components/RecipeView/ui/card';
+import { Card } from '../ui/card';
 import { ChefHat, Clock, Calendar, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useRecipeStore } from '../store/recipe';
 
 interface Recipe {

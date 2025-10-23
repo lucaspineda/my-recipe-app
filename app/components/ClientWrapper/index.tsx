@@ -6,27 +6,32 @@ import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
 import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
-import Clarity from '@microsoft/clarity';
+// import Clarity from '@microsoft/clarity';
 import TagManager from 'react-gtm-module';
+import Hotjar from '@hotjar/browser';
+
+const siteId = 6525527;
+const hotjarVersion = 6;
 
 const tagManagerArgs = {
   gtmId: 'GTM-T7SJQKP2',
 };
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    console.log('init gtm')
+    console.log('init gtm');
     TagManager.initialize(tagManagerArgs);
   }, []);
   const [openMenu, setOpenMenu] = useState(false);
+  Hotjar.init(siteId, hotjarVersion);
 
   const toggleMenu = () => setOpenMenu(!openMenu);
 
   const handleIconClick = () => {
     toggleMenu();
   };
-  const projectId = 'rnup5ef83c';
+  // const projectId = 'rnup5ef83c';
 
-  Clarity.init(projectId);
+  // Clarity.init(projectId);
 
   return (
     <ProtectedRoute>
