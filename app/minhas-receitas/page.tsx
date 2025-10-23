@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
 import { db } from '../hooks/userAuth';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
 import { Card } from '../ui/card';
-import { ChefHat, Clock, Calendar, ArrowRight } from 'lucide-react';
+import { ChefHat, Clock, ArrowRight } from 'lucide-react';
 import { useRecipeStore } from '../store/recipe';
+import { useUserStore } from '../store/user';
 
 interface Recipe {
   id: string;
@@ -23,27 +23,16 @@ export default function MinhasReceitas() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const auth = getAuth();
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
-
-  const { setShowRecipe, recipe } = useRecipeStore();
+  const { user } = useUserStore();
+  const { setShowRecipe } = useRecipeStore();
 
   const handleRedirect = async () => {
-    setShowRecipe(false)
-  }
-  
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
+    setShowRecipe(false);
+  };
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      if (!currentUser) {
-        setError('Você precisa estar logado para ver suas receitas');
+      if (!user?.uid) {
         setLoading(false);
         return;
       }
@@ -52,7 +41,7 @@ export default function MinhasReceitas() {
         const recipesRef = collection(db, 'recipes');
         const q = query(
           recipesRef,
-          where('userId', '==', currentUser.uid),
+          where('userId', '==', user.uid),
           orderBy('createdAt', 'desc')
         );
         const querySnapshot = await getDocs(q);
@@ -81,7 +70,7 @@ export default function MinhasReceitas() {
     };
 
     fetchRecipes();
-  }, [currentUser]);
+  }, [user]);
 
   if (loading) {
     return (

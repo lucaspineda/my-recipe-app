@@ -14,18 +14,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   const authPublicPaths = ['/', '/login', '/signup', '/password-reset'];
   
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log(user, 'user')
       if (user) {
-        getUser();
+        await getUser();
 
         if (authPublicPaths.includes(pathname)) {
           router.push('/recipe');
         }
-      }
-      if (!user && !alwaysPublicPaths.includes(pathname) && !authPublicPaths.includes(pathname)) {
+      } else if (!alwaysPublicPaths.includes(pathname) && !authPublicPaths.includes(pathname)) {
         setUser(null);
         router.push('/login');
-        return null;
       }
     });
 
