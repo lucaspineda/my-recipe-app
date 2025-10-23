@@ -17,7 +17,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`global-input ${className}`}
           id={id}
           type="string"
-          data-clarity-unmask="true"
           placeholder={placeholder}
           {...rest}
         />

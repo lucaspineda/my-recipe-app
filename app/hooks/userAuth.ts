@@ -48,14 +48,25 @@ export const useUserAuth = () => {
   const { setUser } = useUserStore();
 
   const getUser = async () => {
+    if (!auth.currentUser) {
+      console.log('No authenticated user');
+      return;
+    }
+    
     const docRef = doc(db, "users", auth.currentUser.uid);
+    console.log(auth.currentUser.uid, 'auth.currentUser.uid')
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const user = docSnap.data();
-      setUser(user as UserDB);
+      setUser({ ...user, uid: auth.currentUser.uid } as UserDB);
     } else {
-      console.log("No such user document!");
-      // signOut(auth)
+      console.log("No such user document! Creating one now...");
+      await createUserInDB(auth.currentUser.email);
+      const newDocSnap = await getDoc(docRef);
+      if (newDocSnap.exists()) {
+        const user = newDocSnap.data();
+        setUser({ ...user, uid: auth.currentUser.uid } as UserDB);
+      }
     }
   };
 
@@ -121,7 +132,8 @@ export const useUserAuth = () => {
         password
       );
       if (userCredential) {
-        createUserInDB(email);
+        await createUserInDB(email);
+        await getUser();
       }
       if (router) {
         router.push("/recipe");

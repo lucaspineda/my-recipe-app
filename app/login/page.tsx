@@ -50,7 +50,6 @@ export default function Login() {
           <input
             {...register('email')}
             className="global-input"
-            data-clarity-unmask="true"
             id="login"
             type="text"
             placeholder="Digite seu e-mail"

@@ -21,6 +21,7 @@ export interface UserPlan {
 }
 
 export interface User {
+  uid: string;
   email: string;
   plan: UserPlan;
   lastLoginAt: Date;

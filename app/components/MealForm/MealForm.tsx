@@ -1,23 +1,22 @@
-import React, { ChangeEvent, useState, MouseEvent, useEffect } from 'react';
+import React, { useState, MouseEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { forwardRef } from 'react';
 import { useRecipeStore } from '../../store/recipe';
 import { useRouter, usePathname } from 'next/navigation';
 import Loading from '../Loading/Loading';
-import RecipeView from '../RecipeView/RecipeView';
 import Button from '../Button/Button';
 import { auth, db } from '../../hooks/userAuth';
 import { getIdToken } from 'firebase/auth';
 import { AlertCircle } from 'lucide-react';
 import { useUserStore } from '../../store/user';
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { mealOptions, mealMap } from './data';
+import { mealOptions } from './data';
 import IngredientsInput from '../IngredientsInput';
 
 const schema = z.object({
@@ -27,20 +26,15 @@ const schema = z.object({
 
 export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
-    ingredients: storeIngredients,
     recipeLoading,
     showRecipe,
-    recipe,
-    setRecipe,
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
-    setShowRecipe,
   } = useRecipeStore();
 
   const [error, setError] = useState(false);
   const [optionMeal, setOptionMeal] = useState('almoco');
-  const [recipeMealOption, setRecipeMealOption] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const router = useRouter();
   const pathname = usePathname();
@@ -84,8 +78,27 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const handleIngredientsChange = (newIngredients: string[]) => {
     setIngredients(newIngredients);
     setValue('ingredients', newIngredients.length > 0 ? newIngredients.join(', ') : '');
-    if(pathname === '/') {
+    if (pathname === '/') {
       localStorage.setItem('ingredients', JSON.stringify(newIngredients));
+    }
+  };
+
+  const saveRecipe = async (recipe: any) => {
+    console.log('Saving recipe:', recipe);
+    try {
+      const savedRecipe = await addDoc(collection(db, 'recipes'), {
+        title: recipe.titulo,
+        introduction: recipe.introducao,
+        ingredients: recipe.ingredientes,
+        preparationMethod: recipe.modoDePreparo,
+        observations: recipe.observacoes,
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+      return savedRecipe;
+    } catch (error) {
+      console.error('Error saving recipe: ', error);
+      toast.error('Erro ao salvar a receita. Tente novamente.');
     }
   };
 
@@ -119,12 +132,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           },
         },
       );
-      updateIngredients(null);
-      updateMealOption(null);
-      setShowRecipe(true);
-      setIngredients([]);
-      setRecipe(response.data.response);
-      setRecipeMealOption(mealMap[response.data.optionMeal]);
 
       const newRecipeCount = user.plan.recipeCount - 1;
 
@@ -133,6 +140,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         'plan.recipeCount': newRecipeCount,
       });
       updateRecipesCount(newRecipeCount);
+
+      let newRecipe = response.data.response.replace(/```json|```/g, '').trim();
+      let newRecipeObject = JSON.parse(newRecipe);
+      const recipe = await saveRecipe(newRecipeObject);
+      if (recipe) {
+        router.push(`/recipe/${recipe.id}`);
+      }
     } catch (error) {
       setRecipeLoading(false);
       setError(true);
@@ -238,18 +252,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
               Escolha um plano
             </Link>
           ) : (
-            <Button className='mb-20'>Gerar Receita</Button>
+            <Button className="mb-20">Gerar Receita</Button>
           )}
-          
+
           {/* Hidden input para react-hook-form */}
-          <input
-            {...register('ingredients')}
-            type="hidden"
-            value={ingredients.join(', ')}
-          />
+          <input {...register('ingredients')} type="hidden" value={ingredients.join(', ')} />
         </form>
       )}
-      {showRecipe && <RecipeView />}
     </>
   );
 });
