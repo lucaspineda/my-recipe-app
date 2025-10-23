@@ -33,7 +33,6 @@ export default function MinhasReceitas() {
   useEffect(() => {
     const fetchRecipes = async () => {
       if (!user?.uid) {
-        setLoading(false);
         return;
       }
 
