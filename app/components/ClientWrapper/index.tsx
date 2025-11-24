@@ -6,9 +6,10 @@ import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
 import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
-// import Clarity from '@microsoft/clarity';
+import Clarity from '@microsoft/clarity';
 import TagManager from 'react-gtm-module';
 import Hotjar from '@hotjar/browser';
+import { useUserStore } from '../../store/user';
 
 const siteId = 6525527;
 const hotjarVersion = 6;
@@ -17,21 +18,37 @@ const tagManagerArgs = {
   gtmId: 'GTM-T7SJQKP2',
 };
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+  const [openMenu, setOpenMenu] = useState(false);
+  const { user } = useUserStore();
+  const projectId = 'rnup5ef83c';
+
   useEffect(() => {
     console.log('init gtm');
     TagManager.initialize(tagManagerArgs);
+    Hotjar.init(siteId, hotjarVersion);
+    Clarity.init(projectId);
   }, []);
-  const [openMenu, setOpenMenu] = useState(false);
-  Hotjar.init(siteId, hotjarVersion);
+
+  useEffect(() => {
+    // Identify user in Hotjar and Clarity when user data is available
+    if (user?.email && user?.uid) {
+      Hotjar.identify(user.uid, {
+        email: user.email,
+      });
+      
+      Clarity.identify(user.uid, undefined, undefined, user.name);
+      Clarity.setTag('email', user.email);
+      if (user.name) {
+        Clarity.setTag('name', user.name);
+      }
+    }
+  }, [user]);
 
   const toggleMenu = () => setOpenMenu(!openMenu);
 
   const handleIconClick = () => {
     toggleMenu();
   };
-  // const projectId = 'rnup5ef83c';
-
-  // Clarity.init(projectId);
 
   return (
     <ProtectedRoute>

@@ -14,6 +14,12 @@ import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
 
+declare global {
+  interface Window {
+    clarity: (type: string, event: string, value?: string) => void;
+  }
+}
+
 interface Recipe {
   title: string;
   introduction: string;
@@ -32,6 +38,7 @@ const RecipePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [chatFeatureDialogOpen, setChatFeatureDialogOpen] = useState(false);
   const { setShowRecipe, recipe } = useRecipeStore();
 
   const handleShare = async (platform: string) => {
@@ -62,7 +69,6 @@ const RecipePage = () => {
 
   const handleGetOtherRecipe = async () => {
     try {
-      // redirect to /recipe
       setShowRecipe(false);
       router.push('/recipe');
     } catch {
@@ -82,11 +88,9 @@ const RecipePage = () => {
         const recipeSnap = await getDoc(recipeRef);
 
         if (recipeSnap.exists()) {
-          console.log('Recipe data:', recipeSnap.data());
           setRecipes(recipeSnap.data() as Recipe);
         } else {
           setError('Recipe not found');
-          console.log('No such recipe!');
         }
       } catch (err) {
         setError('Error fetching recipe');
@@ -179,22 +183,42 @@ const RecipePage = () => {
             <Separator />
 
             {/* Botões principais */}
-            <div className="flex flex-col gap-3 pt-2 md:flex-row">
-              <Button
-                onClick={() => setShareDialogOpen(true)}
-                className="flex-1 bg-[#F57C00] text-white font-semibold hover:bg-[#E64A19] transition-colors"
-              >
-                <Share2 className="w-4 h-4" />
-                Compartilhar
-              </Button>
+            <div className="flex flex-col gap-3 pt-2">
+              {/* Seção de ajuda do Chefinho */}
+              <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
+                <p className="text-sm text-gray-700 mb-3">
+                  <strong>Precisa de ajuda?</strong> Tire dúvidas sobre a receita, saiba quais ingredientes pode substituir ou 
+                  como melhorar o prato. O Chefinho está aqui para ajudar!
+                </p>
+                <Button
+                  className="w-full h-auto min-h-[44px] py-3 bg-secondary text-white font-semibold hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 text-wrap"
+                  onClick={() => {
+                    setChatFeatureDialogOpen(true);
+                  }}
+                >
+                  <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm md:text-base leading-tight">Fale com o Chefinho sobre essa receita</span>
+                </Button>
+              </div>
 
-              <Button
-                variant="secondary"
-                className="flex-1 text-white font-semibold transition-colors"
-                onClick={handleGetOtherRecipe}
-              >
-                Gerar outra receita
-              </Button>
+              {/* Botões de compartilhar e gerar nova receita */}
+              <div className="flex flex-col gap-3 md:flex-row">
+                <Button
+                  onClick={() => setShareDialogOpen(true)}
+                  className="flex-1 bg-[#F57C00] text-white font-semibold hover:bg-[#E64A19] transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Compartilhar
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  className="flex-1 text-white font-semibold transition-colors"
+                  onClick={handleGetOtherRecipe}
+                >
+                  Gerar outra receita
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -227,6 +251,51 @@ const RecipePage = () => {
                 <MessageCircle className="w-4 h-4" />
                 WhatsApp
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de funcionalidade de chat */}
+        <Dialog open={chatFeatureDialogOpen} onOpenChange={setChatFeatureDialogOpen}>
+          <DialogContent className="sm:max-w-md bg-white text-black">
+            <DialogHeader>
+              <DialogTitle className="text-black">Nova Funcionalidade em Desenvolvimento</DialogTitle>
+              <DialogDescription className="text-black/90">
+                Estamos trabalhando nessa funcionalidade para você poder conversar com o Chefinho IA sobre suas receitas!
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-4">
+              <p className="text-center text-gray-700 mb-6">
+                Você pagaria por essa funcionalidade?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => {
+                    setChatFeatureDialogOpen(false);
+                    toast({
+                      title: 'Obrigado!',
+                      description: 'Sua opinião é muito importante para nós. Vamos considerar isso no desenvolvimento.',
+                    });
+                  }}
+                  className="bg-green-500 text-white hover:bg-green-600"
+                >
+                  Sim
+                </Button>
+                <Button
+                  onClick={() => {
+                    setChatFeatureDialogOpen(false);
+                    toast({
+                      title: 'Obrigado!',
+                      description: 'Sua opinião é muito importante para nós.',
+                    });
+                  }}
+                  variant="outline"
+                  className="border-gray-300 hover:bg-gray-100"
+                >
+                  Não
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

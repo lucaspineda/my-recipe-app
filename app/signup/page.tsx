@@ -60,8 +60,22 @@ export default function Signup() {
   return (
     <main className="flex flex-col text-center h-screen justify-center w-full max-w-[420px] justify-self-center">
       <div className="flex flex-col">
-        <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
-        <h2 className="my-6">Crie sua conta</h2>
+        <h1 className="text-2xl font-bold">Bem-Vindo ao Chefinho IA</h1>
+        <div className="my-6 bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
+          <p className="text-secondary font-semibold mb-2">🎉 Apenas mais um passo!</p>
+          <p className="text-sm text-gray-700">
+            Você vai conseguir gerar suas primeiras receitas de forma <strong>grátis</strong>.
+          </p>
+          <p className="text-sm text-gray-700 mt-1">
+            Crie sua conta e ganhe <strong>3 receitas grátis por mês</strong>!
+          </p>
+          <p className="text-sm text-gray-700 mt-2">
+            Para ver outros planos,{' '}
+            <Link href="/plans-public" className="text-secondary font-semibold underline hover:text-secondary/80">
+              clique aqui
+            </Link>
+          </p>
+        </div>
         <GoogleSignInButton />
         <FacebookSignInButton />
         <div className="flex items-center my-4">

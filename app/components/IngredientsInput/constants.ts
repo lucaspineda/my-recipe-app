@@ -1,7 +1,22 @@
 export const INGREDIENTES = [
-  "arroz", "feijão", "macarrão", "carne", "frango", "ovo", "leite", "manteiga", "açúcar",
-  "sal", "óleo", "alho", "cebola", "cenoura", "batata", "tomate", "pimentão", "farinha",
-  "fermento", "queijo", "presunto", "creme de leite", "milho", "ervilha", "banana", "maçã",
-  "laranja", "limão", "chocolate", "café", "chá", "pão", "iogurte", "aveia", "abobrinha",
-  "berinjela", "espinafre", "couve", "brócolis", "repolho"
+  "abacate", "abacaxi", "abobrinha", "açafrão", "açúcar", "aipim", "aipo", "alecrim", 
+  "alface", "alho", "alho-poró", "ameixa", "amêndoa", "amendoim", "anis", "arroz", 
+  "atum", "aveia", "azeite", "azeitona", "bacon", "banana", "batata", "batata-doce", 
+  "baunilha", "berinjela", "beterraba", "biscoito", "brócolis", "cacau", "café", 
+  "calabresa", "calabresa", "canela", "caqui", "caramelo", "carne", "carne moída", 
+  "carne seca", "castanha", "cebola", "cebolinha", "cenoura", "cereais", "cereja", 
+  "chá", "chicória", "chocolate", "chuchu", "coentro", "cogumelo", "colorau", 
+  "cominho", "couve", "couve-flor", "creme de leite", "cravo", "cúrcuma", "damasco", 
+  "endívia", "ervilha", "espinafre", "farinha", "farinha de trigo", "feijão", 
+  "fermento", "figo", "frango", "gengibre", "goiaba", "grão-de-bico", "inhame", 
+  "iogurte", "jabuticaba", "ketchup", "kiwi", "laranja", "leite", "leite condensado", 
+  "lentilha", "lima", "limão", "linguiça", "louro", "maçã", "macarrão", "macaxeira", 
+  "maionese", "mandioca", "manga", "manjericão", "manteiga", "margarina", "massa", 
+  "mel", "melancia", "melão", "milho", "molho de tomate", "morango", "mostarda", 
+  "nabo", "noz", "noz-moscada", "óleo", "orégano", "ovo", "palmito", "pão", 
+  "páprica", "pepino", "pera", "pêssego", "pimentão", "pimenta", "pimenta-do-reino", 
+  "pinhão", "pistache", "polvilho", "presunto", "queijo", "quiabo", "rabanete", 
+  "repolho", "ricota", "rúcula", "sal", "salsa", "salsão", "salsicha", "soja", 
+  "tamarindo", "tomilho", "tomate", "toranja", "trigo", "uva", "vagem", "vinagre", 
+  "vinho"
 ];
