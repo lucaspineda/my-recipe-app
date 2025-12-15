@@ -57,7 +57,7 @@
     "dompurify": "^3.2.1",
     "firebase": "^10.13.0",
     "lucide-react": "^0.461.0",
-    "next": "14.1.4",
+    "next": "^14.2.35",
     "postcss": "^8",
     "react": "^18",
     "react-day-picker": "^9.10.0",
@@ -76,7 +76,7 @@
     "@types/node": "20.14.5",
     "@types/react": "18.3.3",
     "eslint": "^8",
-    "eslint-config-next": "14.1.4",
+    "eslint-config-next": "^16.0.10",
     "prettier": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.6.11"
   }
