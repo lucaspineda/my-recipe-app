@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import Image from 'next/image';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../hooks/userAuth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
-import { ChefHat, Share2, Link, MessageCircle } from 'lucide-react';
+import { ChefHat, Share2, Link, MessageCircle, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { DialogHeader } from '../../ui/dialog';
@@ -26,6 +28,14 @@ interface Recipe {
   ingredients: string[];
   preparationMethod: string[];
   observations: string[];
+  nutritionalInfo?: {
+    calorias: string;
+    proteinas: string;
+    carboidratos: string;
+    gorduras: string;
+    fibras: string;
+  };
+  imageUrl?: string;
   userId: string;
   createdAt: any;
 }
@@ -39,6 +49,8 @@ const RecipePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [chatFeatureDialogOpen, setChatFeatureDialogOpen] = useState(false);
+  const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const { setShowRecipe, recipe } = useRecipeStore();
 
   const handleShare = async (platform: string) => {
@@ -85,17 +97,27 @@ const RecipePage = () => {
       try {
         const recipeId = params.id as string;
         const recipeRef = doc(db, 'recipes', recipeId);
-        const recipeSnap = await getDoc(recipeRef);
-
-        if (recipeSnap.exists()) {
-          setRecipes(recipeSnap.data() as Recipe);
-        } else {
-          setError('Recipe not found');
-        }
+        
+        // Setup real-time listener
+        const unsubscribe = onSnapshot(recipeRef, (recipeSnap) => {
+          if (recipeSnap.exists()) {
+            const recipeData = recipeSnap.data() as Recipe;
+            setRecipes(recipeData);
+            
+            // If image exists, we're done loading
+            if (recipeData.imageUrl) {
+              setImageLoading(false);
+            }
+          } else {
+            setError('Recipe not found');
+          }
+          setLoading(false);
+        });
+        
+        return () => unsubscribe();
       } catch (err) {
         setError('Error fetching recipe');
         console.error('Error fetching recipe:', err);
-      } finally {
         setLoading(false);
       }
     };
@@ -121,6 +143,24 @@ const RecipePage = () => {
                 <CardTitle className="text-2xl font-bold text-[#2B2B2B] mb-2">{recipes.title}</CardTitle>
                 <p className="text-[#5C5C5C] leading-relaxed">{recipes.introduction}</p>
               </div>
+            </div>
+            <div className="!mt-6 relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
+              {imageLoading && !recipes.imageUrl ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F57C00] mx-auto mb-3"></div>
+                    <p className="text-sm text-gray-500">Gerando imagem da receita...</p>
+                  </div>
+                </div>
+              ) : recipes.imageUrl ? (
+                <Image
+                  src={recipes.imageUrl}
+                  alt={recipes.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : null}
             </div>
           </CardHeader>
 
@@ -180,6 +220,63 @@ const RecipePage = () => {
               </>
             )}
 
+            {/* Informações Nutricionais */}
+            {recipes.nutritionalInfo && (
+              <>
+                <Separator />
+                <Collapsible
+                  open={nutritionalInfoOpen}
+                  onOpenChange={setNutritionalInfoOpen}
+                  className="w-full"
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full py-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex flex-col items-start">
+                      <h3 className="text-lg font-semibold text-[#2B2B2B] flex items-center gap-2">
+                        Informações Nutricionais
+                      </h3>
+                      <p className="text-xs text-[#5C5C5C] mt-1">Valores aproximados por porção</p>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-[#F57C00] transition-transform duration-200 ${
+                        nutritionalInfoOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-3">
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5C5C5C] font-medium">Calorias:</span>
+                        <span className="text-[#2B2B2B] font-semibold">{recipes.nutritionalInfo.calorias}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5C5C5C] font-medium">Proteínas:</span>
+                        <span className="text-[#2B2B2B] font-semibold">{recipes.nutritionalInfo.proteinas}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5C5C5C] font-medium">Carboidratos:</span>
+                        <span className="text-[#2B2B2B] font-semibold">{recipes.nutritionalInfo.carboidratos}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5C5C5C] font-medium">Gorduras:</span>
+                        <span className="text-[#2B2B2B] font-semibold">{recipes.nutritionalInfo.gorduras}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#5C5C5C] font-medium">Fibras:</span>
+                        <span className="text-[#2B2B2B] font-semibold">{recipes.nutritionalInfo.fibras}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#5C5C5C] italic mt-3">
+                      * Valores aproximados que podem variar de acordo com os ingredientes utilizados.
+                    </p>
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
+            )}
+
             <Separator />
 
             {/* Botões principais */}
@@ -187,7 +284,7 @@ const RecipePage = () => {
               {/* Seção de ajuda do Chefinho */}
               <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
                 <p className="text-sm text-gray-700 mb-3">
-                  <strong>Precisa de ajuda?</strong> Tire dúvidas sobre a receita, saiba quais ingredientes pode substituir ou 
+                  <strong>Quer melhorar sua receita?</strong> Melhore sua receita, saiba quais ingredientes pode substituir ou 
                   como melhorar o prato. O Chefinho está aqui para ajudar!
                 </p>
                 <Button
@@ -217,6 +314,20 @@ const RecipePage = () => {
                   onClick={handleGetOtherRecipe}
                 >
                   Gerar outra receita
+                </Button>
+              </div>
+
+              {/* Disclaimer de receita salva */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                <p className="text-sm text-gray-700 text-center">
+                  ✓ Esta receita foi salva automaticamente. Para ver todas as suas receitas salvas, clique no botão abaixo.
+                </p>
+                <Button
+                  onClick={() => router.push('/minhas-receitas')}
+                  variant="outline"
+                  className="w-full mt-3 border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800 font-semibold"
+                >
+                  Ver Receitas Salvas
                 </Button>
               </div>
             </div>

@@ -84,7 +84,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     }
   };
 
-  const saveRecipe = async (recipe: any) => {
+  const saveRecipe = async (recipe: any, imageUrl?: string) => {
     console.log('Saving recipe:', recipe);
     try {
       const savedRecipe = await addDoc(collection(db, 'recipes'), {
@@ -93,6 +93,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         ingredients: recipe.ingredientes,
         preparationMethod: recipe.modoDePreparo,
         observations: recipe.observacoes,
+        nutritionalInfo: recipe.informacoesNutricionais || null,
+        imageUrl: imageUrl || null,
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
       });
@@ -150,9 +152,40 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
 
       let newRecipe = response.data.response.replace(/```json|```/g, '').trim();
       let newRecipeObject = JSON.parse(newRecipe);
+      
+      // Save recipe without image first
       const recipe = await saveRecipe(newRecipeObject);
       if (recipe) {
+        // Redirect to recipe page immediately
         router.push(`/recipe/${recipe.id}`);
+        
+        // Generate image in background and update recipe
+        try {
+          const imageResponse = await axios.post(
+            `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/generate-image`,
+            {
+              recipeTitle: newRecipeObject.titulo,
+              recipeDescription: newRecipeObject.introducao,
+              ingredients: newRecipeObject.ingredientes,
+              preparationMethod: newRecipeObject.modoDePreparo,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: token,
+              },
+            },
+          );
+          
+          // Update recipe with image URL
+          if (imageResponse.data.imageUrl) {
+            await updateDoc(doc(db, 'recipes', recipe.id), {
+              imageUrl: imageResponse.data.imageUrl,
+            });
+          }
+        } catch (imageError) {
+          console.error('Error generating image:', imageError);
+        }
       }
     } catch (error) {
       setRecipeLoading(false);

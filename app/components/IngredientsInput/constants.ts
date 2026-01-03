@@ -3,7 +3,7 @@ export const INGREDIENTES = [
   "alface", "alho", "alho-poró", "ameixa", "amêndoa", "amendoim", "anis", "arroz", 
   "atum", "aveia", "azeite", "azeitona", "bacon", "banana", "batata", "batata-doce", 
   "baunilha", "berinjela", "beterraba", "biscoito", "brócolis", "cacau", "café", 
-  "calabresa", "calabresa", "canela", "caqui", "caramelo", "carne", "carne moída", 
+  "calabresa", "canela", "caqui", "caramelo", "carne", "carne moída", 
   "carne seca", "castanha", "cebola", "cebolinha", "cenoura", "cereais", "cereja", 
   "chá", "chicória", "chocolate", "chuchu", "coentro", "cogumelo", "colorau", 
   "cominho", "couve", "couve-flor", "creme de leite", "cravo", "cúrcuma", "damasco", 
@@ -16,7 +16,7 @@ export const INGREDIENTES = [
   "nabo", "noz", "noz-moscada", "óleo", "orégano", "ovo", "palmito", "pão", 
   "páprica", "pepino", "pera", "pêssego", "pimentão", "pimenta", "pimenta-do-reino", 
   "pinhão", "pistache", "polvilho", "presunto", "queijo", "quiabo", "rabanete", 
-  "repolho", "ricota", "rúcula", "sal", "salsa", "salsão", "salsicha", "soja", 
-  "tamarindo", "tomilho", "tomate", "toranja", "trigo", "uva", "vagem", "vinagre", 
-  "vinho"
+  "repolho", "ricota", "rúcula", "sal", "salada", "salsa", "salsão", "salsicha", "soja", 
+  "tamarindo", "tapioca", "tomilho", "tomate", "toranja", "trigo", "uva", "vagem", "vinagre", 
+  "vinho", "whey"
 ];
