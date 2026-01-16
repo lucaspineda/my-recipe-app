@@ -15,6 +15,7 @@ import { DialogHeader } from '../../ui/dialog';
 import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
+import { FeedbackSection } from '../../components/FeedbackSection/FeedbackSection';
 
 declare global {
   interface Window {
@@ -276,6 +277,11 @@ const RecipePage = () => {
                 </Collapsible>
               </>
             )}
+
+            <Separator />
+
+            {/* Feedback da receita */}
+            <FeedbackSection recipeId={params.id as string} />
 
             <Separator />
 
