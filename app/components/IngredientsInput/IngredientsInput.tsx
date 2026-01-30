@@ -123,7 +123,7 @@ const IngredientsInput = forwardRef<HTMLInputElement, IngredientsInputProps>(({
 
   return (
     <div className={`w-full ${className}`} ref={containerRef}>
-      <p className="text-sm text-gray-600 mb-2">
+      <p className="text-base text-gray-600 mb-2">
         Digite para buscar ou adicionar ingredientes personalizados
       </p>
 

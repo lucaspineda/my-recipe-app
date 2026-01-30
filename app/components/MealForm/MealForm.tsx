@@ -7,7 +7,7 @@ import Loading from '../Loading/Loading';
 import Button from '../Button/Button';
 import { auth, db } from '../../hooks/userAuth';
 import { getIdToken } from 'firebase/auth';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Clock, Sun, Coffee, Cake, Moon, Cookie } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
@@ -20,6 +20,7 @@ import { mealOptions } from './data';
 import IngredientsInput from '../IngredientsInput/IngredientsInput';
 import SingleSelect from '../SingleSelect/SingleSelect';
 import Modal from '../Modal/Modal';
+import { Slider } from '../../ui/slider';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -38,6 +39,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [error, setError] = useState(false);
   const [optionMeal, setOptionMeal] = useState('almoco');
   const [ingredients, setIngredients] = useState<string[]>([]);
+  const [ingredientMode, setIngredientMode] = useState<'strict' | 'suggest'>('suggest');
+  const [prepTime, setPrepTime] = useState(40);
+  const [cookingLevel, setCookingLevel] = useState<'iniciante' | 'intermediario' | 'avancado'>('intermediario');
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const ingredientsInputRef = React.useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -72,6 +76,33 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       setValue('ingredients', parsedIngredients.length > 0 ? parsedIngredients.join(', ') : '');
       localStorage.removeItem('ingredients');
     }
+    
+    // Retrieve other saved options
+    if (pathname === '/recipe') {
+      const savedIngredientMode = localStorage.getItem('ingredientMode');
+      const savedPrepTime = localStorage.getItem('prepTime');
+      const savedCookingLevel = localStorage.getItem('cookingLevel');
+      const savedMealType = localStorage.getItem('mealType');
+      
+      if (savedIngredientMode) {
+        setIngredientMode(savedIngredientMode as 'strict' | 'suggest');
+        localStorage.removeItem('ingredientMode');
+      }
+      if (savedPrepTime) {
+        setPrepTime(parseInt(savedPrepTime));
+        localStorage.removeItem('prepTime');
+      }
+      if (savedCookingLevel) {
+        setCookingLevel(savedCookingLevel as 'iniciante' | 'intermediario' | 'avancado');
+        localStorage.removeItem('cookingLevel');
+      }
+      if (savedMealType) {
+        setOptionMeal(savedMealType);
+        setValue('mealType', savedMealType);
+        localStorage.removeItem('mealType');
+      }
+    }
+    
     // Set default mealType value
     setValue('mealType', optionMeal);
   }, [pathname, setValue, optionMeal]);
@@ -115,6 +146,13 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     if (!auth.currentUser) {
       updateIngredients(ingredients.join(', '));
       updateMealOption(optionMeal);
+      
+      // Save all form options to localStorage
+      localStorage.setItem('ingredientMode', ingredientMode);
+      localStorage.setItem('prepTime', prepTime.toString());
+      localStorage.setItem('cookingLevel', cookingLevel);
+      localStorage.setItem('mealType', optionMeal);
+      
       router.push('/signup');
       return;
     }
@@ -133,6 +171,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         {
           optionMeal: optionMeal,
           ingredients: ingredients.join(', '),
+          ingredientMode: ingredientMode,
+          prepTime: prepTime,
+          cookingLevel: cookingLevel,
         },
         {
           headers: {
@@ -159,32 +200,36 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         // Redirect to recipe page immediately
         router.push(`/recipe/${recipe.id}`);
         
-        // Generate image in background and update recipe
-        try {
-          const imageResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/generate-image`,
-            {
-              recipeTitle: newRecipeObject.titulo,
-              recipeDescription: newRecipeObject.introducao,
-              ingredients: newRecipeObject.ingredientes,
-              preparationMethod: newRecipeObject.modoDePreparo,
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: token,
+        // Only generate image for Pro users (planId >= 2)
+        const isPro = user?.plan?.planId >= 2;
+        if (isPro) {
+          // Generate image in background and update recipe
+          try {
+            const imageResponse = await axios.post(
+              `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/generate-image`,
+              {
+                recipeTitle: newRecipeObject.titulo,
+                recipeDescription: newRecipeObject.introducao,
+                ingredients: newRecipeObject.ingredientes,
+                preparationMethod: newRecipeObject.modoDePreparo,
               },
-            },
-          );
-          
-          // Update recipe with image URL
-          if (imageResponse.data.imageUrl) {
-            await updateDoc(doc(db, 'recipes', recipe.id), {
-              imageUrl: imageResponse.data.imageUrl,
-            });
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: token,
+                },
+              },
+            );
+            
+            // Update recipe with image URL
+            if (imageResponse.data.imageUrl) {
+              await updateDoc(doc(db, 'recipes', recipe.id), {
+                imageUrl: imageResponse.data.imageUrl,
+              });
+            }
+          } catch (imageError) {
+            console.error('Error generating image:', imageError);
           }
-        } catch (imageError) {
-          console.error('Error generating image:', imageError);
         }
       }
     } catch (error) {
@@ -220,21 +265,185 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
             className="mb-4"
             ref={ingredientsInputRef}
           />
+          
+          {/* Ingredient Mode Toggle */}
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-6">2</div>
+          <label className="secondary-header py-3">Como usar os ingredientes</label>
+          <div className="mb-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setIngredientMode('suggest')}
+                className={`flex-1 py-4 px-4 rounded-lg border-2 transition-all ${
+                  ingredientMode === 'suggest'
+                    ? 'bg-white border-secondary shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                <div className="text-lg mb-1">✨ Modo criativo</div>
+                <p className="text-sm text-gray-500">Usa a maioria dos ingredientes mas pode sugerir remoção ou adição</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIngredientMode('strict')}
+                className={`flex-1 py-4 px-4 rounded-lg border-2 transition-all ${
+                  ingredientMode === 'strict'
+                    ? 'bg-white border-secondary shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                <div className="text-lg mb-1">🍳 Só o que eu tenho</div>
+                <p className="text-sm text-gray-500">Usa apenas os ingredientes que você listou</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Prep Time Slider */}
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-6">3</div>
+          <label className="secondary-header py-3">Tempo de preparo</label>
+          <div className="mb-4">
+            <div className="flex items-center justify-end mb-3">
+              <span className="text-base font-semibold text-secondary">
+                {prepTime === 0 ? 'Sem limite' : `${prepTime} min`}
+              </span>
+            </div>
+            <Slider
+              value={[prepTime]}
+              onValueChange={(value) => setPrepTime(value[0])}
+              max={90}
+              min={0}
+              step={5}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-gray-800 mt-1">
+              <span>Sem limite</span>
+              <span>90 min</span>
+            </div>
+          </div>
+
+          {/* Cooking Level */}
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-6">4</div>
+          <label className="secondary-header py-3">Qual seu nível na cozinha?</label>
+          <div className="mb-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setCookingLevel('iniciante')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  cookingLevel === 'iniciante'
+                    ? 'bg-white border-secondary shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                <div className="text-lg">🍳 Iniciante</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCookingLevel('intermediario')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  cookingLevel === 'intermediario'
+                    ? 'bg-white border-secondary shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                <div className="text-lg">🥩 Intermediário</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCookingLevel('avancado')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  cookingLevel === 'avancado'
+                    ? 'bg-white border-secondary shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                <div className="text-lg">🧑‍🍳 Avançado</div>
+              </button>
+            </div>
+          </div>
+
           {errors?.ingredients?.message && (
             <span className="text-red-700 text-sm mt-2">{errors?.ingredients?.message.toString()}</span>
           )}
-          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-10">2</div>
+          <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl mt-6">5</div>
           <label className="secondary-header py-3">Selecione qual refeição irá preparar</label>
-          <SingleSelect
-            options={mealOptions}
-            value={optionMeal}
-            onChange={(value) => {
-              setOptionMeal(value);
-              setValue('mealType', value);
-            }}
-            placeholder="Selecione o tipo de refeição"
-            className="mb-4"
-          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setOptionMeal('cafe');
+                setValue('mealType', 'cafe');
+              }}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border-2 transition-all ${
+                optionMeal === 'cafe'
+                  ? 'bg-white border-secondary shadow-md'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              <span className="text-2xl mb-2">☕</span>
+              <span className="text-sm font-medium">Café da Manhã</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOptionMeal('almoco');
+                setValue('mealType', 'almoco');
+              }}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border-2 transition-all ${
+                optionMeal === 'almoco'
+                  ? 'bg-white border-secondary shadow-md'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              <span className="text-2xl mb-2">🍽️</span>
+              <span className="text-sm font-medium">Almoço</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOptionMeal('lanche');
+                setValue('mealType', 'lanche');
+              }}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border-2 transition-all ${
+                optionMeal === 'lanche'
+                  ? 'bg-white border-secondary shadow-md'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              <span className="text-2xl mb-2">🥪</span>
+              <span className="text-sm font-medium">Lanche</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOptionMeal('janta');
+                setValue('mealType', 'janta');
+              }}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border-2 transition-all ${
+                optionMeal === 'janta'
+                  ? 'bg-white border-secondary shadow-md'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              <span className="text-2xl mb-2">🌙</span>
+              <span className="text-sm font-medium">Janta</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOptionMeal('sobremesa');
+                setValue('mealType', 'sobremesa');
+              }}
+              className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border-2 transition-all ${
+                optionMeal === 'sobremesa'
+                  ? 'bg-white border-secondary shadow-md'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              <span className="text-2xl mb-2">🍰</span>
+              <span className="text-sm font-medium">Sobremesa</span>
+            </button>
+          </div>
           {errors?.mealType?.message && (
             <span className="text-red-700 text-sm mt-2">{errors?.mealType?.message.toString()}</span>
           )}

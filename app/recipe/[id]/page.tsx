@@ -7,7 +7,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../hooks/userAuth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
-import { ChefHat, Share2, Link, MessageCircle, ChevronDown } from 'lucide-react';
+import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -15,6 +15,7 @@ import { DialogHeader } from '../../ui/dialog';
 import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
+import { useUserStore } from '../../store/user';
 import { FeedbackSection } from '../../components/FeedbackSection/FeedbackSection';
 
 declare global {
@@ -50,9 +51,16 @@ const RecipePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [chatFeatureDialogOpen, setChatFeatureDialogOpen] = useState(false);
-  const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(false);
+  const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const { setShowRecipe, recipe } = useRecipeStore();
+  const { user } = useUserStore();
+  
+  // Check if user is on Pro plan (planId 2 or 3)
+  const isPro = user?.plan?.planId >= 2;
+  
+  // Check if this is the current user's own recipe
+  const isOwnRecipe = user?.uid && recipes?.userId === user.uid;
 
   const handleShare = async (platform: string) => {
     try {
@@ -99,21 +107,30 @@ const RecipePage = () => {
         const recipeId = params.id as string;
         const recipeRef = doc(db, 'recipes', recipeId);
         
-        // Setup real-time listener
-        const unsubscribe = onSnapshot(recipeRef, (recipeSnap) => {
-          if (recipeSnap.exists()) {
-            const recipeData = recipeSnap.data() as Recipe;
-            setRecipes(recipeData);
-            
-            // If image exists, we're done loading
-            if (recipeData.imageUrl) {
-              setImageLoading(false);
+        // Setup real-time listener with error handler
+        const unsubscribe = onSnapshot(
+          recipeRef, 
+          (recipeSnap) => {
+            if (recipeSnap.exists()) {
+              const recipeData = recipeSnap.data() as Recipe;
+              setRecipes(recipeData);
+              
+              // If image exists, we're done loading
+              if (recipeData.imageUrl) {
+                setImageLoading(false);
+              }
+            } else {
+              setError('Recipe not found');
             }
-          } else {
-            setError('Recipe not found');
+            setLoading(false);
+          },
+          (err) => {
+            // Handle Firestore permission errors
+            console.error('Error fetching recipe:', err);
+            setError('Erro ao carregar receita');
+            setLoading(false);
           }
-          setLoading(false);
-        });
+        );
         
         return () => unsubscribe();
       } catch (err) {
@@ -145,22 +162,65 @@ const RecipePage = () => {
                 <p className="text-[#5C5C5C] leading-relaxed">{recipes.introduction}</p>
               </div>
             </div>
-            <div className="!mt-6 relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
-              {imageLoading && !recipes.imageUrl ? (
-                <div className="absolute inset-0 flex items-center justify-center">
+            <div className="!mt-6 relative w-full h-[300px] sm:h-[350px] md:h-[400px] rounded-lg overflow-hidden">
+              {recipes.imageUrl ? (
+                // Show image if it exists (for everyone)
+                <Image
+                  src={recipes.imageUrl}
+                  alt={recipes.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover"
+                  priority
+                />
+              ) : isOwnRecipe && !isPro ? (
+                // Locked state for free users viewing their own recipe without image
+                <div className="absolute inset-0">
+                  {/* Background image with blur */}
+                  <Image
+                    src="/images/avocado-toast.jpg"
+                    alt="Premium feature"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover blur-sm scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30" />
+                  {/* Content overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-4">
+                    <div className="text-center w-full">
+                      <div className="w-12 h-12 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 rounded-full bg-gradient-to-br from-[#F57C00] to-[#FF9800] flex items-center justify-center shadow-lg">
+                        <Lock className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
+                      </div>
+                      <div className="bg-white/95 backdrop-blur rounded-xl p-3 sm:p-6 shadow-xl mx-2 sm:mx-auto sm:max-w-xs">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                          <Sparkles className="w-3 h-3 sm:w-5 sm:h-5 text-[#F57C00]" />
+                          <span className="text-[9px] sm:text-xs font-semibold text-[#F57C00] uppercase tracking-wide">Recurso Premium</span>
+                        </div>
+                        <h3 className="text-sm sm:text-lg font-bold text-[#2B2B2B] mb-1">
+                          Imagens de receita com IA
+                        </h3>
+                        <p className="text-[11px] sm:text-sm text-gray-600 mb-2 sm:mb-4 leading-tight">
+                          Visualize suas receitas com imagens geradas por IA
+                        </p>
+                        <Button
+                          onClick={() => router.push('/plans')}
+                          className="w-full bg-gradient-to-r from-[#F57C00] to-[#FF9800] hover:from-[#E64A19] hover:to-[#F57C00] text-white font-semibold py-2 sm:py-3 text-xs sm:text-base rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105"
+                        >
+                          <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Fazer upgrade
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : isOwnRecipe && isPro && imageLoading ? (
+                // Loading state for Pro users waiting for image generation
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F57C00] mx-auto mb-3"></div>
                     <p className="text-sm text-gray-500">Gerando imagem da receita...</p>
                   </div>
                 </div>
-              ) : recipes.imageUrl ? (
-                <Image
-                  src={recipes.imageUrl}
-                  alt={recipes.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
               ) : null}
             </div>
           </CardHeader>
@@ -280,29 +340,34 @@ const RecipePage = () => {
 
             <Separator />
 
-            {/* Feedback da receita */}
-            <FeedbackSection recipeId={params.id as string} />
-
-            <Separator />
+            {/* Feedback da receita - Only show if user is logged in */}
+            {user && (
+              <>
+                <FeedbackSection recipeId={params.id as string} />
+                <Separator />
+              </>
+            )}
 
             {/* Botões principais */}
             <div className="flex flex-col gap-3 pt-2">
-              {/* Seção de ajuda do Chefinho */}
-              <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
-                <p className="text-sm text-gray-700 mb-3">
-                  <strong>Quer melhorar sua receita?</strong> Melhore sua receita, saiba quais ingredientes pode substituir ou 
-                  como melhorar o prato. O Chefinho está aqui para ajudar!
-                </p>
-                <Button
-                  className="w-full h-auto min-h-[44px] py-3 bg-secondary text-white font-semibold hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 text-wrap"
-                  onClick={() => {
-                    setChatFeatureDialogOpen(true);
-                  }}
-                >
-                  <MessageCircle className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-sm md:text-base leading-tight">Fale com o Chefinho sobre essa receita</span>
-                </Button>
-              </div>
+              {/* Seção de ajuda do Chefinho - Only show if user is logged in */}
+              {user && (
+                <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-3">
+                    <strong>Quer melhorar sua receita?</strong> Melhore sua receita, saiba quais ingredientes pode substituir ou 
+                    como melhorar o prato. O Chefinho está aqui para ajudar!
+                  </p>
+                  <Button
+                    className="w-full h-auto min-h-[44px] py-3 bg-secondary text-white font-semibold hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 text-wrap"
+                    onClick={() => {
+                      setChatFeatureDialogOpen(true);
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm md:text-base leading-tight">Fale com o Chefinho sobre essa receita</span>
+                  </Button>
+                </div>
+              )}
 
               {/* Botões de compartilhar e gerar nova receita */}
               <div className="flex flex-col gap-3 md:flex-row">
@@ -314,28 +379,56 @@ const RecipePage = () => {
                   Compartilhar
                 </Button>
 
-                <Button
-                  variant="secondary"
-                  className="flex-1 text-white font-semibold transition-colors"
-                  onClick={handleGetOtherRecipe}
-                >
-                  Gerar outra receita
-                </Button>
+                {user && (
+                  <Button
+                    variant="secondary"
+                    className="flex-1 text-white font-semibold transition-colors"
+                    onClick={handleGetOtherRecipe}
+                  >
+                    Gerar outra receita
+                  </Button>
+                )}
               </div>
 
-              {/* Disclaimer de receita salva */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                <p className="text-sm text-gray-700 text-center">
-                  ✓ Esta receita foi salva automaticamente. Para ver todas as suas receitas salvas, clique no botão abaixo.
-                </p>
-                <Button
-                  onClick={() => router.push('/minhas-receitas')}
-                  variant="outline"
-                  className="w-full mt-3 border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800 font-semibold"
-                >
-                  Ver Receitas Salvas
-                </Button>
-              </div>
+              {/* Login CTA for non-logged users */}
+              {!user && (
+                <div className="bg-primary border border-tertiary rounded-lg p-4 text-center">
+                  <p className="text-sm text-[#2B2B2B] mb-3">
+                    Gostou da receita? Crie sua conta para gerar sua própria receita personalizada!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      onClick={() => router.push('/signup')}
+                      className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-semibold"
+                    >
+                      Criar conta grátis
+                    </Button>
+                    <Button
+                      onClick={() => router.push('/login')}
+                      variant="outline"
+                      className="flex-1 border-secondary text-secondary hover:bg-secondary hover:text-white font-semibold"
+                    >
+                      Já tenho conta
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Disclaimer de receita salva - only for logged users viewing their own recipe */}
+              {user && isOwnRecipe && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                  <p className="text-sm text-gray-700 text-center">
+                    ✓ Esta receita foi salva automaticamente. Para ver todas as suas receitas salvas, clique no botão abaixo.
+                  </p>
+                  <Button
+                    onClick={() => router.push('/minhas-receitas')}
+                    variant="outline"
+                    className="w-full mt-3 border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800 font-semibold"
+                  >
+                    Ver Receitas Salvas
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
