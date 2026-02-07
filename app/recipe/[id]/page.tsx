@@ -7,7 +7,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../hooks/userAuth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
-import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock } from 'lucide-react';
+import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock, Send } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -353,19 +353,24 @@ const RecipePage = () => {
               {/* Seção de ajuda do Chefinho - Only show if user is logged in */}
               {user && (
                 <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
-                  <p className="text-sm text-gray-700 mb-3">
-                    <strong>Quer melhorar sua receita?</strong> Melhore sua receita, saiba quais ingredientes pode substituir ou 
-                    como melhorar o prato. O Chefinho está aqui para ajudar!
-                  </p>
-                  <Button
-                    className="w-full h-auto min-h-[44px] py-3 bg-secondary text-white font-semibold hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2 text-wrap"
-                    onClick={() => {
-                      setChatFeatureDialogOpen(true);
-                    }}
-                  >
-                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-sm md:text-base leading-tight">Fale com o Chefinho sobre essa receita</span>
-                  </Button>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-secondary flex-shrink-0" />
+                    <p className="text-sm font-semibold text-gray-700">Refine sua receita</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ex: substituir manteiga, deixar mais saudável..."
+                      className="flex-1 text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400"
+                      onFocus={() => setChatFeatureDialogOpen(true)}
+                    />
+                    <Button
+                      className="h-auto min-h-[40px] px-3 bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center"
+                      onClick={() => setChatFeatureDialogOpen(true)}
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -479,7 +484,7 @@ const RecipePage = () => {
               <p className="text-center text-gray-700 mb-6">
                 Você pagaria por essa funcionalidade?
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
@@ -491,6 +496,19 @@ const RecipePage = () => {
                   className="bg-green-500 text-white hover:bg-green-600"
                 >
                   Sim
+                </Button>
+                <Button
+                  onClick={() => {
+                    setChatFeatureDialogOpen(false);
+                    toast({
+                      title: 'Obrigado!',
+                      description: 'Sua opinião é muito importante para nós.',
+                    });
+                  }}
+                  variant="outline"
+                  className="border-yellow-400 text-yellow-600 hover:bg-yellow-50"
+                >
+                  Talvez
                 </Button>
                 <Button
                   onClick={() => {
