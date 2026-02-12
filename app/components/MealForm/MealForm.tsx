@@ -1,4 +1,4 @@
-import React, { useState, MouseEvent, useEffect } from 'react';
+import React, { useState, MouseEvent, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { forwardRef } from 'react';
 import { useRecipeStore } from '../../store/recipe';
@@ -7,7 +7,8 @@ import Loading from '../Loading/Loading';
 import Button from '../Button/Button';
 import { auth, db } from '../../hooks/userAuth';
 import { getIdToken } from 'firebase/auth';
-import { AlertCircle, Clock, Sun, Coffee, Cake, Moon, Cookie } from 'lucide-react';
+import { AlertCircle, Clock, Sun, Coffee, Cake, Moon, Cookie, ChefHat, Sparkles, RefreshCw, ArrowLeft } from 'lucide-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useUserStore } from '../../store/user';
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
@@ -43,7 +44,23 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [prepTime, setPrepTime] = useState(40);
   const [cookingLevel, setCookingLevel] = useState<'iniciante' | 'intermediario' | 'avancado'>('intermediario');
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
+  const [showRecipeOptionsModal, setShowRecipeOptionsModal] = useState(false);
+  const [recipeOptions, setRecipeOptions] = useState<any[]>([]);
+  const [recipeOptionsLoading, setRecipeOptionsLoading] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+  const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const ingredientsInputRef = React.useRef<HTMLInputElement>(null);
+
+  const loadingMessages = [
+    { title: '🔍 Analisando seus ingredientes...', subtitle: 'O Chefinho está conferindo o que você tem disponível' },
+    { title: '🧑‍🍳 Pensando em combinações...', subtitle: 'Buscando os melhores sabores para combinar' },
+    { title: '📋 Escolhendo o preparo ideal...', subtitle: 'Adaptando ao seu nível de habilidade' },
+    { title: '⏱️ Ajustando o tempo de preparo...', subtitle: 'Encaixando tudo no tempo que você tem' },
+    { title: '✨ Criando receitas exclusivas...', subtitle: 'Cada opção pensada especialmente para você' },
+    { title: '🍽️ Quase pronto...', subtitle: 'Finalizando as 4 melhores opções' },
+    { title: '🎯 Dando os últimos retoques...', subtitle: 'Garantindo que cada receita ficará perfeita' },
+  ];
   const router = useRouter();
   const pathname = usePathname();
   const { user, updateRecipesCount } = useUserStore();
@@ -58,6 +75,28 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   } = useForm({
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    if (recipeOptionsLoading) {
+      setLoadingMsgIndex(0);
+      loadingIntervalRef.current = setInterval(() => {
+        setLoadingMsgIndex((prev) => {
+          if (prev < loadingMessages.length - 1) return prev + 1;
+          return prev; // Stay on last message
+        });
+      }, 3000);
+    } else {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+      }
+    };
+  }, [recipeOptionsLoading]);
 
   useEffect(() => {
     if (error) {
@@ -163,11 +202,22 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       return console.log('unauthorized');
     }
 
-    setRecipeLoading(true);
+    await fetchRecipeOptions(token);
+  };
+
+  const fetchRecipeOptions = async (token?: string) => {
+    if (!token) {
+      token = await getIdToken(auth.currentUser);
+    }
+    if (!token) return;
+
+    setShowRecipeOptionsModal(true);
+    setRecipeOptionsLoading(true);
+    setRecipeOptions([]);
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini`,
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/recipe-options`,
         {
           optionMeal: optionMeal,
           ingredients: ingredients.join(', '),
@@ -191,27 +241,37 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       });
       updateRecipesCount(newRecipeCount);
 
-      let newRecipe = response.data.response.replace(/```json|```/g, '').trim();
-      let newRecipeObject = JSON.parse(newRecipe);
-      
-      // Save recipe without image first
-      const recipe = await saveRecipe(newRecipeObject);
+      const parsed = response.data.response;
+      const receitas = parsed.receitas || [];
+      setRecipeOptions(receitas);
+    } catch (error) {
+      setShowRecipeOptionsModal(false);
+      setError(true);
+      return console.log(error);
+    } finally {
+      setRecipeOptionsLoading(false);
+    }
+  };
+
+  const handleSelectRecipe = async (selectedRecipe: any) => {
+    setSavingRecipe(true);
+    try {
+      const token = await getIdToken(auth.currentUser);
+      const recipe = await saveRecipe(selectedRecipe);
       if (recipe) {
-        // Redirect to recipe page immediately
         router.push(`/recipe/${recipe.id}`);
-        
+
         // Only generate image for Pro users (planId >= 2)
         const isPro = user?.plan?.planId >= 2;
-        if (isPro) {
-          // Generate image in background and update recipe
+        if (isPro && token) {
           try {
             const imageResponse = await axios.post(
               `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/generate-image`,
               {
-                recipeTitle: newRecipeObject.titulo,
-                recipeDescription: newRecipeObject.introducao,
-                ingredients: newRecipeObject.ingredientes,
-                preparationMethod: newRecipeObject.modoDePreparo,
+                recipeTitle: selectedRecipe.titulo,
+                recipeDescription: selectedRecipe.introducao,
+                ingredients: selectedRecipe.ingredientes,
+                preparationMethod: selectedRecipe.modoDePreparo,
               },
               {
                 headers: {
@@ -220,8 +280,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                 },
               },
             );
-            
-            // Update recipe with image URL
+
             if (imageResponse.data.imageUrl) {
               await updateDoc(doc(db, 'recipes', recipe.id), {
                 imageUrl: imageResponse.data.imageUrl,
@@ -233,14 +292,11 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         }
       }
     } catch (error) {
-      setRecipeLoading(false);
-      setError(true);
-
-      return console.log(error);
+      console.error('Error saving selected recipe:', error);
+      toast.error('Erro ao salvar a receita. Tente novamente.');
     } finally {
-      setTimeout(() => {
-        setRecipeLoading(false);
-      }, 500);
+      setSavingRecipe(false);
+      setShowRecipeOptionsModal(false);
     }
   };
 
@@ -499,6 +555,98 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           <input {...register('mealType')} type="hidden" value={optionMeal} />
         </form>
       )}
+
+      {/* Recipe Options Modal */}
+      <Modal isOpen={showRecipeOptionsModal} onClose={() => !recipeOptionsLoading && !savingRecipe && setShowRecipeOptionsModal(false)}>
+        <div className="w-full max-w-2xl mx-auto">
+          {recipeOptionsLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <DotLottieReact
+                src="https://lottie.host/a4c75b0a-3bad-4479-80d9-8705fabc20f7/JK7A6PJh1v.json"
+                loop
+                autoplay
+                style={{ width: 200, height: 200 }}
+              />
+              <div className="mt-4 min-h-[60px] flex flex-col items-center">
+                <h3
+                  key={loadingMsgIndex}
+                  className="text-xl font-semibold text-gray-800 animate-fade-in"
+                >
+                  {loadingMessages[loadingMsgIndex].title}
+                </h3>
+                <p
+                  key={`sub-${loadingMsgIndex}`}
+                  className="text-sm text-gray-500 mt-2 animate-fade-in"
+                >
+                  {loadingMessages[loadingMsgIndex].subtitle}
+                </p>
+              </div>
+              <div className="flex gap-1.5 mt-5">
+                {loadingMessages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      i <= loadingMsgIndex ? 'bg-secondary w-6' : 'bg-gray-200 w-3'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : savingRecipe ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <DotLottieReact
+                src="https://lottie.host/a4c75b0a-3bad-4479-80d9-8705fabc20f7/JK7A6PJh1v.json"
+                loop
+                autoplay
+                style={{ width: 200, height: 200 }}
+              />
+              <h3 className="text-xl font-semibold mt-4 text-gray-800">Salvando sua receita...</h3>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-5 h-5 text-secondary" />
+                <h3 className="text-xl font-bold text-gray-800">Escolha sua receita</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-5">O Chefinho preparou 4 opções para você. Escolha a que mais te agrada!</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {recipeOptions.map((recipe, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSelectRecipe(recipe)}
+                    className="text-left p-4 rounded-xl border-2 border-gray-200 hover:border-secondary hover:shadow-md transition-all bg-white group cursor-pointer"
+                  >
+                    <div>
+                      <h4 className="font-semibold text-gray-800 group-hover:text-secondary transition-colors text-sm leading-tight mb-2">
+                        {recipe.titulo}
+                      </h4>
+                      <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
+                        {recipe.introducao}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => fetchRecipeOptions()}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Não gostei, me mostre outras opções
+                </button>
+                <button
+                  onClick={() => setShowRecipeOptionsModal(false)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Quero trocar meus ingredientes
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* Ingredients Required Modal */}
       <Modal isOpen={showIngredientsModal} onClose={() => setShowIngredientsModal(false)}>
