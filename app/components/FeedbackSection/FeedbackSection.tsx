@@ -1,25 +1,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, X, Send } from 'lucide-react';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../hooks/userAuth';
-import { useToast } from '../../hooks/use-toast';
+import { toast } from 'react-toastify';
 
 export enum FeedbackType {
   UP = 'up',
   DOWN = 'down'
 }
 
+const DISLIKE_REASONS = [
+  'Receita muito complicada',
+  'Não gostei da combinação',
+  'Demorada demais',
+  'Ingredientes difíceis',
+  'Não era o que eu queria',
+];
+
 interface FeedbackSectionProps {
   recipeId: string;
 }
 
 export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) => {
-  const { toast } = useToast();
   const [feedback, setFeedback] = useState<FeedbackType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReasonPicker, setShowReasonPicker] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [customReason, setCustomReason] = useState('');
+  const [isSubmittingReason, setIsSubmittingReason] = useState(false);
 
   // Check if user already voted
   useEffect(() => {
@@ -56,15 +67,11 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
 
   const handleFeedback = async (type: FeedbackType) => {
     if (isSubmitting) return;
-    if (feedback === type) return; // Already selected this option
+    if (feedback === type) return;
 
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      toast({
-        title: 'Erro',
-        description: 'Você precisa estar logado para avaliar.',
-        variant: 'destructive',
-      });
+      toast.error('Você precisa estar logado para avaliar.');
       return;
     }
 
@@ -78,7 +85,6 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
       
       if (recipeSnap.exists()) {
         const data = recipeSnap.data();
-        // Remove previous feedback from user and add new one
         const updatedFeedback = (data.feedback || []).filter(
           (f: { userId: string }) => f.userId !== userId
         );
@@ -93,26 +99,72 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
         });
       }
 
-      toast({
-        title: 'Obrigado!',
-        description: previousFeedback ? 'Seu feedback foi atualizado.' : 'Seu feedback foi registrado.',
-      });
-
       // Track in Clarity if available
       if (typeof window !== 'undefined' && window.clarity) {
         window.clarity('event', 'recipe_feedback', type);
       }
+
+      if (type === FeedbackType.DOWN) {
+        setShowReasonPicker(true);
+      } else {
+        toast.success('Obrigado pelo feedback!');
+      }
     } catch (error) {
       console.error('Error submitting feedback:', error);
       setFeedback(previousFeedback);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível registrar seu feedback. Tente novamente.',
-        variant: 'destructive',
-      });
+      toast.error('Não foi possível registrar seu feedback. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmitReason = async () => {
+    const reason = selectedReason === 'Outro' ? customReason.trim() : selectedReason;
+    if (!reason) return;
+
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+
+    setIsSubmittingReason(true);
+
+    try {
+      const recipeRef = doc(db, 'recipes', recipeId);
+      const recipeSnap = await getDoc(recipeRef);
+
+      if (recipeSnap.exists()) {
+        const data = recipeSnap.data();
+        const updatedFeedback = (data.feedback || []).map(
+          (f: { userId: string; type: string; timestamp: string; reason?: string }) => {
+            if (f.userId === userId && f.type === FeedbackType.DOWN) {
+              return { ...f, reason };
+            }
+            return f;
+          }
+        );
+
+        await updateDoc(recipeRef, {
+          feedback: updatedFeedback,
+        });
+      }
+
+      toast.success('Obrigado pelo feedback! Sua opinião nos ajuda a melhorar as receitas.');
+
+      setShowReasonPicker(false);
+      setSelectedReason(null);
+      setCustomReason('');
+    } catch (error) {
+      console.error('Error submitting reason:', error);
+      toast.error('Não foi possível enviar o motivo. Tente novamente.');
+    } finally {
+      setIsSubmittingReason(false);
+    }
+  };
+
+  const handleSkipReason = () => {
+    setShowReasonPicker(false);
+    setSelectedReason(null);
+    setCustomReason('');
+    toast.success('Obrigado pelo feedback!');
   };
 
   if (isLoading) {
@@ -125,35 +177,107 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
-      <p className="text-center text-sm font-semibold text-[#2B2B2B] mb-3">
-        Você gostou da receita?
-      </p>
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => handleFeedback(FeedbackType.UP)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
-            feedback === FeedbackType.UP
-              ? 'bg-green-500 text-white scale-110'
-              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-          }`}
-          disabled={isSubmitting}
-        >
-          <ThumbsUp className="w-5 h-5" />
-          <span className="font-medium">Gostei</span>
-        </button>
-        <button
-          onClick={() => handleFeedback(FeedbackType.DOWN)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
-            feedback === FeedbackType.DOWN
-              ? 'bg-red-500 text-white scale-110'
-              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-          }`}
-          disabled={isSubmitting}
-        >
-          <ThumbsDown className="w-5 h-5" />
-          <span className="font-medium">Não gostei</span>
-        </button>
-      </div>
+      {!showReasonPicker ? (
+        <>
+          <p className="text-center text-sm font-semibold text-[#2B2B2B] mb-3">
+            Você gostou da receita?
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => handleFeedback(FeedbackType.UP)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
+                feedback === FeedbackType.UP
+                  ? 'bg-green-500 text-white scale-110'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+              disabled={isSubmitting}
+            >
+              <ThumbsUp className="w-5 h-5" />
+              <span className="font-medium">Gostei</span>
+            </button>
+            <button
+              onClick={() => handleFeedback(FeedbackType.DOWN)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
+                feedback === FeedbackType.DOWN
+                  ? 'bg-red-500 text-white scale-110'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+              disabled={isSubmitting}
+            >
+              <ThumbsDown className="w-5 h-5" />
+              <span className="font-medium">Não gostei</span>
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="animate-fade-in">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-semibold text-[#2B2B2B]">
+              😕 O que não ficou bom?
+            </p>
+            <button
+              onClick={handleSkipReason}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2 mb-3">
+            {DISLIKE_REASONS.map((reason) => (
+              <button
+                key={reason}
+                onClick={() => {
+                  setSelectedReason(reason);
+                  setCustomReason('');
+                }}
+                className={`text-left px-4 py-2.5 rounded-lg text-sm transition-all ${
+                  selectedReason === reason
+                    ? 'bg-secondary text-white'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:border-secondary/50'
+                }`}
+              >
+                {reason}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                setSelectedReason('Outro');
+              }}
+              className={`text-left px-4 py-2.5 rounded-lg text-sm transition-all ${
+                selectedReason === 'Outro'
+                  ? 'bg-secondary text-white'
+                  : 'bg-white border border-gray-200 text-gray-700 hover:border-secondary/50'
+              }`}
+            >
+              Outro
+            </button>
+          </div>
+
+          {selectedReason === 'Outro' && (
+            <textarea
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              placeholder="Conte-nos o que podemos melhorar..."
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-700 resize-none focus:outline-none focus:border-secondary transition-colors mb-3"
+              rows={3}
+            />
+          )}
+
+          <button
+            onClick={handleSubmitReason}
+            disabled={
+              isSubmittingReason ||
+              !selectedReason ||
+              (selectedReason === 'Outro' && !customReason.trim())
+            }
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="w-4 h-4" />
+            Enviar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
