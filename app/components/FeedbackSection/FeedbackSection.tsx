@@ -11,7 +11,7 @@ export enum FeedbackType {
   DOWN = 'down'
 }
 
-const DISLIKE_REASONS = [
+export const DISLIKE_REASONS = [
   'Receita muito complicada',
   'Não gostei da combinação',
   'Demorada demais',
@@ -19,11 +19,8 @@ const DISLIKE_REASONS = [
   'Não era o que eu queria',
 ];
 
-interface FeedbackSectionProps {
-  recipeId: string;
-}
-
-export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) => {
+// ─── Shared feedback logic hook ───
+export function useFeedback(recipeId: string) {
   const [feedback, setFeedback] = useState<FeedbackType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +29,6 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
   const [customReason, setCustomReason] = useState('');
   const [isSubmittingReason, setIsSubmittingReason] = useState(false);
 
-  // Check if user already voted
   useEffect(() => {
     const checkExistingFeedback = async () => {
       const userId = auth.currentUser?.uid;
@@ -44,13 +40,13 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
       try {
         const recipeRef = doc(db, 'recipes', recipeId);
         const recipeSnap = await getDoc(recipeRef);
-        
+
         if (recipeSnap.exists()) {
           const data = recipeSnap.data();
           const existingFeedback = data.feedback?.find(
             (f: { userId: string; type: string }) => f.userId === userId
           );
-          
+
           if (existingFeedback) {
             setFeedback(existingFeedback.type as FeedbackType);
           }
@@ -82,7 +78,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
     try {
       const recipeRef = doc(db, 'recipes', recipeId);
       const recipeSnap = await getDoc(recipeRef);
-      
+
       if (recipeSnap.exists()) {
         const data = recipeSnap.data();
         const updatedFeedback = (data.feedback || []).filter(
@@ -99,7 +95,6 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
         });
       }
 
-      // Track in Clarity if available
       if (typeof window !== 'undefined' && window.clarity) {
         window.clarity('event', 'recipe_feedback', type);
       }
@@ -167,16 +162,54 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
     toast.success('Obrigado pelo feedback!');
   };
 
-  if (isLoading) {
-    return (
-      <div className="bg-gray-50 rounded-lg p-4">
-        <p className="text-center text-sm text-gray-500">Carregando...</p>
-      </div>
-    );
-  }
+  return {
+    feedback,
+    isSubmitting,
+    isLoading,
+    showReasonPicker,
+    selectedReason,
+    setSelectedReason,
+    customReason,
+    setCustomReason,
+    isSubmittingReason,
+    handleFeedback,
+    handleSubmitReason,
+    handleSkipReason,
+  };
+}
 
+export type UseFeedbackReturn = ReturnType<typeof useFeedback>;
+
+// ─── Shared feedback UI ───
+interface FeedbackContentProps {
+  feedback: FeedbackType | null;
+  isSubmitting: boolean;
+  showReasonPicker: boolean;
+  selectedReason: string | null;
+  setSelectedReason: (reason: string | null) => void;
+  customReason: string;
+  setCustomReason: (reason: string) => void;
+  isSubmittingReason: boolean;
+  handleFeedback: (type: FeedbackType) => void;
+  handleSubmitReason: () => void;
+  handleSkipReason: () => void;
+}
+
+export const FeedbackContent: React.FC<FeedbackContentProps> = ({
+  feedback,
+  isSubmitting,
+  showReasonPicker,
+  selectedReason,
+  setSelectedReason,
+  customReason,
+  setCustomReason,
+  isSubmittingReason,
+  handleFeedback,
+  handleSubmitReason,
+  handleSkipReason,
+}) => {
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
+    <>
       {!showReasonPicker ? (
         <>
           <p className="text-center text-sm font-semibold text-[#2B2B2B] mb-3">
@@ -278,6 +311,31 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId }) =>
           </button>
         </div>
       )}
+    </>
+  );
+};
+
+// ─── Inline feedback section (existing) ───
+interface FeedbackSectionProps {
+  recipeId: string;
+  sharedFeedback?: UseFeedbackReturn;
+}
+
+export const FeedbackSection: React.FC<FeedbackSectionProps> = ({ recipeId, sharedFeedback }) => {
+  const localFeedback = useFeedback(recipeId);
+  const feedbackProps = sharedFeedback || localFeedback;
+
+  if (feedbackProps.isLoading) {
+    return (
+      <div className="bg-gray-50 rounded-lg p-4">
+        <p className="text-center text-sm text-gray-500">Carregando...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <FeedbackContent {...feedbackProps} />
     </div>
   );
 };

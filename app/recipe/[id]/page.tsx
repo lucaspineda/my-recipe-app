@@ -16,7 +16,8 @@ import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
 import { useUserStore } from '../../store/user';
-import { FeedbackSection } from '../../components/FeedbackSection/FeedbackSection';
+import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
+import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
 
 declare global {
   interface Window {
@@ -55,6 +56,7 @@ const RecipePage = () => {
   const [imageLoading, setImageLoading] = useState(true);
   const { setShowRecipe, recipe } = useRecipeStore();
   const { user } = useUserStore();
+  const sharedFeedback = useFeedback(params.id as string);
   
   // Check if user is on Pro plan (planId 2 or 3)
   const isPro = user?.plan?.planId >= 2;
@@ -343,7 +345,7 @@ const RecipePage = () => {
             {/* Feedback da receita - Only show if user is logged in */}
             {user && (
               <>
-                <FeedbackSection recipeId={params.id as string} />
+                <FeedbackSection recipeId={params.id as string} sharedFeedback={sharedFeedback} />
                 <Separator />
               </>
             )}
@@ -527,6 +529,9 @@ const RecipePage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Feedback modal - appears after 30s if user hasn't given feedback */}
+        {user && <FeedbackModal recipeId={params.id as string} sharedFeedback={sharedFeedback} />}
       </>
     </div>
   );
