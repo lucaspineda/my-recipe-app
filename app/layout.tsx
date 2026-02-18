@@ -8,6 +8,10 @@ import { GoogleTagManager } from '@next/third-parties/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Footer from './components/Footer/Footer';
 
+export const viewport = {
+  themeColor: '#0f6374',
+};
+
 export const metadata = {
   title: 'Chefinho IA - Criador de receitas com IA',
   keywords:
@@ -28,6 +32,13 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',
+    apple: '/icons/icon-192x192.png',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Chefinho IA',
   },
 };
 
