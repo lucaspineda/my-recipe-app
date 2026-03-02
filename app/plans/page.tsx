@@ -8,6 +8,7 @@ import { useUserStore } from '../store/user';
 import Modal from '../components/Modal/Modal';
 import Button from '../components/Button/Button';
 import { formatDate } from '../utils/date';
+import { trackPageVisit } from '../lib/utils';
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -15,6 +16,10 @@ export default function Plans() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { getUser } = useUserAuth();
+
+  useEffect(() => {
+    trackPageVisit('plans-private');
+  }, []);
 
   const getPlans = async () => {
     try {
@@ -73,9 +78,7 @@ export default function Plans() {
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Planos</h1>
-          <p className="text-lg text-gray-600 max-w-xl">
-            Crie receitas com o plano certo para você
-          </p>
+          <p className="text-lg text-gray-600 max-w-xl">Crie receitas com o plano certo para você</p>
           <p className="text-sm text-gray-400 mt-2">Cancele quando quiser • Sem taxas ocultas</p>
         </div>
 

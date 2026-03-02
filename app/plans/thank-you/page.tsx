@@ -1,7 +1,14 @@
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { trackPageVisit } from '../../lib/utils';
 
 const ThankYouPage: React.FC = () => {
+  useEffect(() => {
+    trackPageVisit('thank-you');
+  }, []);
+
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
       <h1 className='mb-4'>Plano acionado com sucesso 🎉</h1>

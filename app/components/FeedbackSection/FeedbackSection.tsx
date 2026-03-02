@@ -5,6 +5,7 @@ import { ThumbsUp, ThumbsDown, X, Send } from 'lucide-react';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../hooks/userAuth';
 import { toast } from 'react-toastify';
+import { trackEvent } from '../../lib/utils';
 
 export enum FeedbackType {
   UP = 'up',
@@ -95,11 +96,10 @@ export function useFeedback(recipeId: string) {
         });
       }
 
-      if (typeof window !== 'undefined' && window.clarity) {
-        window.clarity('event', 'recipe_feedback', type);
-      }
-
-      if (type === FeedbackType.DOWN) {
+      if (type === FeedbackType.UP) {
+        trackEvent('feedback_gostei', { recipeId });
+      } else if (type === FeedbackType.DOWN) {
+        trackEvent('feedback_nao_gostei', { recipeId });
         setShowReasonPicker(true);
       } else {
         toast.success('Obrigado pelo feedback!');

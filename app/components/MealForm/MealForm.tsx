@@ -22,6 +22,7 @@ import IngredientsInput from '../IngredientsInput/IngredientsInput';
 import SingleSelect from '../SingleSelect/SingleSelect';
 import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
+import { trackEvent } from '../../lib/utils';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -202,7 +203,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       return console.log('unauthorized');
     }
 
+    
     await fetchRecipeOptions(token);
+    trackEvent('generate_recipes');
   };
 
   const fetchRecipeOptions = async (token?: string) => {
@@ -543,6 +546,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
             <Link
               className="mb-20 flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) font-semibold no-underline"
               href={'/plans'}
+              onClick={() => trackEvent('upgrade_plan_click')}
             >
               Escolha um plano
             </Link>
@@ -613,7 +617,10 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                 {recipeOptions.map((recipe, index) => (
                   <button
                     key={index}
-                    onClick={() => handleSelectRecipe(recipe)}
+                    onClick={() => {
+                      trackEvent('select_recipe_option', { recipeTitle: recipe.titulo });
+                      handleSelectRecipe(recipe);
+                    }}
                     className="text-left p-4 rounded-xl border-2 border-gray-200 hover:border-secondary hover:shadow-md transition-all bg-white group cursor-pointer"
                   >
                     <div>
@@ -629,14 +636,20 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
               </div>
               <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
                 <button
-                  onClick={() => fetchRecipeOptions()}
+                  onClick={() => {
+                    trackEvent('refresh_recipe_options');
+                    fetchRecipeOptions();
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Não gostei, me mostre outras opções
                 </button>
                 <button
-                  onClick={() => setShowRecipeOptionsModal(false)}
+                  onClick={() => {
+                    trackEvent('change_ingredients');
+                    setShowRecipeOptionsModal(false);
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />

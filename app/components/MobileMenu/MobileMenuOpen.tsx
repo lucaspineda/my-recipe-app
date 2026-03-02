@@ -10,6 +10,7 @@ import {
 import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../../store/user";
+import { trackEvent } from '../../lib/utils';
 
 export default function MobileMenuOpen({ toggleMenu }) {
   const router = useRouter();
@@ -18,12 +19,17 @@ export default function MobileMenuOpen({ toggleMenu }) {
   const { user } = useUserStore();
 
   const handleSignout = () => {
+    trackEvent('user_signout');
     router.push("/");
     signOut(auth).then(() => {
       toggleMenu();
       router.push("/");
       console.log("user is signed out");
     });
+  };
+
+  const handleSupportClick = () => {
+    trackEvent('user_support_click');
   };
 
   console.log('rendered', user)
@@ -101,7 +107,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-black no-underline"
-              onClick={toggleMenu}
+              onClick={handleSupportClick}
             >
               <IconHeadphones size={20} stroke={2} />
               Suporte

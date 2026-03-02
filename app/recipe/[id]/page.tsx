@@ -18,6 +18,7 @@ import { useRecipeStore } from '../../store/recipe';
 import { useUserStore } from '../../store/user';
 import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
+import { trackPageVisit, trackEvent } from '../../lib/utils';
 
 declare global {
   interface Window {
@@ -57,6 +58,10 @@ const RecipePage = () => {
   const { setShowRecipe, recipe } = useRecipeStore();
   const { user } = useUserStore();
   const sharedFeedback = useFeedback(params.id as string);
+
+    useEffect(() => {
+      trackPageVisit('recipe-details');
+    }, []);
   
   // Check if user is on Pro plan (planId 2 or 3)
   const isPro = user?.plan?.planId >= 2;
@@ -93,6 +98,7 @@ const RecipePage = () => {
   const handleGetOtherRecipe = async () => {
     try {
       setShowRecipe(false);
+      trackEvent('generate_another_recipe');
       router.push('/recipe');
     } catch {
       toast({
@@ -292,7 +298,13 @@ const RecipePage = () => {
                   onOpenChange={setNutritionalInfoOpen}
                   className="w-full"
                 >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full py-2 hover:bg-gray-50 rounded-lg transition-colors">
+                  <CollapsibleTrigger
+                    onClick={() => {
+                      trackEvent('collapsible_toggle', { state: nutritionalInfoOpen ? 'collapsed' : 'expanded' });
+                      setNutritionalInfoOpen(!nutritionalInfoOpen);
+                    }}
+                    className="flex items-center justify-between w-full py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
                     <div className="flex flex-col items-start">
                       <h3 className="text-lg font-semibold text-[#2B2B2B] flex items-center gap-2">
                         Informações Nutricionais
@@ -379,7 +391,10 @@ const RecipePage = () => {
               {/* Botões de compartilhar e gerar nova receita */}
               <div className="flex flex-col gap-3 md:flex-row">
                 <Button
-                  onClick={() => setShareDialogOpen(true)}
+                  onClick={() => {
+                    trackEvent('share_button_click');
+                    setShareDialogOpen(true);
+                  }}
                   className="flex-1 bg-[#F57C00] text-white font-semibold hover:bg-[#E64A19] transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
@@ -405,13 +420,19 @@ const RecipePage = () => {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button
-                      onClick={() => router.push('/signup')}
+                      onClick={() => {
+                        trackEvent('signup_button_click');
+                        router.push('/signup');
+                      }}
                       className="flex-1 bg-secondary hover:bg-secondary/90 text-white font-semibold"
                     >
                       Criar conta grátis
                     </Button>
                     <Button
-                      onClick={() => router.push('/login')}
+                      onClick={() => {
+                        trackEvent('login_button_click');
+                        router.push('/login');
+                      }}
                       variant="outline"
                       className="flex-1 border-secondary text-secondary hover:bg-secondary hover:text-white font-semibold"
                     >
@@ -428,7 +449,10 @@ const RecipePage = () => {
                     ✓ Esta receita foi salva automaticamente. Para ver todas as suas receitas salvas, clique no botão abaixo.
                   </p>
                   <Button
-                    onClick={() => router.push('/minhas-receitas')}
+                    onClick={() => {
+                      trackEvent('view_saved_recipes');
+                      router.push('/minhas-receitas');
+                    }}
                     variant="outline"
                     className="w-full mt-3 border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800 font-semibold"
                   >
@@ -453,7 +477,10 @@ const RecipePage = () => {
             <div className="grid grid-cols-2 gap-3 py-4">
               {/* Copiar link */}
               <Button
-                onClick={() => handleShare('link')}
+                onClick={() => {
+                  trackEvent('share_modal_action', { platform: 'link' });
+                  handleShare('link');
+                }}
                 className="bg-gray-200 text-recipe-brown hover:bg-gray-300 flex items-center gap-2"
               >
                 <Link className="w-4 h-4" />
@@ -462,7 +489,10 @@ const RecipePage = () => {
 
               {/* WhatsApp */}
               <Button
-                onClick={() => handleShare('whatsapp')}
+                onClick={() => {
+                  trackEvent('share_modal_action', { platform: 'whatsapp' });
+                  handleShare('whatsapp');
+                }}
                 className="bg-green-500 text-white hover:bg-green-600 flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -490,6 +520,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
+                    trackEvent('chat_feature_feedback', { response: 'yes' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós. Vamos considerar isso no desenvolvimento.',
@@ -502,6 +533,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
+                    trackEvent('chat_feature_feedback', { response: 'maybe' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós.',
@@ -515,6 +547,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
+                    trackEvent('chat_feature_feedback', { response: 'no' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós.',

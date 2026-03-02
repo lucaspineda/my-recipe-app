@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EditProfileField from "../components/EditProfileField/EditProfileField";
 import Link from "next/link";
 import ChangePassword from "../components/ChangePassword/ChangePassword";
 import { useUserStore } from "../store/user";
 import { Timestamp } from "firebase/firestore";
 import { getRemainingDays } from "../utils/date";
+import { trackPageVisit } from "../lib/utils";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);
@@ -18,6 +19,10 @@ const Profile = () => {
   const toggleChangePassword = () => {
     setChangePassword(!changePassword);
   };
+
+    useEffect(() => {
+      trackPageVisit('profile');
+    }, []);
 
   const handleEditNameOpen = () => {
     setEditName(false);

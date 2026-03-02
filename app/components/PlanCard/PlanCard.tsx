@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Crown, Star, Zap } from 'lucide-react';
 import { Plan } from '../../types';
+import { trackEvent } from '../../lib/utils';
 
 interface PlanCardProps {
   plan: Plan;
@@ -112,7 +113,10 @@ export default function PlanCard({ plan, onSelectPlan, buttonText = 'Começar Ag
 
         {/* CTA Button */}
         <button
-          onClick={onSelectPlan}
+          onClick={() => {
+            trackEvent('select_plan', { planId: plan.id, planName: plan.name });
+            onSelectPlan();
+          }}
           className={`w-full py-3.5 px-6 rounded-xl font-semibold text-sm transition-all duration-200 ${
             plan.recommended
               ? 'bg-secondary text-white hover:bg-secondary/90 shadow-lg shadow-secondary/25 hover:-translate-y-0.5'

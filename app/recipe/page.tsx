@@ -1,13 +1,19 @@
-'use client'
-import MealForm from "../components/MealForm/MealForm";
+'use client';
+import MealForm from '../components/MealForm/MealForm';
 
-import React from "react";
+import React, { useEffect } from 'react';
+import { trackPageVisit } from '../lib/utils';
 
 const RecipePage = () => {
+  useEffect(() => {
+    trackPageVisit('recipe-creation');
+  }, []);
 
-  return <div className="flex justify-center">
-    <MealForm />
-  </div>;
+  return (
+    <div className="flex justify-center">
+      <MealForm />
+    </div>
+  );
 };
 
 export default RecipePage;

@@ -5,11 +5,16 @@ import { db } from '../hooks/userAuth';
 import { Plan } from '../types';
 import { useRouter } from 'next/navigation';
 import PlanCard from '../components/PlanCard/PlanCard';
+import { trackPageVisit } from '../lib/utils';
 
 export default function PublicPlans() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    trackPageVisit('plans-public');
+  }, []);
 
   const getPlans = async () => {
     try {

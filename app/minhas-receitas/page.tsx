@@ -8,6 +8,7 @@ import { Card } from '../ui/card';
 import { ChefHat, Clock, ArrowRight } from 'lucide-react';
 import { useRecipeStore } from '../store/recipe';
 import { useUserStore } from '../store/user';
+import { trackPageVisit } from '../lib/utils';
 
 interface Recipe {
   id: string;
@@ -25,6 +26,10 @@ export default function MinhasReceitas() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUserStore();
   const { setShowRecipe } = useRecipeStore();
+
+  useEffect(() => {
+    trackPageVisit('minhas-receitas');
+  }, []);
 
   const handleRedirect = async () => {
     setShowRecipe(false);

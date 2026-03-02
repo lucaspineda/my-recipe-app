@@ -6,6 +6,7 @@ import { useRecipeStore } from '../../store/recipe';
 import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../Button/Button';
+import { trackEvent } from '../../lib/utils';
 
 export default function DesktopMenu() {
   const router = useRouter();
@@ -14,12 +15,17 @@ export default function DesktopMenu() {
   const { setShowRecipe } = useRecipeStore();
 
   const handleSignout = () => {
+    trackEvent('user_signout');
     router.push('/');
     signOut(auth).then(() => {
       setShowRecipe(false);
       router.push('/');
       console.log('user is signed out');
     });
+  };
+
+  const handleSupportClick = () => {
+    trackEvent('user_support_click');
   };
 
   return (
@@ -59,6 +65,7 @@ export default function DesktopMenu() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="no-underline text-black font-normal"
+                onClick={handleSupportClick}
               >
                 Suporte
               </a>

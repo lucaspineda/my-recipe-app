@@ -13,38 +13,14 @@ const notify = () => toast.error('Erro ao entrar com o Google. Tente novamente.'
 export default function GoogleSignInButton() {
     const auth = getAuth();
   
-  const { getUserByUid, createUserInDBByUid, getUser } = useUserAuth();
+  const { signInWithGoogleAccessToken } = useUserAuth();
   const [loading, setLoading] = useState(false);
-
-  const signInWithGoogleAccessToken = async (accessToken) => {
-    setLoading(true);
-    try {
-      const credential = GoogleAuthProvider.credential(null, accessToken);
-      const userCredential = await signInWithCredential(auth, credential);
-      console.log(userCredential, 'userCredential')
-      const user = userCredential.user;
-      const userExists = await getUserByUid(user.uid) || false;
-      if (!userExists) {
-        await createUserInDBByUid(user.email, user.uid);
-      } else {
-        console.log('Usuário já existe no banco de dados:', user.email);
-      }
-      // TODO: need to refactor and remove duplicate getUser functions calls
-      getUser()
-      console.log('Usuário autenticado com sucesso:', user.email);
-      return userCredential;
-    } catch (error) {
-      console.error('signInWithGoogleAccessToken error:', error);
-      notify();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const googleSignIn = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      setLoading(true);
       await signInWithGoogleAccessToken(tokenResponse.access_token);
-      // await signInWithGoogleAccessToken('invalid token'); // teste do toast
+      setLoading(false);
     },
     onError: (error) => {
       setLoading(false);

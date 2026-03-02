@@ -12,6 +12,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import TagManager from 'react-gtm-module';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
 import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
+import { trackPageVisit } from '../lib/utils';
 
 export default function Signup() {
   const [password, setPassword] = useState('');
@@ -44,6 +45,10 @@ export default function Signup() {
   } = useForm({
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    trackPageVisit('signup');
+  }, []);
 
   const handleSignUpWithEmail = async (data) => {
     const user = await signUpWithEmail(data.email, data.password, router);
