@@ -22,7 +22,7 @@ import IngredientsInput from '../IngredientsInput/IngredientsInput';
 import SingleSelect from '../SingleSelect/SingleSelect';
 import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
-import { trackEvent } from '../../lib/utils';
+import { trackEvent, generateRecipeImage } from '../../lib/utils';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -259,39 +259,15 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const handleSelectRecipe = async (selectedRecipe: any) => {
     setSavingRecipe(true);
     try {
-      const token = await getIdToken(auth.currentUser);
       const recipe = await saveRecipe(selectedRecipe);
       if (recipe) {
         router.push(`/recipe/${recipe.id}`);
 
         // Only generate image for Pro users (planId >= 2)
         const isPro = user?.plan?.planId >= 2;
-        if (isPro && token) {
-          try {
-            const imageResponse = await axios.post(
-              `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/generate-image`,
-              {
-                recipeTitle: selectedRecipe.titulo,
-                recipeDescription: selectedRecipe.introducao,
-                ingredients: selectedRecipe.ingredientes,
-                preparationMethod: selectedRecipe.modoDePreparo,
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: token,
-                },
-              },
-            );
-
-            if (imageResponse.data.imageUrl) {
-              await updateDoc(doc(db, 'recipes', recipe.id), {
-                imageUrl: imageResponse.data.imageUrl,
-              });
-            }
-          } catch (imageError) {
-            console.error('Error generating image:', imageError);
-          }
+        if (isPro) {
+          // Generate image in background using unified function
+          generateRecipeImage(recipe.id, selectedRecipe);
         }
       }
     } catch (error) {

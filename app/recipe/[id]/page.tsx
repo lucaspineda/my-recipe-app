@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../hooks/userAuth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
@@ -18,7 +18,7 @@ import { useRecipeStore } from '../../store/recipe';
 import { useUserStore } from '../../store/user';
 import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
-import { trackPageVisit, trackEvent } from '../../lib/utils';
+import { trackPageVisit, trackEvent, generateRecipeImage } from '../../lib/utils';
 
 declare global {
   interface Window {
@@ -55,6 +55,7 @@ const RecipePage = () => {
   const [chatFeatureDialogOpen, setChatFeatureDialogOpen] = useState(false);
   const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
+  const imageGenerationTriggered = useRef(false);
   const { setShowRecipe, recipe } = useRecipeStore();
   const { user } = useUserStore();
   const sharedFeedback = useFeedback(params.id as string);
@@ -68,6 +69,40 @@ const RecipePage = () => {
   
   // Check if this is the current user's own recipe
   const isOwnRecipe = user?.uid && recipes?.userId === user.uid;
+
+  // Trigger image generation for Pro users viewing their own recipes without an image
+  useEffect(() => {
+    const generateImageForExistingRecipe = async () => {
+      // Only trigger if:
+      // - Recipe exists and has no image
+      // - User is Pro
+      // - It's their own recipe
+      // - We haven't already triggered generation
+      if (
+        recipes &&
+        !recipes.imageUrl &&
+        isPro &&
+        isOwnRecipe &&
+        !imageGenerationTriggered.current &&
+        !loading
+      ) {
+        imageGenerationTriggered.current = true;
+        setImageLoading(true);
+
+        const imageUrl = await generateRecipeImage(params.id as string, recipes);
+        
+        if (!imageUrl) {
+          setImageLoading(false);
+        }
+        // If imageUrl is returned, the Firestore listener will update the UI
+      } else if (recipes && !recipes.imageUrl && !isPro) {
+        // Not a Pro user, don't show loading spinner
+        setImageLoading(false);
+      }
+    };
+
+    generateImageForExistingRecipe();
+  }, [recipes, isPro, isOwnRecipe, loading, params.id]);
 
   const handleShare = async (platform: string) => {
     try {
