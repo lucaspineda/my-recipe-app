@@ -19,7 +19,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { User as UserDB, UserPlan } from "../types";
 import { useUserStore } from "../store/user";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { trackEvent } from "../lib/utils";
+import { trackEvent } from "../lib/analytics";
 import { FacebookAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {

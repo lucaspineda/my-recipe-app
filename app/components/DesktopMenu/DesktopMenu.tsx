@@ -6,7 +6,7 @@ import { useRecipeStore } from '../../store/recipe';
 import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../Button/Button';
-import { trackEvent } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 export default function DesktopMenu() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Crown, Star, Zap } from 'lucide-react';
 import { Plan } from '../../types';
-import { trackEvent } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 interface PlanCardProps {
   plan: Plan;

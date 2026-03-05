@@ -7,7 +7,7 @@ import ChangePassword from "../components/ChangePassword/ChangePassword";
 import { useUserStore } from "../store/user";
 import { Timestamp } from "firebase/firestore";
 import { getRemainingDays } from "../utils/date";
-import { trackPageVisit } from "../lib/utils";
+import { trackPageVisit } from "../lib/analytics";
 
 const Profile = () => {
   const [editName, setEditName] = useState<boolean>(false);

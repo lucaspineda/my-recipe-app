@@ -8,7 +8,7 @@ import { useUserStore } from '../store/user';
 import Modal from '../components/Modal/Modal';
 import Button from '../components/Button/Button';
 import { formatDate } from '../utils/date';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);

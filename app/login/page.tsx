@@ -10,7 +10,7 @@ import { useUserAuth } from '../hooks/userAuth';
 import Button from '../components/Button/Button';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
 import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 const schema = z.object({
   email: z.string().email('Email é obrigatório'),

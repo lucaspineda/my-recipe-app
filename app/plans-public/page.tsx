@@ -5,7 +5,7 @@ import { db } from '../hooks/userAuth';
 import { Plan } from '../types';
 import { useRouter } from 'next/navigation';
 import PlanCard from '../components/PlanCard/PlanCard';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 export default function PublicPlans() {
   const [plans, setPlans] = useState<Plan[]>([]);

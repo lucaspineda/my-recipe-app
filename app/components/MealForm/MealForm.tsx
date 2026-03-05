@@ -22,7 +22,8 @@ import IngredientsInput from '../IngredientsInput/IngredientsInput';
 import SingleSelect from '../SingleSelect/SingleSelect';
 import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
-import { trackEvent, generateRecipeImage } from '../../lib/utils';
+import { generateRecipeImage } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 const schema = z.object({
   ingredients: z.string(),

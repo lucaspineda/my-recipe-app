@@ -8,7 +8,7 @@ import { Card } from '../ui/card';
 import { ChefHat, Clock, ArrowRight } from 'lucide-react';
 import { useRecipeStore } from '../store/recipe';
 import { useUserStore } from '../store/user';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 interface Recipe {
   id: string;

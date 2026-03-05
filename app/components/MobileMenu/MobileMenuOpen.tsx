@@ -10,7 +10,7 @@ import {
 import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../../store/user";
-import { trackEvent } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 export default function MobileMenuOpen({ toggleMenu }) {
   const router = useRouter();

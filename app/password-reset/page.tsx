@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Input from "../components/Input/Input";
 import Button from "../components/Button/Button";
 import { useUserAuth } from "../hooks/userAuth";
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 const schema = z.object({
   email: z.string().email("Email é obrigatório"),

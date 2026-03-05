@@ -18,7 +18,8 @@ import { useRecipeStore } from '../../store/recipe';
 import { useUserStore } from '../../store/user';
 import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
-import { trackPageVisit, trackEvent, generateRecipeImage } from '../../lib/utils';
+import { generateRecipeImage } from '../../lib/utils';
+import { trackPageVisit, trackEvent } from '../../lib/analytics';
 
 declare global {
   interface Window {

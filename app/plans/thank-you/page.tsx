@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import React, { useEffect } from 'react';
-import { trackPageVisit } from '../../lib/utils';
+import { trackPageVisit } from '../../lib/analytics';
 
 const ThankYouPage: React.FC = () => {
   useEffect(() => {

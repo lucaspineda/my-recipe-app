@@ -12,7 +12,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import TagManager from 'react-gtm-module';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
 import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 export default function Signup() {
   const [password, setPassword] = useState('');

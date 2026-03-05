@@ -2,7 +2,7 @@
 import MealForm from '../components/MealForm/MealForm';
 
 import React, { useEffect } from 'react';
-import { trackPageVisit } from '../lib/utils';
+import { trackPageVisit } from '../lib/analytics';
 
 const RecipePage = () => {
   useEffect(() => {

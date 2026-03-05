@@ -5,7 +5,7 @@ import { ThumbsUp, ThumbsDown, X, Send } from 'lucide-react';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../hooks/userAuth';
 import { toast } from 'react-toastify';
-import { trackEvent } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 export enum FeedbackType {
   UP = 'up',
