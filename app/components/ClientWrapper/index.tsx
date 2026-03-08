@@ -10,6 +10,7 @@ import Clarity from '@microsoft/clarity';
 import TagManager from 'react-gtm-module';
 import Hotjar from '@hotjar/browser';
 import { useUserStore } from '../../store/user';
+import { captureUtmParams } from '../../lib/analytics';
 
 const siteId = 6525527;
 const hotjarVersion = 6;
@@ -23,6 +24,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
   const projectId = 'rnup5ef83c';
 
   useEffect(() => {
+    captureUtmParams();
     console.log('init gtm');
     TagManager.initialize(tagManagerArgs);
     Hotjar.init(siteId, hotjarVersion);
