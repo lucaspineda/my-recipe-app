@@ -43,7 +43,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
   const handlePlanSelecting = async () => {
     try {
       setLoading(true);
-      trackEvent('select_plan', { planId: plan.id, planName: plan.name, planCost: plan.cost });
+      trackEvent('select_plan_btn_clicked', { planId: plan.id, planName: plan.name, planCost: plan.cost });
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
       const response = await subscribe();
