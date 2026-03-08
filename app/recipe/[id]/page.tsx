@@ -412,11 +412,11 @@ const RecipePage = () => {
                       type="text"
                       placeholder="Ex: substituir manteiga, deixar mais saudável..."
                       className="flex-1 text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400"
-                      onFocus={() => setChatFeatureDialogOpen(true)}
+                      onFocus={() => { trackEvent('refine_recipe_cta_click'); setChatFeatureDialogOpen(true); }}
                     />
                     <Button
                       className="h-auto min-h-[40px] px-3 bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center"
-                      onClick={() => setChatFeatureDialogOpen(true)}
+                      onClick={() => { trackEvent('refine_recipe_cta_click'); setChatFeatureDialogOpen(true); }}
                     >
                       <Send className="w-4 h-4" />
                     </Button>
@@ -556,7 +556,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
-                    trackEvent('chat_feature_feedback', { response: 'yes' });
+                    trackEvent('refine_recipe_feedback', { response: 'yes' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós. Vamos considerar isso no desenvolvimento.',
@@ -569,7 +569,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
-                    trackEvent('chat_feature_feedback', { response: 'maybe' });
+                    trackEvent('refine_recipe_feedback', { response: 'maybe' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós.',
@@ -583,7 +583,7 @@ const RecipePage = () => {
                 <Button
                   onClick={() => {
                     setChatFeatureDialogOpen(false);
-                    trackEvent('chat_feature_feedback', { response: 'no' });
+                    trackEvent('refine_recipe_feedback', { response: 'no' });
                     toast({
                       title: 'Obrigado!',
                       description: 'Sua opinião é muito importante para nós.',
