@@ -10,6 +10,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { Check, Crown, Loader2, Star, Zap } from 'lucide-react';
+import { trackEvent } from '../../lib/analytics';
 
 interface PlansCardProps {
   plan: Plan;
@@ -42,6 +43,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
   const handlePlanSelecting = async () => {
     try {
       setLoading(true);
+      trackEvent('select_plan', { planId: plan.id, planName: plan.name, planCost: plan.cost });
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
       const response = await subscribe();

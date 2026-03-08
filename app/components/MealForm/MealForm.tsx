@@ -2,13 +2,12 @@ import React, { useState, MouseEvent, useEffect, useRef, useCallback } from 'rea
 import Image from 'next/image';
 import { forwardRef } from 'react';
 import { useRecipeStore } from '../../store/recipe';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Loading from '../Loading/Loading';
 import Button from '../Button/Button';
 import { auth, db } from '../../hooks/userAuth';
 import { getIdToken } from 'firebase/auth';
-import { AlertCircle, Clock, Sun, Coffee, Cake, Moon, Cookie, ChefHat, Sparkles, RefreshCw, ArrowLeft } from 'lucide-react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { AlertCircle, Clock, Sun, Coffee, Cake, Moon, Cookie, ChefHat } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
@@ -24,6 +23,7 @@ import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackEvent } from '../../lib/analytics';
+import RecipeOptionsModal from '../RecipeOptions/RecipeOptionsModal';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -37,6 +37,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
+    recipeOptions,
+    setRecipeOptions,
   } = useRecipeStore();
 
   const [error, setError] = useState(false);
@@ -47,7 +49,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [cookingLevel, setCookingLevel] = useState<'iniciante' | 'intermediario' | 'avancado'>('intermediario');
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
   const [showRecipeOptionsModal, setShowRecipeOptionsModal] = useState(false);
-  const [recipeOptions, setRecipeOptions] = useState<any[]>([]);
   const [recipeOptionsLoading, setRecipeOptionsLoading] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
@@ -65,6 +66,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   ];
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, updateRecipesCount } = useUserStore();
 
   const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
@@ -108,6 +110,18 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       setError(null);
     }
   }, [error]);
+
+  // Restore options modal when user navigates back via browser back button
+  useEffect(() => {
+    if (searchParams.get('step') === 'options') {
+      if (recipeOptions.length > 0) {
+        setShowRecipeOptionsModal(true);
+      } else {
+        // Options lost (e.g. page refresh) — clear the stale URL param
+        router.replace('/recipe');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const savedIngredients = localStorage.getItem('ingredients');
@@ -248,6 +262,10 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       const parsed = response.data.response;
       const receitas = parsed.receitas || [];
       setRecipeOptions(receitas);
+      // Only push a new history entry on the first generation (not on refresh)
+      if (searchParams.get('step') !== 'options') {
+        router.push('/recipe?step=options');
+      }
     } catch (error) {
       setShowRecipeOptionsModal(false);
       setError(true);
@@ -255,6 +273,11 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
     } finally {
       setRecipeOptionsLoading(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowRecipeOptionsModal(false);
+    router.push('/recipe');
   };
 
   const handleSelectRecipe = async (selectedRecipe: any) => {
@@ -538,105 +561,18 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       )}
 
       {/* Recipe Options Modal */}
-      <Modal isOpen={showRecipeOptionsModal} onClose={() => !recipeOptionsLoading && !savingRecipe && setShowRecipeOptionsModal(false)}>
-        <div className="w-full max-w-2xl mx-auto">
-          {recipeOptionsLoading ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <DotLottieReact
-                src="https://lottie.host/a4c75b0a-3bad-4479-80d9-8705fabc20f7/JK7A6PJh1v.json"
-                loop
-                autoplay
-                style={{ width: 200, height: 200 }}
-              />
-              <div className="mt-4 min-h-[60px] flex flex-col items-center">
-                <h3
-                  key={loadingMsgIndex}
-                  className="text-xl font-semibold text-gray-800 animate-fade-in"
-                >
-                  {loadingMessages[loadingMsgIndex].title}
-                </h3>
-                <p
-                  key={`sub-${loadingMsgIndex}`}
-                  className="text-sm text-gray-500 mt-2 animate-fade-in"
-                >
-                  {loadingMessages[loadingMsgIndex].subtitle}
-                </p>
-              </div>
-              <div className="flex gap-1.5 mt-5">
-                {loadingMessages.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 rounded-full transition-all duration-500 ${
-                      i <= loadingMsgIndex ? 'bg-secondary w-6' : 'bg-gray-200 w-3'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : savingRecipe ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <DotLottieReact
-                src="https://lottie.host/a4c75b0a-3bad-4479-80d9-8705fabc20f7/JK7A6PJh1v.json"
-                loop
-                autoplay
-                style={{ width: 200, height: 200 }}
-              />
-              <h3 className="text-xl font-semibold mt-4 text-gray-800">Salvando sua receita...</h3>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-5 h-5 text-secondary" />
-                <h3 className="text-xl font-bold text-gray-800">Escolha sua receita</h3>
-              </div>
-              <p className="text-sm text-gray-500 mb-5">O Chefinho preparou 4 opções para você. Escolha a que mais te agrada!</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {recipeOptions.map((recipe, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      trackEvent('select_recipe_option', { recipeTitle: recipe.titulo });
-                      handleSelectRecipe(recipe);
-                    }}
-                    className="text-left p-4 rounded-xl border-2 border-gray-200 hover:border-secondary hover:shadow-md transition-all bg-white group cursor-pointer"
-                  >
-                    <div>
-                      <h4 className="font-semibold text-gray-800 group-hover:text-secondary transition-colors text-sm leading-tight mb-2">
-                        {recipe.titulo}
-                      </h4>
-                      <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
-                        {recipe.introducao}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => {
-                    trackEvent('refresh_recipe_options');
-                    fetchRecipeOptions();
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Não gostei, me mostre outras opções
-                </button>
-                <button
-                  onClick={() => {
-                    trackEvent('change_ingredients');
-                    setShowRecipeOptionsModal(false);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Quero trocar meus ingredientes
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Modal>
+      <RecipeOptionsModal
+        isOpen={showRecipeOptionsModal}
+        onClose={handleCloseModal}
+        loading={recipeOptionsLoading}
+        savingRecipe={savingRecipe}
+        loadingMsgIndex={loadingMsgIndex}
+        loadingMessages={loadingMessages}
+        recipeOptions={recipeOptions}
+        onSelectRecipe={handleSelectRecipe}
+        onRefresh={fetchRecipeOptions}
+        onChangeIngredients={handleCloseModal}
+      />
 
       {/* Ingredients Required Modal */}
       <Modal isOpen={showIngredientsModal} onClose={() => setShowIngredientsModal(false)}>

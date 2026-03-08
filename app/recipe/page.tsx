@@ -1,7 +1,7 @@
 'use client';
 import MealForm from '../components/MealForm/MealForm';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { trackPageVisit } from '../lib/analytics';
 
 const RecipePage = () => {
@@ -11,7 +11,9 @@ const RecipePage = () => {
 
   return (
     <div className="flex justify-center">
-      <MealForm />
+      <Suspense fallback={null}>
+        <MealForm />
+      </Suspense>
     </div>
   );
 };
