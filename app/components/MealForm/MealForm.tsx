@@ -254,7 +254,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       const newRecipeCount = user.plan.recipeCount - 1;
 
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        'plan.updatedAt': serverTimestamp(),
         'plan.recipeCount': newRecipeCount,
       });
       updateRecipesCount(newRecipeCount);

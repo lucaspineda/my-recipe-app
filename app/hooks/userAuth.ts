@@ -38,7 +38,7 @@ const FreePlan: UserPlan = {
   recipeCount: 3,
   planId: 1,
   startedAt: serverTimestamp(),
- 
+  updatedAt: serverTimestamp(),
   name: "Básico",
   cost: 0,
 };

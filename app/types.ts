@@ -14,6 +14,7 @@ export interface UserPlan {
   planId: number;
   cost: number;
   startedAt: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
   expiresAt?: Timestamp | FieldValue;
   name: string;
   recipeCount?: number;
