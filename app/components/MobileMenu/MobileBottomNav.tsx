@@ -31,8 +31,8 @@ export default function MobileBottomNav() {
       {menuOpen && <MobileMenuOpen toggleMenu={toggleMenu} />}
 
       {!menuOpen && (
-        <nav className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
-          <div className="bg-secondary rounded-2xl px-2 py-2 grid grid-cols-5 border-2 border-tertiary/40 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <nav className="fixed bottom-4 left-0 right-0 z-30 lg:hidden flex justify-center px-4">
+          <div className="bg-secondary rounded-2xl px-2 py-2 grid grid-cols-5 border-2 border-tertiary/40 shadow-[0_4px_20px_rgba(0,0,0,0.3)] w-full max-w-md">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href === '/recipe' && pathname === '/');
 
