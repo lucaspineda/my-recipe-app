@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Bounce, ToastContainer } from 'react-toastify';
 import DesktopMenu from '../DesktopMenu/DesktopMenu';
 import MobileMenu from '../MobileMenu/MobileMenu';
-import MobileMenuOpen from '../MobileMenu/MobileMenuOpen';
+import MobileBottomNav from '../MobileMenu/MobileBottomNav';
 import ProtectedRoute from '../ProtectedRoute/ProtectedRoute';
 import Clarity from '@microsoft/clarity';
 import TagManager from 'react-gtm-module';
@@ -19,7 +19,6 @@ const tagManagerArgs = {
   gtmId: 'GTM-T7SJQKP2',
 };
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
-  const [openMenu, setOpenMenu] = useState(false);
   const { user } = useUserStore();
   const projectId = 'rnup5ef83c';
 
@@ -46,12 +45,6 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     }
   }, [user]);
 
-  const toggleMenu = () => setOpenMenu(!openMenu);
-
-  const handleIconClick = () => {
-    toggleMenu();
-  };
-
   return (
     <ProtectedRoute>
       <ToastContainer
@@ -71,10 +64,10 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         <DesktopMenu />
       </div>
       <div className="sticky z-20 top-0 lg:hidden">
-        <MobileMenu toggleMenu={handleIconClick} />
+        <MobileMenu />
       </div>
-      {openMenu && <MobileMenuOpen toggleMenu={toggleMenu} />}
       <div className="relative p-5">{children}</div>
+      <MobileBottomNav />
     </ProtectedRoute>
   );
 }
