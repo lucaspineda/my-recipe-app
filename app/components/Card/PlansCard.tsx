@@ -7,7 +7,6 @@ import { Plan } from '../../types';
 import { useUserStore } from '../../store/user';
 import { formatDate } from '../../utils/date';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { Check, Crown, Loader2, Star, Zap } from 'lucide-react';
 import { trackEvent } from '../../lib/analytics';
@@ -19,12 +18,13 @@ interface PlansCardProps {
 export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
   const { user } = useUserStore();
-  const router = useRouter();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
 
   const notify = () => toast.error('Ocorreu um erro ao assinar o plano');
 
   const subscribe = async () => {
+    if (!auth.currentUser) throw new Error('User not authenticated');
+    const token = await auth.currentUser.getIdToken();
     const response = await axios.post(
       process.env.NEXT_PUBLIC_SERVER_BASE_URL + '/subscribe',
       {
@@ -33,7 +33,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
       },
       {
         headers: {
-          Authorization: (await auth.currentUser.getIdToken()).toString(),
+          Authorization: token,
         },
       },
     );
@@ -44,14 +44,11 @@ export default function PlansCard({ plan }: PlansCardProps) {
     try {
       setLoading(true);
       trackEvent('select_plan_btn_clicked', { planId: plan.id, planName: plan.name, planCost: plan.cost });
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
       const response = await subscribe();
       const redirectLink = response.url;
-      router.push(redirectLink);
+      window.location.href = redirectLink;
     } catch (error) {
       notify();
-    } finally {
       setLoading(false);
     }
   };
