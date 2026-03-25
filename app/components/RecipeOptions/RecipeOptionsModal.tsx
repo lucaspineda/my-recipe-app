@@ -1,9 +1,10 @@
 'use client';
 
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { Sparkles, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Sparkles, RefreshCw, ArrowLeft, Wand2 } from 'lucide-react';
 import Modal from '../Modal/Modal';
 import { trackEvent } from '../../lib/analytics';
+import { useState, useRef } from 'react';
 
 interface LoadingMessage {
   title: string;
@@ -21,6 +22,8 @@ interface RecipeOptionsModalProps {
   onSelectRecipe: (recipe: any) => void;
   onRefresh: () => void;
   onChangeIngredients: () => void;
+  onRefine: (refinement: string) => void;
+  refining: boolean;
 }
 
 export default function RecipeOptionsModal({
@@ -34,7 +37,28 @@ export default function RecipeOptionsModal({
   onSelectRecipe,
   onRefresh,
   onChangeIngredients,
+  onRefine,
+  refining,
 }: RecipeOptionsModalProps) {
+  const [refinementText, setRefinementText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleRefinementChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRefinementText(e.target.value);
+    // Auto-grow
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  const handleSubmitRefine = () => {
+    if (refinementText.trim() && !refining) {
+      trackEvent('refine_recipe_options', { refinement: refinementText });
+      onRefine(refinementText.trim());
+      setRefinementText('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    }
+  };
   return (
     <Modal isOpen={isOpen} onClose={() => !loading && !savingRecipe && onClose()}>
       <div className="w-full max-w-2xl mx-auto">
@@ -110,7 +134,37 @@ export default function RecipeOptionsModal({
               ))}
             </div>
             <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
-              <button
+              {/* Refine recipes */}
+              <div className="w-full mb-2">
+                <div className="flex flex-col gap-2">
+                  <textarea
+                    ref={textareaRef}
+                    rows={2}
+                    value={refinementText}
+                    onChange={handleRefinementChange}
+                    placeholder="Ex: mais simples, adicione molho, remova ingredientes..."
+                    disabled={refining}
+                    className="w-full px-3 py-2.5 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-secondary disabled:bg-gray-100 disabled:text-gray-400 resize-none overflow-hidden"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitRefine();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleSubmitRefine}
+                    disabled={!refinementText.trim() || refining}
+                    className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    {refining ? 'Refinando...' : 'Refinar receitas'}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              {/* <button
                 onClick={() => {
                   trackEvent('refresh_recipe_options');
                   onRefresh();
@@ -119,7 +173,7 @@ export default function RecipeOptionsModal({
               >
                 <RefreshCw className="w-4 h-4" />
                 Não gostei, me mostre outras opções
-              </button>
+              </button> */}
               <button
                 onClick={() => {
                   trackEvent('change_ingredients');

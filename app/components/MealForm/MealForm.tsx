@@ -51,6 +51,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [showRecipeOptionsModal, setShowRecipeOptionsModal] = useState(false);
   const [recipeOptionsLoading, setRecipeOptionsLoading] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [refining, setRefining] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const ingredientsInputRef = React.useRef<HTMLInputElement>(null);
@@ -277,6 +278,40 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const handleCloseModal = () => {
     setShowRecipeOptionsModal(false);
     router.push('/recipe');
+  };
+
+  const handleRefine = async (refinement: string) => {
+    const token = await getIdToken(auth.currentUser);
+    if (!token) return;
+
+    setRefining(true);
+    setRecipeOptionsLoading(true);
+    setLoadingMsgIndex(0);
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/refine-recipes`,
+        {
+          recipes: recipeOptions,
+          refinementInstruction: refinement,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        },
+      );
+
+      const parsed = response.data.response;
+      const receitas = Array.isArray(parsed) ? parsed : parsed.receitas || [];
+      setRecipeOptions(receitas);
+    } catch (error) {
+      console.error('Error refining recipes:', error);
+      toast.error('Erro ao refinar as receitas. Tente novamente.');
+    } finally {
+      setRefining(false);
+      setRecipeOptionsLoading(false);
+    }
   };
 
   const handleSelectRecipe = async (selectedRecipe: any) => {
@@ -571,6 +606,8 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         onSelectRecipe={handleSelectRecipe}
         onRefresh={fetchRecipeOptions}
         onChangeIngredients={handleCloseModal}
+        onRefine={handleRefine}
+        refining={refining}
       />
 
       {/* Ingredients Required Modal */}
