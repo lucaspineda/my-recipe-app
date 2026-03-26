@@ -62,6 +62,15 @@ const RecipePage = () => {
   const [refiningMsgIndex, setRefiningMsgIndex] = useState(0);
   const refiningIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const refineTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [feedbackResetKey, setFeedbackResetKey] = useState(0);
+  const feedbackResetDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedResetFeedbackTimer = () => {
+    if (feedbackResetDebounceRef.current) clearTimeout(feedbackResetDebounceRef.current);
+    feedbackResetDebounceRef.current = setTimeout(() => {
+      setFeedbackResetKey((k) => k + 1);
+    }, 1000);
+  };
 
   const refiningMessages = [
     { title: '🔍 Analisando sua receita...', subtitle: 'O Chefinho está lendo cada detalhe' },
@@ -503,11 +512,13 @@ const RecipePage = () => {
                       ref={refineTextareaRef}
                       rows={2}
                       value={refineText}
+                      onFocus={debouncedResetFeedbackTimer}
                       onChange={(e) => {
                         setRefineText(e.target.value);
                         const el = e.target;
                         el.style.height = 'auto';
                         el.style.height = `${el.scrollHeight}px`;
+                        debouncedResetFeedbackTimer();
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -650,7 +661,7 @@ const RecipePage = () => {
 
 
         {/* Feedback modal - appears after 30s if user hasn't given feedback */}
-        {user && <FeedbackModal recipeId={params.id as string} sharedFeedback={sharedFeedback} />}
+        {user && <FeedbackModal recipeId={params.id as string} sharedFeedback={sharedFeedback} resetKey={feedbackResetKey} />}
       </>
     </div>
   );

@@ -9,11 +9,12 @@ interface FeedbackModalProps {
   recipeId: string;
   delayMs?: number;
   sharedFeedback?: UseFeedbackReturn;
+  resetKey?: number;
 }
 
 const FEEDBACK_DISMISSED_KEY = 'feedback_modal_dismissed';
 
-export const FeedbackModal: React.FC<FeedbackModalProps> = ({ recipeId, delayMs = 30000, sharedFeedback }) => {
+export const FeedbackModal: React.FC<FeedbackModalProps> = ({ recipeId, delayMs = 30000, sharedFeedback, resetKey = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const localFeedback = useFeedback(recipeId);
   const feedbackProps = sharedFeedback || localFeedback;
@@ -48,7 +49,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ recipeId, delayMs 
     }, delayMs);
 
     return () => clearTimeout(timer);
-  }, [feedbackProps.isLoading, feedbackProps.feedback, delayMs, wasDismissed]);
+  }, [feedbackProps.isLoading, feedbackProps.feedback, delayMs, wasDismissed, resetKey]);
 
   // Close modal after feedback is given (thumbs up)
   useEffect(() => {
