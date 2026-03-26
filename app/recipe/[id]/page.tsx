@@ -3,11 +3,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../hooks/userAuth';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../../hooks/userAuth';
+import axios from 'axios';
+import { getIdToken } from 'firebase/auth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
-import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock, Send } from 'lucide-react';
+import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock, Wand2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -20,6 +22,7 @@ import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/F
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackPageVisit, trackEvent } from '../../lib/analytics';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 declare global {
   interface Window {
@@ -53,8 +56,37 @@ const RecipePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [chatFeatureDialogOpen, setChatFeatureDialogOpen] = useState(false);
   const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(true);
+  const [refineText, setRefineText] = useState('');
+  const [refining, setRefining] = useState(false);
+  const [refiningMsgIndex, setRefiningMsgIndex] = useState(0);
+  const refiningIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const refineTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const refiningMessages = [
+    { title: '🔍 Analisando sua receita...', subtitle: 'O Chefinho está lendo cada detalhe' },
+    { title: '✏️ Aplicando as mudanças...', subtitle: 'Ajustando ingredientes e preparo' },
+    { title: '✨ Finalizando os ajustes...', subtitle: 'Garantindo que tudo ficará perfeito' },
+  ];
+
+  useEffect(() => {
+    if (refining) {
+      setRefiningMsgIndex(0);
+      refiningIntervalRef.current = setInterval(() => {
+        setRefiningMsgIndex((prev) =>
+          prev < refiningMessages.length - 1 ? prev + 1 : prev
+        );
+      }, 2500);
+    } else {
+      if (refiningIntervalRef.current) {
+        clearInterval(refiningIntervalRef.current);
+        refiningIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (refiningIntervalRef.current) clearInterval(refiningIntervalRef.current);
+    };
+  }, [refining]);
   const [imageLoading, setImageLoading] = useState(true);
   const imageGenerationTriggered = useRef(false);
   const { setShowRecipe, recipe } = useRecipeStore();
@@ -131,6 +163,61 @@ const RecipePage = () => {
     }
   };
 
+  const handleRefineRecipe = async () => {
+    if (!refineText.trim() || refining || !auth.currentUser) return;
+    const token = await getIdToken(auth.currentUser);
+    if (!token) return;
+
+    setRefining(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      const recipeForApi = {
+        titulo: recipes.title,
+        introducao: recipes.introduction,
+        ingredientes: recipes.ingredients,
+        modoDePreparo: recipes.preparationMethod,
+        observacoes: recipes.observations,
+        informacoesNutricionais: recipes.nutritionalInfo || null,
+      };
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/refine-recipes`,
+        { recipes: [recipeForApi], refinementInstruction: refineText.trim() },
+        { headers: { 'Content-Type': 'application/json', Authorization: token } },
+      );
+
+      const parsed = response.data.response;
+      const refined = Array.isArray(parsed) ? parsed[0] : parsed.receitas?.[0];
+      if (!refined) throw new Error('No refined recipe returned');
+
+      await updateDoc(doc(db, 'recipes', params.id as string), {
+        title: refined.titulo,
+        introduction: refined.introducao,
+        ingredients: refined.ingredientes,
+        preparationMethod: refined.modoDePreparo,
+        observations: refined.observacoes,
+        nutritionalInfo: refined.informacoesNutricionais || null,
+        imageUrl: null,
+      });
+
+      trackEvent('refine_recipe_success', { recipeId: params.id });
+      setRefineText('');
+      if (refineTextareaRef.current) refineTextareaRef.current.style.height = 'auto';
+      toast({ title: 'Receita refinada!', description: 'Sua receita foi atualizada com sucesso.' });
+
+      if (isPro) {
+        setImageLoading(true);
+        imageGenerationTriggered.current = false;
+        generateRecipeImage(params.id as string, refined);
+      }
+    } catch (error) {
+      console.error('Error refining recipe:', error);
+      toast({ title: 'Erro', description: 'Não foi possível refinar a receita. Tente novamente.', variant: 'destructive' });
+    } finally {
+      setRefining(false);
+    }
+  };
+
   const handleGetOtherRecipe = async () => {
     try {
       setShowRecipe(false);
@@ -199,6 +286,41 @@ const RecipePage = () => {
     <div className="flex justify-center">
       <>
         <Card className="w-full max-w-4xl mx-auto bg-white border border-gray-200 shadow-md rounded-2xl">
+          {refining ? (
+            <div className="flex flex-col items-center justify-center py-16 px-8">
+              <DotLottieReact
+                src="https://lottie.host/a4c75b0a-3bad-4479-80d9-8705fabc20f7/JK7A6PJh1v.json"
+                loop
+                autoplay
+                style={{ width: 180, height: 180 }}
+              />
+              <div className="mt-4 min-h-[60px] flex flex-col items-center text-center">
+                <h3
+                  key={refiningMsgIndex}
+                  className="text-xl font-semibold text-gray-800 animate-fade-in"
+                >
+                  {refiningMessages[refiningMsgIndex].title}
+                </h3>
+                <p
+                  key={`sub-${refiningMsgIndex}`}
+                  className="text-sm text-gray-500 mt-2 animate-fade-in"
+                >
+                  {refiningMessages[refiningMsgIndex].subtitle}
+                </p>
+              </div>
+              <div className="flex gap-1.5 mt-5">
+                {refiningMessages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      i <= refiningMsgIndex ? 'bg-secondary w-6' : 'bg-gray-200 w-3'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -401,24 +523,40 @@ const RecipePage = () => {
             {/* Botões principais */}
             <div className="flex flex-col gap-3 pt-2">
               {/* Seção de ajuda do Chefinho - Only show if user is logged in */}
-              {user && (
+              {user && isOwnRecipe && (
                 <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-secondary flex-shrink-0" />
                     <p className="text-sm font-semibold text-gray-700">Refine sua receita</p>
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Ex: substituir manteiga, deixar mais saudável..."
-                      className="flex-1 text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400"
-                      onFocus={() => { trackEvent('refine_recipe_cta_click'); setChatFeatureDialogOpen(true); }}
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      ref={refineTextareaRef}
+                      rows={2}
+                      value={refineText}
+                      onChange={(e) => {
+                        setRefineText(e.target.value);
+                        const el = e.target;
+                        el.style.height = 'auto';
+                        el.style.height = `${el.scrollHeight}px`;
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleRefineRecipe();
+                        }
+                      }}
+                      placeholder="Ex: substituir manteiga, deixar mais saudável, remover glúten..."
+                      disabled={refining}
+                      className="w-full text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400 resize-none overflow-hidden disabled:opacity-50"
                     />
                     <Button
-                      className="h-auto min-h-[40px] px-3 bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center"
-                      onClick={() => { trackEvent('refine_recipe_cta_click'); setChatFeatureDialogOpen(true); }}
+                      className="w-full sm:w-auto sm:self-end bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
+                      onClick={handleRefineRecipe}
+                      disabled={!refineText.trim() || refining}
                     >
-                      <Send className="w-4 h-4" />
+                      <Wand2 className="w-4 h-4" />
+                      {refining ? 'Refinando...' : 'Refinar receita'}
                     </Button>
                   </div>
                 </div>
@@ -498,6 +636,8 @@ const RecipePage = () => {
               )}
             </div>
           </CardContent>
+            </>
+          )}
         </Card>
 
         {/* Modal de compartilhar */}
@@ -538,66 +678,7 @@ const RecipePage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de funcionalidade de chat */}
-        <Dialog open={chatFeatureDialogOpen} onOpenChange={setChatFeatureDialogOpen}>
-          <DialogContent className="sm:max-w-md bg-white text-black">
-            <DialogHeader>
-              <DialogTitle className="text-black">Nova Funcionalidade em Desenvolvimento</DialogTitle>
-              <DialogDescription className="text-black/90">
-                Estamos trabalhando nessa funcionalidade para você poder conversar com o Chefinho IA sobre suas receitas!
-              </DialogDescription>
-            </DialogHeader>
 
-            <div className="py-4">
-              <p className="text-center text-gray-700 mb-6">
-                Você pagaria por essa funcionalidade?
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                <Button
-                  onClick={() => {
-                    setChatFeatureDialogOpen(false);
-                    trackEvent('refine_recipe_feedback', { response: 'yes' });
-                    toast({
-                      title: 'Obrigado!',
-                      description: 'Sua opinião é muito importante para nós. Vamos considerar isso no desenvolvimento.',
-                    });
-                  }}
-                  className="bg-green-500 text-white hover:bg-green-600"
-                >
-                  Sim
-                </Button>
-                <Button
-                  onClick={() => {
-                    setChatFeatureDialogOpen(false);
-                    trackEvent('refine_recipe_feedback', { response: 'maybe' });
-                    toast({
-                      title: 'Obrigado!',
-                      description: 'Sua opinião é muito importante para nós.',
-                    });
-                  }}
-                  variant="outline"
-                  className="border-yellow-400 text-yellow-600 hover:bg-yellow-50"
-                >
-                  Talvez
-                </Button>
-                <Button
-                  onClick={() => {
-                    setChatFeatureDialogOpen(false);
-                    trackEvent('refine_recipe_feedback', { response: 'no' });
-                    toast({
-                      title: 'Obrigado!',
-                      description: 'Sua opinião é muito importante para nós.',
-                    });
-                  }}
-                  variant="outline"
-                  className="border-gray-300 hover:bg-gray-100"
-                >
-                  Não
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Feedback modal - appears after 30s if user hasn't given feedback */}
         {user && <FeedbackModal recipeId={params.id as string} sharedFeedback={sharedFeedback} />}
