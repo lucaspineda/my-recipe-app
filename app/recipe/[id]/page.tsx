@@ -209,7 +209,7 @@ const RecipePage = () => {
         imageUrl: null,
       });
 
-      trackEvent('refine_recipe', { recipeId: params.id });
+      trackEvent('refine_recipe', { refinement: refineText.trim(), recipeId: params.id });
       setRefineText('');
       if (refineTextareaRef.current) refineTextareaRef.current.style.height = 'auto';
       toast({ title: 'Receita refinada!', description: 'Sua receita foi atualizada com sucesso.' });
