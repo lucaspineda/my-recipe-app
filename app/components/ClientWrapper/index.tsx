@@ -11,6 +11,7 @@ import TagManager from 'react-gtm-module';
 import Hotjar from '@hotjar/browser';
 import { useUserStore } from '../../store/user';
 import { captureUtmParams } from '../../lib/analytics';
+import AppUpdateBanner from '../AppUpdateBanner/AppUpdateBanner';
 
 const siteId = 6525527;
 const hotjarVersion = 6;
@@ -60,6 +61,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         theme="colored"
         transition={Bounce}
       />
+      <AppUpdateBanner />
       <div className="hidden sticky z-20 top-0 lg:block">
         <DesktopMenu />
       </div>
