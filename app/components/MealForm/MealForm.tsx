@@ -1,8 +1,7 @@
-import React, { useState, MouseEvent, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
+import React, { useState, MouseEvent, useEffect, useRef } from 'react';
 import { forwardRef } from 'react';
 import { useRecipeStore } from '../../store/recipe';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Loading from '../Loading/Loading';
 import Button from '../Button/Button';
 import { auth, db } from '../../hooks/userAuth';
@@ -23,7 +22,6 @@ import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackEvent } from '../../lib/analytics';
-import RecipeOptionsModal from '../RecipeOptions/RecipeOptionsModal';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -33,12 +31,9 @@ const schema = z.object({
 export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const {
     recipeLoading,
-    showRecipe,
     updateIngredients,
     updateMealOption,
     setRecipeLoading,
-    recipeOptions,
-    setRecipeOptions,
   } = useRecipeStore();
 
   const [error, setError] = useState(false);
@@ -48,26 +43,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [prepTime, setPrepTime] = useState(40);
   const [cookingLevel, setCookingLevel] = useState<'iniciante' | 'intermediario' | 'avancado'>('intermediario');
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
-  const [showRecipeOptionsModal, setShowRecipeOptionsModal] = useState(false);
-  const [recipeOptionsLoading, setRecipeOptionsLoading] = useState(false);
-  const [savingRecipe, setSavingRecipe] = useState(false);
-  const [refining, setRefining] = useState(false);
-  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
-  const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const ingredientsInputRef = React.useRef<HTMLInputElement>(null);
-
-  const loadingMessages = [
-    { title: '🔍 Analisando seus ingredientes...', subtitle: 'O Chefinho está conferindo o que você tem disponível' },
-    { title: '🧑‍🍳 Pensando em combinações...', subtitle: 'Buscando os melhores sabores para combinar' },
-    { title: '📋 Escolhendo o preparo ideal...', subtitle: 'Adaptando ao seu nível de habilidade' },
-    { title: '⏱️ Ajustando o tempo de preparo...', subtitle: 'Encaixando tudo no tempo que você tem' },
-    { title: '✨ Criando receitas exclusivas...', subtitle: 'Cada opção pensada especialmente para você' },
-    { title: '🍽️ Quase pronto...', subtitle: 'Finalizando as 4 melhores opções' },
-    { title: '🎯 Dando os últimos retoques...', subtitle: 'Garantindo que cada receita ficará perfeita' },
-  ];
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, updateRecipesCount } = useUserStore();
 
   const notify = () => toast.error('Ocorreu um erro ao gerar a receita');
@@ -82,28 +60,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   });
 
   useEffect(() => {
-    if (recipeOptionsLoading) {
-      setLoadingMsgIndex(0);
-      loadingIntervalRef.current = setInterval(() => {
-        setLoadingMsgIndex((prev) => {
-          if (prev < loadingMessages.length - 1) return prev + 1;
-          return prev; // Stay on last message
-        });
-      }, 3000);
-    } else {
-      if (loadingIntervalRef.current) {
-        clearInterval(loadingIntervalRef.current);
-        loadingIntervalRef.current = null;
-      }
-    }
-    return () => {
-      if (loadingIntervalRef.current) {
-        clearInterval(loadingIntervalRef.current);
-      }
-    };
-  }, [recipeOptionsLoading]);
-
-  useEffect(() => {
     if (error) {
       setTimeout(() => {
         notify();
@@ -111,18 +67,6 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       setError(null);
     }
   }, [error]);
-
-  // Restore options modal when user navigates back via browser back button
-  useEffect(() => {
-    if (searchParams.get('step') === 'options') {
-      if (recipeOptions.length > 0) {
-        setShowRecipeOptionsModal(true);
-      } else {
-        // Options lost (e.g. page refresh) — clear the stale URL param
-        router.replace('/recipe');
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const savedIngredients = localStorage.getItem('ingredients');
@@ -219,24 +163,22 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       return console.log('unauthorized');
     }
 
-    
-    await fetchRecipeOptions(token);
+
+    await generateRecipe(token);
     trackEvent('generate_recipes');
   };
 
-  const fetchRecipeOptions = async (token?: string) => {
+  const generateRecipe = async (token?: string) => {
     if (!token) {
       token = await getIdToken(auth.currentUser);
     }
     if (!token) return;
 
-    setShowRecipeOptionsModal(true);
-    setRecipeOptionsLoading(true);
-    setRecipeOptions([]);
+    setRecipeLoading(true);
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/recipe-options`,
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/`,
         {
           optionMeal: optionMeal,
           ingredients: ingredients.join(', '),
@@ -252,6 +194,17 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
         },
       );
 
+      const selectedRecipe = response.data.response;
+
+      if (!selectedRecipe) {
+        throw new Error('No recipe returned from single recipe endpoint');
+      }
+
+      const savedRecipe = await saveRecipe(selectedRecipe);
+      if (!savedRecipe) {
+        throw new Error('Failed to save generated recipe');
+      }
+
       const newRecipeCount = user.plan.recipeCount - 1;
 
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
@@ -259,96 +212,27 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       });
       updateRecipesCount(newRecipeCount);
 
-      const parsed = response.data.response;
-      const receitas = parsed.receitas || [];
-      setRecipeOptions(receitas);
-      // Only push a new history entry on the first generation (not on refresh)
-      if (searchParams.get('step') !== 'options') {
-        router.push('/recipe?step=options');
+      router.push(`/recipe/${savedRecipe.id}`);
+
+      const isPro = user?.plan?.planId >= 2;
+      if (isPro) {
+        generateRecipeImage(savedRecipe.id, selectedRecipe);
       }
     } catch (error) {
-      setShowRecipeOptionsModal(false);
+      console.error('Error generating recipe:', error);
       setError(true);
-      return console.log(error);
     } finally {
-      setRecipeOptionsLoading(false);
+      setRecipeLoading(false);
     }
   };
-
-  const handleCloseModal = () => {
-    setShowRecipeOptionsModal(false);
-    router.push('/recipe');
-  };
-
-  const handleRefine = async (refinement: string) => {
-    const token = await getIdToken(auth.currentUser);
-    if (!token) return;
-
-    setRefining(true);
-    setRecipeOptionsLoading(true);
-    setLoadingMsgIndex(0);
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/refine-recipes`,
-        {
-          recipes: recipeOptions,
-          refinementInstruction: refinement,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-          },
-        },
-      );
-
-      const parsed = response.data.response;
-      const receitas = Array.isArray(parsed) ? parsed : parsed.receitas || [];
-      setRecipeOptions(receitas);
-    } catch (error) {
-      console.error('Error refining recipes:', error);
-      toast.error('Erro ao refinar as receitas. Tente novamente.');
-    } finally {
-      setRefining(false);
-      setRecipeOptionsLoading(false);
-    }
-  };
-
-  const handleSelectRecipe = async (selectedRecipe: any) => {
-    setSavingRecipe(true);
-    try {
-      const recipe = await saveRecipe(selectedRecipe);
-      if (recipe) {
-        router.push(`/recipe/${recipe.id}`);
-
-        // Only generate image for Pro users (planId >= 2)
-        const isPro = user?.plan?.planId >= 2;
-        if (isPro) {
-          // Generate image in background using unified function
-          generateRecipeImage(recipe.id, selectedRecipe);
-        }
-      }
-    } catch (error) {
-      console.error('Error saving selected recipe:', error);
-      toast.error('Erro ao salvar a receita. Tente novamente.');
-    } finally {
-      setSavingRecipe(false);
-      setShowRecipeOptionsModal(false);
-    }
-  };
-
-  if (recipeLoading) {
-    return <Loading />;
-  }
 
   return (
     <>
-      {!showRecipe && (
-        <form
-          onSubmit={handleSubmit(handleGetRecipe)}
-          className="w-full flex flex-col text-left max-w-[720px]"
-          ref={ref}
-        >
+      <form
+        onSubmit={handleSubmit(handleGetRecipe)}
+        className="w-full flex flex-col text-left max-w-[720px]"
+        ref={ref}
+      >
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">1</div>
           <label className="secondary-header py-3">Liste os ingredientes que você possuí em casa</label>
           <IngredientsInput
@@ -591,24 +475,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           {/* Hidden input para react-hook-form */}
           <input {...register('ingredients')} type="hidden" value={ingredients.join(', ')} />
           <input {...register('mealType')} type="hidden" value={optionMeal} />
-        </form>
-      )}
-
-      {/* Recipe Options Modal */}
-      <RecipeOptionsModal
-        isOpen={showRecipeOptionsModal}
-        onClose={handleCloseModal}
-        loading={recipeOptionsLoading}
-        savingRecipe={savingRecipe}
-        loadingMsgIndex={loadingMsgIndex}
-        loadingMessages={loadingMessages}
-        recipeOptions={recipeOptions}
-        onSelectRecipe={handleSelectRecipe}
-        onRefresh={fetchRecipeOptions}
-        onChangeIngredients={handleCloseModal}
-        onRefine={handleRefine}
-        refining={refining}
-      />
+      </form>
 
       {/* Ingredients Required Modal */}
       <Modal isOpen={showIngredientsModal} onClose={() => setShowIngredientsModal(false)}>
@@ -625,6 +492,14 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
             Entendi
           </Button>
         </div>
+      </Modal>
+
+      <Modal isOpen={recipeLoading} onClose={() => {}}>
+        <Loading
+          compact
+          title="Aguarde enquanto criamos sua receita"
+          subtitle="Estamos preparando uma receita personalizada com base nos ingredientes e preferências que você escolheu."
+        />
       </Modal>
     </>
   );

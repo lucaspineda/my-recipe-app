@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../hooks/userAuth';
 import axios from 'axios';
 import { getIdToken } from 'firebase/auth';
@@ -22,6 +22,7 @@ import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/F
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackPageVisit, trackEvent } from '../../lib/analytics';
+import RecipeOptionsModal from '../../components/RecipeOptions/RecipeOptionsModal';
 import RecipeRefiningLoader from '../../components/RecipeOptions/RecipeRefiningLoader';
 
 declare global {
@@ -48,6 +49,21 @@ interface Recipe {
   createdAt: any;
 }
 
+interface RecipeOption {
+  titulo: string;
+  introducao: string;
+  ingredientes: Array<{ nome?: string; item?: string; quantidade?: string } | string>;
+  modoDePreparo: string[];
+  observacoes: string[];
+  informacoesNutricionais?: {
+    calorias: string;
+    proteinas: string;
+    carboidratos: string;
+    gorduras: string;
+    fibras: string;
+  } | null;
+}
+
 const RecipePage = () => {
   const { toast } = useToast();
   const router = useRouter();
@@ -61,6 +77,12 @@ const RecipePage = () => {
   const [refining, setRefining] = useState(false);
   const [refiningMsgIndex, setRefiningMsgIndex] = useState(0);
   const refiningIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showRecipeOptionsModal, setShowRecipeOptionsModal] = useState(false);
+  const [recipeOptionsLoading, setRecipeOptionsLoading] = useState(false);
+  const [recipeOptionsLoadingMsgIndex, setRecipeOptionsLoadingMsgIndex] = useState(0);
+  const [savingRecipeOption, setSavingRecipeOption] = useState(false);
+  const [recipeOptions, setRecipeOptions] = useState<RecipeOption[]>([]);
+  const recipeOptionsIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const refineTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [feedbackResetKey, setFeedbackResetKey] = useState(0);
   const feedbackResetDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -76,6 +98,17 @@ const RecipePage = () => {
     { title: '🔍 Analisando sua receita...', subtitle: 'O Chefinho está lendo cada detalhe' },
     { title: '✏️ Aplicando as mudanças...', subtitle: 'Ajustando ingredientes e preparo' },
     { title: '✨ Finalizando os ajustes...', subtitle: 'Garantindo que tudo ficará perfeito' },
+  ];
+
+  const recipeOptionsLoadingMessages = [
+    { title: '🍳 Criando novas opções...', subtitle: 'O Chefinho está pensando em 4 variações para você' },
+    { title: '🥕 Analisando os ingredientes...', subtitle: 'Entendendo o que faz sentido reaproveitar na próxima receita' },
+    { title: '🧠 Buscando combinações gostosas...', subtitle: 'Misturando sabores, texturas e possibilidades' },
+    { title: '🧾 Ajustando os detalhes...', subtitle: 'Combinando ingredientes e preparo para ficar parecido' },
+    { title: '⏱️ Calculando o preparo...', subtitle: 'Equilibrando praticidade e resultado final' },
+    { title: '🌿 Refinando o estilo da receita...', subtitle: 'Deixando cada opção com uma proposta diferente' },
+    { title: '📋 Organizando as melhores opções...', subtitle: 'Selecionando as variações mais promissoras para você' },
+    { title: '✨ Finalizando as sugestões...', subtitle: 'Quase pronto para você escolher sua próxima receita' },
   ];
 
   useEffect(() => {
@@ -96,6 +129,27 @@ const RecipePage = () => {
       if (refiningIntervalRef.current) clearInterval(refiningIntervalRef.current);
     };
   }, [refining]);
+
+  useEffect(() => {
+    if (recipeOptionsLoading) {
+      setRecipeOptionsLoadingMsgIndex(0);
+      recipeOptionsIntervalRef.current = setInterval(() => {
+        setRecipeOptionsLoadingMsgIndex((prev) =>
+          prev < recipeOptionsLoadingMessages.length - 1 ? prev + 1 : prev
+        );
+      }, 2500);
+    } else if (recipeOptionsIntervalRef.current) {
+      clearInterval(recipeOptionsIntervalRef.current);
+      recipeOptionsIntervalRef.current = null;
+    }
+
+    return () => {
+      if (recipeOptionsIntervalRef.current) {
+        clearInterval(recipeOptionsIntervalRef.current);
+        recipeOptionsIntervalRef.current = null;
+      }
+    };
+  }, [recipeOptionsLoading]);
   const [imageLoading, setImageLoading] = useState(true);
   const imageGenerationTriggered = useRef(false);
   const { setShowRecipe, recipe } = useRecipeStore();
@@ -111,6 +165,172 @@ const RecipePage = () => {
   
   // Check if this is the current user's own recipe
   const isOwnRecipe = user?.uid && recipes?.userId === user.uid;
+
+  const inferMealOption = () => {
+    const recipeText = `${recipes?.title || ''} ${recipes?.introduction || ''}`.toLowerCase();
+
+    if (/(bolo|brigadeiro|mousse|torta|sobremesa|doce|pudim|brownie|cookie|sorvete)/.test(recipeText)) {
+      return 'sobremesa';
+    }
+
+    if (/(cafe da manha|café da manhã|panqueca|omelete|torrada|pao|pão|toast|iogurte|granola)/.test(recipeText)) {
+      return 'cafe';
+    }
+
+    if (/(lanche|sanduiche|sanduíche|wrap|hamburguer|hambúrguer|burger|tapioca)/.test(recipeText)) {
+      return 'lanche';
+    }
+
+    if (/(janta|jantar|sopa|caldo)/.test(recipeText)) {
+      return 'janta';
+    }
+
+    return 'almoco';
+  };
+
+  const getRecipeIngredientsText = () => {
+    if (!recipes?.ingredients?.length) return '';
+
+    return recipes.ingredients
+      .map((ingredient: any) => ingredient?.nome || ingredient?.item || ingredient)
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const saveRecipeOption = async (recipeOption: RecipeOption, imageUrl?: string) => {
+    return addDoc(collection(db, 'recipes'), {
+      title: recipeOption.titulo,
+      introduction: recipeOption.introducao,
+      ingredients: recipeOption.ingredientes,
+      preparationMethod: recipeOption.modoDePreparo,
+      observations: recipeOption.observacoes,
+      nutritionalInfo: recipeOption.informacoesNutricionais || null,
+      imageUrl: imageUrl || null,
+      userId: auth.currentUser?.uid,
+      createdAt: serverTimestamp(),
+    });
+  };
+
+  const handleCloseRecipeOptionsModal = () => {
+    if (recipeOptionsLoading || savingRecipeOption) return;
+    setShowRecipeOptionsModal(false);
+    setRecipeOptions([]);
+  };
+
+  const handleSelectRecipeOption = async (recipeOption: RecipeOption) => {
+    try {
+      setSavingRecipeOption(true);
+
+      const savedRecipe = await saveRecipeOption(recipeOption);
+
+      setShowRecipeOptionsModal(false);
+      setRecipeOptions([]);
+      router.push(`/recipe/${savedRecipe.id}`);
+
+      if (isPro) {
+        generateRecipeImage(savedRecipe.id, recipeOption);
+      }
+    } catch (selectionError) {
+      console.error('Error saving selected recipe option:', selectionError);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar a receita selecionada. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingRecipeOption(false);
+    }
+  };
+
+  const handleChangeIngredients = () => {
+    const currentIngredients = recipes?.ingredients
+      ?.map((ingredient: any) => ingredient?.nome || ingredient?.item || ingredient)
+      .filter(Boolean);
+
+    if (currentIngredients?.length) {
+      localStorage.setItem('ingredients', JSON.stringify(currentIngredients));
+    }
+
+    setShowRecipeOptionsModal(false);
+    setRecipeOptions([]);
+    setShowRecipe(false);
+    router.push('/recipe');
+  };
+
+  const generateMoreRecipeOptions = async (refinementInstruction?: string) => {
+    if (!auth.currentUser || !recipes) return;
+
+    const remainingRecipes = user?.plan?.recipeCount;
+    if (remainingRecipes === 0) {
+      toast({
+        title: 'Limite atingido',
+        description: 'Você atingiu o limite de receitas do seu plano atual.',
+        variant: 'destructive',
+      });
+      router.push('/plans');
+      return;
+    }
+
+    const token = await getIdToken(auth.currentUser);
+    if (!token) return;
+
+    setShowRecipeOptionsModal(true);
+    setRecipeOptionsLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/gemini/recipe-options`,
+        {
+          optionMeal: inferMealOption(),
+          ingredients: getRecipeIngredientsText(),
+          ingredientMode: 'suggest',
+          prepTime: 0,
+          cookingLevel: 'intermediario',
+          count: 4,
+          refinementInstruction: refinementInstruction?.trim(),
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        },
+      );
+
+      const parsedResponse = response.data.response;
+      const nextRecipeOptions = Array.isArray(parsedResponse)
+        ? parsedResponse
+        : Array.isArray(parsedResponse?.receitas)
+          ? parsedResponse.receitas
+          : [];
+
+      if (!nextRecipeOptions.length) {
+        throw new Error('No recipe options returned');
+      }
+
+      setRecipeOptions(nextRecipeOptions);
+
+      if (typeof remainingRecipes === 'number') {
+        const newRecipeCount = Math.max(remainingRecipes - 1, 0);
+        await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+          'plan.recipeCount': newRecipeCount,
+        });
+        useUserStore.getState().updateRecipesCount(newRecipeCount);
+      }
+
+      trackEvent('generate_more_recipe_options', { recipeId: params.id, hasRefinement: Boolean(refinementInstruction?.trim()) });
+    } catch (generationError) {
+      console.error('Error generating recipe options:', generationError);
+      setShowRecipeOptionsModal(false);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar novas opções agora. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRecipeOptionsLoading(false);
+    }
+  };
 
   // Trigger image generation for Pro users viewing their own recipes without an image
   useEffect(() => {
@@ -503,8 +723,31 @@ const RecipePage = () => {
               {/* Seção de ajuda do Chefinho - Only show if user is logged in */}
               {user && isOwnRecipe && (
                 <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
+                  {/* Gerar mais opções */}
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-secondary flex-shrink-0" />
+                    <p className="text-sm font-semibold text-gray-700">Gere mais opções de receitas parecidas</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => generateMoreRecipeOptions()}
+                    disabled={recipeOptionsLoading || savingRecipeOption}
+                    className="w-full border-secondary/30 bg-white text-secondary font-semibold"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {recipeOptionsLoading ? 'Gerando opções...' : 'Gerar mais opções parecidas'}
+                  </Button>
+
+                  {/* Separador "OU" */}
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-secondary/20" />
+                    <span className="text-xs font-semibold text-gray-400 uppercase">ou</span>
+                    <div className="flex-1 h-px bg-secondary/20" />
+                  </div>
+
+                  {/* Refinar receita */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wand2 className="w-4 h-4 text-secondary flex-shrink-0" />
                     <p className="text-sm font-semibold text-gray-700">Refine sua receita</p>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -657,6 +900,21 @@ const RecipePage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <RecipeOptionsModal
+          isOpen={showRecipeOptionsModal}
+          onClose={handleCloseRecipeOptionsModal}
+          loading={recipeOptionsLoading}
+          savingRecipe={savingRecipeOption}
+          loadingMsgIndex={recipeOptionsLoadingMsgIndex}
+          loadingMessages={recipeOptionsLoadingMessages}
+          recipeOptions={recipeOptions}
+          onSelectRecipe={handleSelectRecipeOption}
+          onRefresh={() => generateMoreRecipeOptions()}
+          onChangeIngredients={handleChangeIngredients}
+          onRefine={generateMoreRecipeOptions}
+          refining={recipeOptionsLoading}
+        />
 
 
 
