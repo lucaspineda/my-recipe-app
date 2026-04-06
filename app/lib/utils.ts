@@ -73,3 +73,26 @@ export async function generateRecipeImage(
     return null;
   }
 }
+
+export type Platform = 'ios' | 'android' | 'windows' | 'mac' | 'unknown';
+
+export function getPlatform(): Platform {
+  if (typeof navigator === 'undefined') return 'unknown';
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  if (/Windows/.test(ua)) return 'windows';
+  if (/Macintosh|Mac OS X/.test(ua)) return 'mac';
+  return 'unknown';
+}
+
+export function isRunningAsPWA(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = (navigator as any).standalone === true;
+    return Boolean(isStandalone || isIOSStandalone);
+  } catch {
+    return false;
+  }
+}

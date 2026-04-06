@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { X, Download, Share } from 'lucide-react';
+import { getPlatform } from '../../lib/utils';
+import { trackEvent } from '../../lib/analytics';
 
 export default function AppUpdateBanner() {
   const [dismissed, setDismissed] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(ios);
+    setIsIOS(getPlatform() === 'ios');
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -23,8 +24,10 @@ export default function AppUpdateBanner() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
+    trackEvent('pwa_install_prompt_triggered');
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
+    trackEvent('pwa_install_prompt_result', { outcome });
     setDeferredPrompt(null);
     setDismissed(true);
   };
@@ -42,7 +45,7 @@ export default function AppUpdateBanner() {
             🎉 Novidade! Baixe Chefinho IA direto no seu celular.
           </p>
           <button
-            onClick={() => setDismissed(true)}
+            onClick={() => { trackEvent('pwa_banner_dismissed'); setDismissed(true); }}
             className="text-white/70 hover:text-white transition-colors p-0.5 shrink-0 mt-0.5"
             aria-label="Fechar"
           >
@@ -50,7 +53,7 @@ export default function AppUpdateBanner() {
           </button>
         </div>
         <button
-          onClick={isIOS ? () => setShowIOSGuide(true) : handleInstall}
+          onClick={isIOS ? () => { trackEvent('pwa_ios_guide_opened'); setShowIOSGuide(true); } : handleInstall}
           className="self-start flex items-center gap-1.5 bg-white text-secondary font-semibold text-xs px-3 py-1.5 rounded-full hover:bg-white/90 transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
@@ -60,7 +63,7 @@ export default function AppUpdateBanner() {
 
       {/* iOS install guide modal */}
       {showIOSGuide && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-black/60" onClick={() => setShowIOSGuide(false)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-black/60" onClick={() => { trackEvent('pwa_ios_guide_dismissed'); setShowIOSGuide(false); }}>
           <div
             className="bg-white rounded-2xl w-full max-w-sm p-6 mb-4"
             onClick={(e) => e.stopPropagation()}
@@ -74,7 +77,7 @@ export default function AppUpdateBanner() {
             <ol className="space-y-4 text-sm text-gray-700">
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white font-bold text-xs shrink-0 mt-0.5">1</span>
-                <span>Toque no ícone de <strong>Compartilhar</strong> na barra inferior do Safari <Share className="inline w-4 h-4 text-blue-500 mx-0.5" /></span>
+                <span>Toque no ícone de <strong>Compartilhar</strong> <Share className="inline w-4 h-4 text-blue-500 mx-0.5" /> na barra do navegador</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white font-bold text-xs shrink-0 mt-0.5">2</span>
@@ -86,7 +89,7 @@ export default function AppUpdateBanner() {
               </li>
             </ol>
             <button
-              onClick={() => setShowIOSGuide(false)}
+              onClick={() => { trackEvent('pwa_ios_guide_dismissed'); setShowIOSGuide(false); }}
               className="mt-6 w-full bg-secondary text-white font-semibold py-2.5 rounded-xl text-sm"
             >
               Entendi

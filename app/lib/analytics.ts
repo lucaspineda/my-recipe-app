@@ -1,6 +1,7 @@
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
 import { getAuth } from "firebase/auth";
+import { getPlatform, isRunningAsPWA } from "./utils";
 
 const UTM_STORAGE_KEY = "utm_attribution";
 
@@ -102,6 +103,8 @@ export async function trackEvent(
       trafficSource: attribution?.source ?? "organic",
       trafficMedium: attribution?.medium ?? "none",
       trafficDetails: attribution?.details ?? null,
+      userPlatform: getPlatform(),
+      isPWA: isRunningAsPWA(),
       createdAt: serverTimestamp(),
       metadata: metadata || null,
     });
