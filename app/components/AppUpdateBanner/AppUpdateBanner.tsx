@@ -1,41 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Download, Share } from 'lucide-react';
-import { getPlatform } from '../../lib/utils';
+import { useState } from 'react';
+import { X, Download } from 'lucide-react';
 import { trackEvent } from '../../lib/analytics';
+import { AppInstallGuideModal, useAppInstallPrompt } from '../Pwa/AppInstallPrompt';
 
 export default function AppUpdateBanner() {
   const [dismissed, setDismissed] = useState(false);
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isIOS, setIsIOS] = useState(false);
-
-  useEffect(() => {
-    setIsIOS(getPlatform() === 'ios');
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  const { isIOS, canOfferInstall, showIOSGuide, setShowIOSGuide, openInstallFlow } = useAppInstallPrompt();
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    trackEvent('pwa_install_prompt_triggered');
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    trackEvent('pwa_install_prompt_result', { outcome });
-    setDeferredPrompt(null);
-    setDismissed(true);
+    await openInstallFlow('banner');
+    if (!isIOS) {
+      setDismissed(true);
+    }
   };
 
   if (dismissed) return null;
 
-  // Don't show on Android if the prompt isn't ready yet
-  if (!isIOS && !deferredPrompt) return null;
+  if (!canOfferInstall) return null;
 
   return (
     <>
@@ -53,7 +36,7 @@ export default function AppUpdateBanner() {
           </button>
         </div>
         <button
-          onClick={isIOS ? () => { trackEvent('pwa_ios_guide_opened'); setShowIOSGuide(true); } : handleInstall}
+          onClick={handleInstall}
           className="self-start flex items-center gap-1.5 bg-white text-secondary font-semibold text-xs px-3 py-1.5 rounded-full hover:bg-white/90 transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
@@ -61,42 +44,13 @@ export default function AppUpdateBanner() {
         </button>
       </div>
 
-      {/* iOS install guide modal */}
-      {showIOSGuide && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 bg-black/60" onClick={() => { trackEvent('pwa_ios_guide_dismissed'); setShowIOSGuide(false); }}>
-          <div
-            className="bg-white rounded-2xl w-full max-w-sm p-6 mb-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-900">Instalar no iPhone</h2>
-              <button onClick={() => setShowIOSGuide(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <ol className="space-y-4 text-sm text-gray-700">
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white font-bold text-xs shrink-0 mt-0.5">1</span>
-                <span>Toque no ícone de <strong>Compartilhar</strong> <Share className="inline w-4 h-4 text-blue-500 mx-0.5" /> na barra do navegador</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white font-bold text-xs shrink-0 mt-0.5">2</span>
-                <span>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong></span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white font-bold text-xs shrink-0 mt-0.5">3</span>
-                <span>Toque em <strong>"Adicionar"</strong> no canto superior direito</span>
-              </li>
-            </ol>
-            <button
-              onClick={() => { trackEvent('pwa_ios_guide_dismissed'); setShowIOSGuide(false); }}
-              className="mt-6 w-full bg-secondary text-white font-semibold py-2.5 rounded-xl text-sm"
-            >
-              Entendi
-            </button>
-          </div>
-        </div>
-      )}
+      <AppInstallGuideModal
+        isOpen={showIOSGuide}
+        onClose={() => {
+          trackEvent('pwa_ios_guide_dismissed', { source: 'banner' });
+          setShowIOSGuide(false);
+        }}
+      />
     </>
   );
 }

@@ -18,10 +18,11 @@ import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
 import { useUserStore } from '../../store/user';
-import { FeedbackSection, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
+import { FeedbackSection, FeedbackType, useFeedback } from '../../components/FeedbackSection/FeedbackSection';
 import { FeedbackModal } from '../../components/FeedbackSection/FeedbackModal';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackPageVisit, trackEvent } from '../../lib/analytics';
+import { AppInstallGuideModal, AppInstallNudgeModal, useAppInstallPrompt } from '../../components/Pwa/AppInstallPrompt';
 import RecipeOptionsModal from '../../components/RecipeOptions/RecipeOptionsModal';
 import RecipeRefiningLoader from '../../components/RecipeOptions/RecipeRefiningLoader';
 
@@ -85,6 +86,7 @@ const RecipePage = () => {
   const recipeOptionsIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const refineTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [feedbackResetKey, setFeedbackResetKey] = useState(0);
+  const [showInstallNudgeModal, setShowInstallNudgeModal] = useState(false);
   const feedbackResetDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedResetFeedbackTimer = () => {
@@ -152,13 +154,53 @@ const RecipePage = () => {
   }, [recipeOptionsLoading]);
   const [imageLoading, setImageLoading] = useState(true);
   const imageGenerationTriggered = useRef(false);
+  const installPromptTriggerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousFeedbackRef = useRef<FeedbackType | null>(null);
   const { setShowRecipe, recipe } = useRecipeStore();
   const { user } = useUserStore();
   const sharedFeedback = useFeedback(params.id as string);
+  const { isIOS, canOfferInstall, showIOSGuide, setShowIOSGuide, openInstallFlow } = useAppInstallPrompt();
 
     useEffect(() => {
       trackPageVisit('recipe-details');
     }, []);
+
+  useEffect(() => {
+    const previousFeedback = previousFeedbackRef.current;
+    previousFeedbackRef.current = sharedFeedback.feedback;
+
+    if (sharedFeedback.isLoading) return;
+    if (!canOfferInstall) return;
+    if (previousFeedback === FeedbackType.UP || sharedFeedback.feedback !== FeedbackType.UP) return;
+
+    try {
+      const promptAlreadyShown = sessionStorage.getItem(`feedback_install_prompt_${params.id}`) === 'true';
+      if (promptAlreadyShown) return;
+    } catch {}
+
+    installPromptTriggerTimeoutRef.current = setTimeout(() => {
+      setShowInstallNudgeModal(true);
+      try {
+        sessionStorage.setItem(`feedback_install_prompt_${params.id}`, 'true');
+      } catch {}
+      trackEvent('feedback_install_prompt_opened', { recipeId: params.id });
+    }, 650);
+
+    return () => {
+      if (installPromptTriggerTimeoutRef.current) {
+        clearTimeout(installPromptTriggerTimeoutRef.current);
+        installPromptTriggerTimeoutRef.current = null;
+      }
+    };
+  }, [sharedFeedback.feedback, sharedFeedback.isLoading, canOfferInstall, params.id]);
+
+  useEffect(() => {
+    return () => {
+      if (installPromptTriggerTimeoutRef.current) {
+        clearTimeout(installPromptTriggerTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Check if user is on Pro plan (planId 2 or 3)
   const isPro = user?.plan?.planId >= 2;
@@ -459,6 +501,11 @@ const RecipePage = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleConfirmInstallNudge = async () => {
+    setShowInstallNudgeModal(false);
+    await openInstallFlow('feedback_positive');
   };
 
   useEffect(() => {
@@ -914,6 +961,24 @@ const RecipePage = () => {
           onChangeIngredients={handleChangeIngredients}
           onRefine={generateMoreRecipeOptions}
           refining={recipeOptionsLoading}
+        />
+
+        <AppInstallNudgeModal
+          isOpen={showInstallNudgeModal}
+          isIOS={isIOS}
+          onClose={() => {
+            trackEvent('feedback_install_prompt_dismissed', { recipeId: params.id });
+            setShowInstallNudgeModal(false);
+          }}
+          onConfirm={handleConfirmInstallNudge}
+        />
+
+        <AppInstallGuideModal
+          isOpen={showIOSGuide}
+          onClose={() => {
+            trackEvent('pwa_ios_guide_dismissed', { source: 'feedback_positive' });
+            setShowIOSGuide(false);
+          }}
         />
 
 
