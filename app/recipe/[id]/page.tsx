@@ -255,6 +255,7 @@ const RecipePage = () => {
 
   const handleCloseRecipeOptionsModal = () => {
     if (recipeOptionsLoading || savingRecipeOption) return;
+    trackEvent('recipe_options_modal_dismissed', { recipeId: params.id });
     setShowRecipeOptionsModal(false);
     setRecipeOptions([]);
   };
@@ -293,6 +294,7 @@ const RecipePage = () => {
       localStorage.setItem('ingredients', JSON.stringify(currentIngredients));
     }
 
+    trackEvent('change_ingredients_from_recipe_options', { recipeId: params.id });
     setShowRecipeOptionsModal(false);
     setRecipeOptions([]);
     setShowRecipe(false);
@@ -304,6 +306,7 @@ const RecipePage = () => {
 
     const remainingRecipes = user?.plan?.recipeCount;
     if (remainingRecipes === 0) {
+      trackEvent('generate_more_recipe_options_blocked_limit', { recipeId: params.id });
       toast({
         title: 'Limite atingido',
         description: 'Você atingiu o limite de receitas do seu plano atual.',
@@ -363,6 +366,10 @@ const RecipePage = () => {
       trackEvent('generate_more_recipe_options', { recipeId: params.id, hasRefinement: Boolean(refinementInstruction?.trim()) });
     } catch (generationError) {
       console.error('Error generating recipe options:', generationError);
+      trackEvent('generate_more_recipe_options_failed', {
+        recipeId: params.id,
+        hasRefinement: Boolean(refinementInstruction?.trim()),
+      });
       setShowRecipeOptionsModal(false);
       toast({
         title: 'Erro',
@@ -505,6 +512,10 @@ const RecipePage = () => {
 
   const handleConfirmInstallNudge = async () => {
     setShowInstallNudgeModal(false);
+    trackEvent('feedback_install_prompt_confirmed', {
+      recipeId: params.id,
+      platform: isIOS ? 'ios' : 'android',
+    });
     await openInstallFlow('feedback_positive');
   };
 
