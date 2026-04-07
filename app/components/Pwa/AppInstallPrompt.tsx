@@ -18,7 +18,9 @@ interface AppInstallGuideModalProps {
 interface AppInstallNudgeModalProps {
   isOpen: boolean;
   isIOS: boolean;
-  onClose: () => void;
+  onCloseButton: () => void;
+  onDismissButton: () => void;
+  onBackdropClose: () => void;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -119,15 +121,22 @@ export function AppInstallGuideModal({ isOpen, onClose }: AppInstallGuideModalPr
   );
 }
 
-export function AppInstallNudgeModal({ isOpen, isIOS, onClose, onConfirm }: AppInstallNudgeModalProps) {
+export function AppInstallNudgeModal({
+  isOpen,
+  isIOS,
+  onCloseButton,
+  onDismissButton,
+  onBackdropClose,
+  onConfirm,
+}: AppInstallNudgeModalProps) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="fixed inset-0 bg-black/60" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/60" onClick={onBackdropClose} />
       <div className="bg-white rounded-2xl shadow-2xl p-6 z-50 w-full max-w-sm animate-fade-in relative text-left">
         <button
-          onClick={onClose}
+          onClick={onCloseButton}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -150,7 +159,7 @@ export function AppInstallNudgeModal({ isOpen, isIOS, onClose, onConfirm }: AppI
             {isIOS ? 'Ver como instalar' : 'Adicionar à tela inicial'}
           </button>
           <button
-            onClick={onClose}
+            onClick={onDismissButton}
             className="w-full border border-gray-200 text-gray-700 font-medium py-3 rounded-xl text-sm"
           >
             Agora não

@@ -510,6 +510,14 @@ const RecipePage = () => {
     }
   };
 
+  const handleInstallPromptDismiss = (reason: 'close_button' | 'dismiss_button' | 'backdrop') => {
+    trackEvent('feedback_install_prompt_dismissed', {
+      recipeId: params.id,
+      reason,
+    });
+    setShowInstallNudgeModal(false);
+  };
+
   const handleConfirmInstallNudge = async () => {
     setShowInstallNudgeModal(false);
     trackEvent('feedback_install_prompt_confirmed', {
@@ -788,7 +796,10 @@ const RecipePage = () => {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={() => generateMoreRecipeOptions()}
+                    onClick={() => {
+                      trackEvent('generate_more_recipe_options_click', { recipeId: params.id });
+                      generateMoreRecipeOptions();
+                    }}
                     disabled={recipeOptionsLoading || savingRecipeOption}
                     className="w-full border-secondary/30 bg-white text-secondary font-semibold"
                   >
@@ -977,10 +988,9 @@ const RecipePage = () => {
         <AppInstallNudgeModal
           isOpen={showInstallNudgeModal}
           isIOS={isIOS}
-          onClose={() => {
-            trackEvent('feedback_install_prompt_dismissed', { recipeId: params.id });
-            setShowInstallNudgeModal(false);
-          }}
+          onCloseButton={() => handleInstallPromptDismiss('close_button')}
+          onDismissButton={() => handleInstallPromptDismiss('dismiss_button')}
+          onBackdropClose={() => handleInstallPromptDismiss('backdrop')}
           onConfirm={handleConfirmInstallNudge}
         />
 
