@@ -25,6 +25,8 @@ import { trackPageVisit, trackEvent } from '../../lib/analytics';
 import { AppInstallGuideModal, AppInstallNudgeModal, useAppInstallPrompt } from '../../components/Pwa/AppInstallPrompt';
 import RecipeOptionsModal from '../../components/RecipeOptions/RecipeOptionsModal';
 import RecipeRefiningLoader from '../../components/RecipeOptions/RecipeRefiningLoader';
+import RecipeLimitModal from '../../components/SurveyReward/RecipeLimitModal';
+import SurveyRewardModal from '../../components/SurveyReward/SurveyRewardModal';
 
 declare global {
   interface Window {
@@ -87,6 +89,8 @@ const RecipePage = () => {
   const refineTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [feedbackResetKey, setFeedbackResetKey] = useState(0);
   const [showInstallNudgeModal, setShowInstallNudgeModal] = useState(false);
+  const [showRecipeLimitModal, setShowRecipeLimitModal] = useState(false);
+  const [showSurveyModal, setShowSurveyModal] = useState(false);
   const feedbackResetDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedResetFeedbackTimer = () => {
@@ -306,13 +310,8 @@ const RecipePage = () => {
 
     const remainingRecipes = user?.plan?.recipeCount;
     if (remainingRecipes === 0) {
-      trackEvent('generate_more_recipe_options_blocked_limit', { recipeId: params.id });
-      toast({
-        title: 'Limite atingido',
-        description: 'Você atingiu o limite de receitas do seu plano atual.',
-        variant: 'destructive',
-      });
-      router.push('/plans');
+      trackEvent('recipe_limit_modal_opened', { recipeId: params.id, source: 'generate_options' });
+      setShowRecipeLimitModal(true);
       return;
     }
 
@@ -985,6 +984,38 @@ const RecipePage = () => {
           refining={recipeOptionsLoading}
         />
 
+        <RecipeLimitModal
+          isOpen={showRecipeLimitModal}
+          surveyAlreadyCompleted={!!user?.surveyCompletedAt}
+          onClose={() => {
+            trackEvent('recipe_limit_dismissed');
+            setShowRecipeLimitModal(false);
+          }}
+          onStartSurvey={() => {
+            setShowRecipeLimitModal(false);
+            setShowSurveyModal(true);
+          }}
+          onUpgrade={() => {
+            setShowRecipeLimitModal(false);
+            router.push('/plans');
+          }}
+        />
+
+        <SurveyRewardModal
+          isOpen={showSurveyModal}
+          onClose={() => {
+            trackEvent('survey_dismissed');
+            setShowSurveyModal(false);
+          }}
+          onComplete={() => {
+            setShowSurveyModal(false);
+            toast({
+              title: 'Pronto! +5 receitas adicionadas 🎉',
+              description: 'Obrigado pelo seu feedback!',
+            });
+          }}
+        />
+
         <AppInstallNudgeModal
           isOpen={showInstallNudgeModal}
           isIOS={isIOS}
@@ -1001,7 +1032,6 @@ const RecipePage = () => {
             setShowIOSGuide(false);
           }}
         />
-
 
 
         {/* Feedback modal - appears after 30s if user hasn't given feedback */}

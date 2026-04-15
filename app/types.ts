@@ -27,4 +27,5 @@ export interface User {
   plan: UserPlan;
   lastLoginAt: Date;
   name?: string;
+  surveyCompletedAt?: Timestamp;
 }
