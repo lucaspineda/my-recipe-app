@@ -2,6 +2,7 @@
 
 import { Timestamp } from 'firebase/firestore';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { auth } from '../../hooks/userAuth';
 import { Plan } from '../../types';
 import { useUserStore } from '../../store/user';
@@ -18,6 +19,7 @@ interface PlansCardProps {
 export default function PlansCard({ plan }: PlansCardProps) {
   const [loading, setLoading] = useState(false);
   const { user } = useUserStore();
+  const router = useRouter();
   const expirationDate = formatDate(user?.plan.expiresAt as Timestamp);
 
   const notify = () => toast.error('Ocorreu um erro ao assinar o plano');
@@ -44,9 +46,7 @@ export default function PlansCard({ plan }: PlansCardProps) {
     try {
       setLoading(true);
       trackEvent('select_plan_btn_clicked', { planId: plan.id, planName: plan.name, planCost: plan.cost });
-      const response = await subscribe();
-      const redirectLink = response.url;
-      window.location.href = redirectLink;
+      router.push(`/checkout/${plan.id}`);
     } catch (error) {
       notify();
       setLoading(false);
