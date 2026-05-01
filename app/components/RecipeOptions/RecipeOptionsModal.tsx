@@ -1,7 +1,7 @@
 'use client';
 
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { Sparkles, RefreshCw, ArrowLeft, Wand2 } from 'lucide-react';
+import { Sparkles, RefreshCw, ArrowLeft, Wand2, Lock } from 'lucide-react';
 import Modal from '../Modal/Modal';
 import { trackEvent } from '../../lib/analytics';
 import { useState, useRef } from 'react';
@@ -24,6 +24,8 @@ interface RecipeOptionsModalProps {
   onChangeIngredients: () => void;
   onRefine: (refinement: string) => void;
   refining: boolean;
+  isPro?: boolean;
+  onUpgrade?: () => void;
 }
 
 export default function RecipeOptionsModal({
@@ -39,6 +41,8 @@ export default function RecipeOptionsModal({
   onChangeIngredients,
   onRefine,
   refining,
+  isPro = true,
+  onUpgrade,
 }: RecipeOptionsModalProps) {
   const [refinementText, setRefinementText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -120,7 +124,7 @@ export default function RecipeOptionsModal({
                     trackEvent('select_recipe_option', { recipeTitle: recipe.titulo });
                     onSelectRecipe(recipe);
                   }}
-                  className="text-left p-4 rounded-xl border-2 border-gray-200 hover:border-secondary hover:shadow-md transition-all bg-white group cursor-pointer"
+                  className="text-left p-4 rounded-xl border-2 border-gray-200 hover:border-secondary hover:shadow-md bg-white group cursor-pointer transition-all"
                 >
                   <div>
                     <h4 className="font-semibold text-gray-800 group-hover:text-secondary transition-colors text-sm leading-tight mb-2">
@@ -133,36 +137,38 @@ export default function RecipeOptionsModal({
                 </button>
               ))}
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
-              {/* Refine recipes */}
-              <div className="w-full mb-2">
-                <div className="flex flex-col gap-2">
-                  <textarea
-                    ref={textareaRef}
-                    rows={2}
-                    value={refinementText}
-                    onChange={handleRefinementChange}
-                    placeholder="Ex: mais simples, adicione molho, remova ingredientes..."
-                    disabled={refining}
-                    className="w-full px-3 py-2.5 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-secondary disabled:bg-gray-100 disabled:text-gray-400 resize-none overflow-hidden"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitRefine();
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={handleSubmitRefine}
-                    disabled={!refinementText.trim() || refining}
-                    className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Wand2 className="w-4 h-4" />
-                    {refining ? 'Refinando...' : 'Refinar receitas'}
-                  </button>
+            {isPro && (
+              <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
+                {/* Refine recipes */}
+                <div className="w-full mb-2">
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      ref={textareaRef}
+                      rows={2}
+                      value={refinementText}
+                      onChange={handleRefinementChange}
+                      placeholder="Ex: mais simples, adicione molho, remova ingredientes..."
+                      disabled={refining}
+                      className="w-full px-3 py-2.5 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-secondary disabled:bg-gray-100 disabled:text-gray-400 resize-none overflow-hidden"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmitRefine();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={handleSubmitRefine}
+                      disabled={!refinementText.trim() || refining}
+                      className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 rounded-lg bg-secondary text-white font-medium text-sm hover:bg-secondary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Wand2 className="w-4 h-4" />
+                      {refining ? 'Refinando...' : 'Refinar receitas'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-2">
               {/* <button
                 onClick={() => {
@@ -174,16 +180,18 @@ export default function RecipeOptionsModal({
                 <RefreshCw className="w-4 h-4" />
                 Não gostei, me mostre outras opções
               </button> */}
-              <button
-                onClick={() => {
-                  trackEvent('change_ingredients');
-                  onChangeIngredients();
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Quero trocar meus ingredientes
-              </button>
+              {isPro && (
+                <button
+                  onClick={() => {
+                    trackEvent('change_ingredients');
+                    onChangeIngredients();
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Quero trocar meus ingredientes
+                </button>
+              )}
             </div>
           </div>
         )}

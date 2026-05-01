@@ -838,17 +838,30 @@ const RecipePage = () => {
                         }
                       }}
                       placeholder="Ex: substituir manteiga, deixar mais saudável, remover glúten..."
-                      disabled={refining}
+                      disabled={refining || !isPro}
                       className="w-full text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400 resize-none overflow-hidden disabled:opacity-50"
                     />
-                    <Button
-                      className="w-full sm:w-auto sm:self-end bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
-                      onClick={handleRefineRecipe}
-                      disabled={!refineText.trim() || refining}
-                    >
-                      <Wand2 className="w-4 h-4" />
-                      {refining ? 'Refinando...' : 'Refinar receita'}
-                    </Button>
+                    {isPro ? (
+                      <Button
+                        className="w-full sm:w-auto sm:self-end bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
+                        onClick={handleRefineRecipe}
+                        disabled={!refineText.trim() || refining}
+                      >
+                        <Wand2 className="w-4 h-4" />
+                        {refining ? 'Refinando...' : 'Refinar receita'}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full sm:w-auto sm:self-end bg-gradient-to-r from-[#F57C00] to-[#FF9800] hover:from-[#E64A19] hover:to-[#F57C00] text-white font-semibold flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:scale-105"
+                        onClick={() => {
+                          trackEvent('premium_gate_refine_upgrade_click');
+                          router.push('/plans');
+                        }}
+                      >
+                        <Lock className="w-4 h-4" />
+                        Fazer upgrade para refinar
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
