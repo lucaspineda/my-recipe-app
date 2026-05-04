@@ -4,6 +4,7 @@ import {
   IconToolsKitchen2,
   IconUser,
   IconShoppingBag,
+  IconShoppingCart,
   IconHeadphones,
   IconList,
 } from "@tabler/icons-react";
@@ -79,6 +80,16 @@ export default function MobileMenuOpen({ toggleMenu }) {
             >
               <IconList size={20} stroke={2} />
               Minhas Receitas
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="flex items-center gap-1 text-black no-underline"
+              href="/lista-de-compras"
+              onClick={toggleMenu}
+            >
+              <IconShoppingCart size={20} stroke={2} />
+              Lista de Compras
             </Link>
           </li>
           <li>

@@ -1,15 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, BookOpen, ChefHat, ShoppingBag, User, Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { BookOpen, ChefHat, ShoppingCart, User, Menu } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { useState } from 'react';
 import MobileMenuOpen from './MobileMenuOpen';
 
 const navItems = [
   { href: '/minhas-receitas', label: 'Receitas', icon: BookOpen },
-  { href: '/plans', label: 'Planos', icon: ShoppingBag },
+  { href: '/lista-de-compras', label: 'Lista', icon: ShoppingCart },
   { href: '/recipe', label: 'Criar', icon: ChefHat },
   { href: '/profile', label: 'Perfil', icon: User },
 ];

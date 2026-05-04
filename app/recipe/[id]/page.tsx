@@ -3,17 +3,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { addDoc, collection, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../../hooks/userAuth';
 import axios from 'axios';
 import { getIdToken } from 'firebase/auth';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Separator } from '@radix-ui/react-separator';
-import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock, Wand2 } from 'lucide-react';
+import { ChefHat, Share2, Link, MessageCircle, ChevronDown, Sparkles, Lock, Wand2, ShoppingCart, Plus, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { DialogHeader } from '../../ui/dialog';
+import { Input } from '../../ui/input';
 import { useToast } from '../../hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useRecipeStore } from '../../store/recipe';
@@ -27,6 +28,8 @@ import RecipeOptionsModal from '../../components/RecipeOptions/RecipeOptionsModa
 import RecipeRefiningLoader from '../../components/RecipeOptions/RecipeRefiningLoader';
 import RecipeLimitModal from '../../components/SurveyReward/RecipeLimitModal';
 import SurveyRewardModal from '../../components/SurveyReward/SurveyRewardModal';
+import Modal from '../../components/Modal/Modal';
+import { ShoppingItem, ShoppingList, sortLists } from '../../lista-de-compras/shared';
 
 declare global {
   interface Window {
@@ -67,6 +70,17 @@ interface RecipeOption {
   } | null;
 }
 
+type ShoppingListFlowStep = 'select-list' | 'confirm-items' | 'success';
+
+interface RecipeShoppingDraftItem {
+  id: string;
+  name: string;
+  quantityText: string | null;
+  normalizedName: string;
+  selected: boolean;
+  alreadyInList: boolean;
+}
+
 const RecipePage = () => {
   const { toast } = useToast();
   const router = useRouter();
@@ -75,6 +89,8 @@ const RecipePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shoppingListModalOpen, setShoppingListModalOpen] = useState(false);
+  const [assistantActionsOpen, setAssistantActionsOpen] = useState(false);
   const [nutritionalInfoOpen, setNutritionalInfoOpen] = useState(true);
   const [refineText, setRefineText] = useState('');
   const [refining, setRefining] = useState(false);
@@ -91,6 +107,21 @@ const RecipePage = () => {
   const [showInstallNudgeModal, setShowInstallNudgeModal] = useState(false);
   const [showRecipeLimitModal, setShowRecipeLimitModal] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const [shoppingListStep, setShoppingListStep] = useState<ShoppingListFlowStep>('select-list');
+  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
+  const [shoppingListsLoading, setShoppingListsLoading] = useState(false);
+  const [selectedShoppingList, setSelectedShoppingList] = useState<ShoppingList | null>(null);
+  const [showCreateShoppingList, setShowCreateShoppingList] = useState(false);
+  const [shoppingListName, setShoppingListName] = useState('');
+  const [savingShoppingList, setSavingShoppingList] = useState(false);
+  const [preparingShoppingListItems, setPreparingShoppingListItems] = useState(false);
+  const [shoppingListDraftItems, setShoppingListDraftItems] = useState<RecipeShoppingDraftItem[]>([]);
+  const [savingShoppingListItems, setSavingShoppingListItems] = useState(false);
+  const [shoppingListSaveResult, setShoppingListSaveResult] = useState<{
+    addedCount: number;
+    listId: string;
+    listName: string;
+  } | null>(null);
   const feedbackResetDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedResetFeedbackTimer = () => {
@@ -211,6 +242,7 @@ const RecipePage = () => {
   
   // Check if this is the current user's own recipe
   const isOwnRecipe = user?.uid && recipes?.userId === user.uid;
+  const canManageRecipe = Boolean(user && isOwnRecipe);
 
   const inferMealOption = () => {
     const recipeText = `${recipes?.title || ''} ${recipes?.introduction || ''}`.toLowerCase();
@@ -241,6 +273,85 @@ const RecipePage = () => {
       .map((ingredient: any) => ingredient?.nome || ingredient?.item || ingredient)
       .filter(Boolean)
       .join(', ');
+  };
+
+  const normalizeShoppingItemName = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const getRecipeIngredientParts = (ingredient: any) => {
+    if (typeof ingredient === 'string') {
+      return {
+        name: ingredient.trim(),
+        quantityText: null,
+      };
+    }
+
+    const name = `${ingredient?.nome || ingredient?.item || ''}`.trim();
+    const quantityText = ingredient?.quantidade == null ? null : `${ingredient.quantidade}`.trim();
+
+    return {
+      name,
+      quantityText: quantityText || null,
+    };
+  };
+
+  const getRecipeIngredientDisplayText = (ingredient: any) => {
+    const { name, quantityText } = getRecipeIngredientParts(ingredient);
+
+    if (!name) return '';
+    return quantityText ? `${name} - ${quantityText}` : name;
+  };
+
+  const getRecipeShoppingDraftItems = () => {
+    if (!recipes?.ingredients?.length) return [] as RecipeShoppingDraftItem[];
+
+    const draftItems = new Map<string, RecipeShoppingDraftItem>();
+
+    recipes.ingredients.forEach((ingredient: any, index: number) => {
+      const { name, quantityText } = getRecipeIngredientParts(ingredient);
+      const normalizedName = normalizeShoppingItemName(name);
+
+      if (!name || !normalizedName) return;
+
+      const existingItem = draftItems.get(normalizedName);
+      if (existingItem) {
+        if (!existingItem.quantityText && quantityText) {
+          draftItems.set(normalizedName, {
+            ...existingItem,
+            quantityText,
+          });
+        }
+        return;
+      }
+
+      draftItems.set(normalizedName, {
+        id: `${normalizedName}-${index}`,
+        name,
+        quantityText,
+        normalizedName,
+        selected: true,
+        alreadyInList: false,
+      });
+    });
+
+    return Array.from(draftItems.values());
+  };
+
+  const resetShoppingListFlow = () => {
+    setShoppingListStep('select-list');
+    setSelectedShoppingList(null);
+    setShowCreateShoppingList(false);
+    setShoppingListName('');
+    setPreparingShoppingListItems(false);
+    setShoppingListDraftItems([]);
+    setSavingShoppingListItems(false);
+    setShoppingListSaveResult(null);
   };
 
   const saveRecipeOption = async (recipeOption: RecipeOption, imageUrl?: string) => {
@@ -440,6 +551,251 @@ const RecipePage = () => {
     }
   };
 
+  const handleShoppingListClick = () => {
+    if (!user) {
+      trackEvent('shopping_list_recipe_login_redirect', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+      });
+      router.push('/login');
+      return;
+    }
+
+    const nextDraftItems = getRecipeShoppingDraftItems();
+    if (!nextDraftItems.length) {
+      toast({
+        title: 'Sem ingredientes',
+        description: 'Não encontramos ingredientes suficientes para montar a lista.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    resetShoppingListFlow();
+    trackEvent('shopping_list_cta_click', {
+      recipeId: params.id,
+      source: 'recipe_ingredients',
+      isLoggedIn: Boolean(user),
+      isOwnRecipe: Boolean(isOwnRecipe),
+    });
+    trackEvent('shopping_list_recipe_modal_opened', {
+      recipeId: params.id,
+      source: 'recipe_ingredients',
+      ingredientCount: nextDraftItems.length,
+    });
+    setShoppingListModalOpen(true);
+  };
+
+  const handleShoppingListModalChange = (open: boolean) => {
+    if (!open && shoppingListModalOpen) {
+      trackEvent('shopping_list_modal_closed', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+        step: shoppingListStep,
+      });
+      resetShoppingListFlow();
+    }
+
+    setShoppingListModalOpen(open);
+  };
+
+  const handlePrepareShoppingListItems = async (list: ShoppingList) => {
+    const nextDraftItems = getRecipeShoppingDraftItems();
+
+    if (!nextDraftItems.length) {
+      toast({
+        title: 'Sem ingredientes',
+        description: 'Não encontramos ingredientes suficientes para adicionar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setPreparingShoppingListItems(true);
+
+    try {
+      const existingItemsSnapshot = await getDocs(collection(db, 'shoppingLists', list.id, 'items'));
+      const existingItemNames = new Set(
+        existingItemsSnapshot.docs
+          .map((snapshotDoc) => (snapshotDoc.data() as Omit<ShoppingItem, 'id'>).name)
+          .map((name) => normalizeShoppingItemName(name || ''))
+          .filter(Boolean),
+      );
+
+      const nextItems = nextDraftItems.map((item) => {
+        const alreadyInList = existingItemNames.has(item.normalizedName);
+
+        return {
+          ...item,
+          alreadyInList,
+          selected: alreadyInList ? false : item.selected,
+        };
+      });
+
+      setSelectedShoppingList(list);
+      setShoppingListDraftItems(nextItems);
+      setShoppingListStep('confirm-items');
+      setShowCreateShoppingList(false);
+
+      trackEvent('shopping_list_recipe_list_selected', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+        listId: list.id,
+        listName: list.name,
+      });
+    } catch (shoppingListError) {
+      console.error('Error preparing shopping list items:', shoppingListError);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível preparar os ingredientes agora.',
+        variant: 'destructive',
+      });
+    } finally {
+      setPreparingShoppingListItems(false);
+    }
+  };
+
+  const handleCreateShoppingList = async () => {
+    const trimmedName = shoppingListName.trim();
+
+    if (!user?.uid || !trimmedName) {
+      toast({
+        title: 'Nome obrigatório',
+        description: 'Digite um nome para a lista.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSavingShoppingList(true);
+
+    try {
+      const listRef = await addDoc(collection(db, 'shoppingLists'), {
+        userId: user.uid,
+        name: trimmedName,
+        status: 'active',
+        itemCount: 0,
+        pendingItemCount: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      const nextList: ShoppingList = {
+        id: listRef.id,
+        userId: user.uid,
+        name: trimmedName,
+        status: 'active',
+        itemCount: 0,
+        pendingItemCount: 0,
+      };
+
+      setShoppingListName('');
+      setSelectedShoppingList(nextList);
+      trackEvent('shopping_list_recipe_list_created', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+        listId: listRef.id,
+      });
+
+      await handlePrepareShoppingListItems(nextList);
+    } catch (shoppingListError) {
+      console.error('Error creating shopping list from recipe:', shoppingListError);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar a lista agora.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingShoppingList(false);
+    }
+  };
+
+  const handleToggleDraftShoppingItem = (draftItemId: string) => {
+    setShoppingListDraftItems((currentDraftItems) =>
+      currentDraftItems.map((draftItem) => {
+        if (draftItem.id !== draftItemId || draftItem.alreadyInList) {
+          return draftItem;
+        }
+
+        return {
+          ...draftItem,
+          selected: !draftItem.selected,
+        };
+      }),
+    );
+  };
+
+  const handleSaveRecipeToShoppingList = async () => {
+    if (!selectedShoppingList || !recipes) return;
+
+    const itemsToAdd = shoppingListDraftItems.filter((item) => item.selected && !item.alreadyInList);
+    setSavingShoppingListItems(true);
+
+    try {
+      const batch = writeBatch(db);
+      const shoppingListRef = doc(db, 'shoppingLists', selectedShoppingList.id);
+
+      itemsToAdd.forEach((item) => {
+        const itemRef = doc(collection(db, 'shoppingLists', selectedShoppingList.id, 'items'));
+        batch.set(itemRef, {
+          name: item.name,
+          quantityText: item.quantityText,
+          checked: false,
+          sourceType: 'recipe',
+          sourceRecipeId: params.id as string,
+          sourceRecipeTitle: recipes.title,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      });
+
+      if (itemsToAdd.length > 0) {
+        batch.update(shoppingListRef, {
+          itemCount: (selectedShoppingList.itemCount ?? 0) + itemsToAdd.length,
+          pendingItemCount: (selectedShoppingList.pendingItemCount ?? 0) + itemsToAdd.length,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        batch.update(shoppingListRef, {
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      trackEvent('shopping_list_recipe_items_confirmed', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+        listId: selectedShoppingList.id,
+        selectedCount: itemsToAdd.length,
+        skippedCount: shoppingListDraftItems.length - itemsToAdd.length,
+      });
+
+      await batch.commit();
+
+      setShoppingListSaveResult({
+        addedCount: itemsToAdd.length,
+        listId: selectedShoppingList.id,
+        listName: selectedShoppingList.name,
+      });
+      setShoppingListStep('success');
+
+      trackEvent('shopping_list_recipe_items_added', {
+        recipeId: params.id,
+        source: 'recipe_ingredients',
+        listId: selectedShoppingList.id,
+        addedCount: itemsToAdd.length,
+      });
+    } catch (shoppingListError) {
+      console.error('Error saving recipe ingredients to shopping list:', shoppingListError);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a lista agora.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingShoppingListItems(false);
+    }
+  };
+
   const handleRefineRecipe = async () => {
     if (!refineText.trim() || refining || !auth.currentUser) return;
     const token = await getIdToken(auth.currentUser);
@@ -568,6 +924,56 @@ const RecipePage = () => {
     fetchRecipe();
   }, [params.id]);
 
+  useEffect(() => {
+    if (!shoppingListModalOpen || !user?.uid) {
+      if (!shoppingListModalOpen) {
+        setShoppingLists([]);
+        setShoppingListsLoading(false);
+      }
+      return;
+    }
+
+    setShoppingListsLoading(true);
+
+    const listsQuery = query(
+      collection(db, 'shoppingLists'),
+      where('userId', '==', user.uid),
+    );
+
+    const unsubscribe = onSnapshot(
+      listsQuery,
+      (snapshot) => {
+        const nextLists = sortLists(
+          snapshot.docs.map((snapshotDoc) => ({
+            id: snapshotDoc.id,
+            ...(snapshotDoc.data() as Omit<ShoppingList, 'id'>),
+          })),
+        );
+
+        setShoppingLists(nextLists);
+        setShoppingListsLoading(false);
+        setSelectedShoppingList((currentSelectedList) => {
+          if (currentSelectedList) {
+            return nextLists.find((list) => list.id === currentSelectedList.id) ?? currentSelectedList;
+          }
+
+          return nextLists[0] ?? null;
+        });
+      },
+      (shoppingListError) => {
+        console.error('Error loading shopping lists from recipe:', shoppingListError);
+        setShoppingListsLoading(false);
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível carregar suas listas agora.',
+          variant: 'destructive',
+        });
+      },
+    );
+
+    return () => unsubscribe();
+  }, [shoppingListModalOpen, toast, user?.uid]);
+
   if (loading) {
     return <div className="flex justify-center">Loading...</div>;
   }
@@ -664,15 +1070,28 @@ const RecipePage = () => {
                 Ingredientes:
               </h3>
               <ul className="space-y-2">
-                {recipes.ingredients.map((ingredient: any, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="w-2 h-2 bg-[#F57C00] rounded-full mt-2 shrink-0" />
-                    <span className="text-[#5C5C5C]">
-                      {ingredient.nome || ingredient.item} - {ingredient.quantidade}
-                    </span>
-                  </li>
-                ))}
+                {recipes.ingredients.map((ingredient: any, index: number) => {
+                  const ingredientLabel = getRecipeIngredientDisplayText(ingredient);
+
+                  if (!ingredientLabel) return null;
+
+                  return (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="w-2 h-2 bg-[#F57C00] rounded-full mt-2 shrink-0" />
+                      <span className="text-[#5C5C5C]">{ingredientLabel}</span>
+                    </li>
+                  );
+                })}
               </ul>
+              <div className="mt-4 rounded-xl border border-[#F57C00]/20 bg-[#FFF7F0] p-4">
+                <Button
+                  onClick={handleShoppingListClick}
+                  className="w-full bg-[#F57C00] text-white font-semibold hover:bg-[#E64A19]"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Adicionar a lista de compras
+                </Button>
+              </div>
             </div>
 
             <Separator />
@@ -785,85 +1204,114 @@ const RecipePage = () => {
 
             {/* Botões principais */}
             <div className="flex flex-col gap-3 pt-2">
-              {/* Seção de ajuda do Chefinho - Only show if user is logged in */}
-              {user && isOwnRecipe && (
-                <div className="bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
-                  {/* Gerar mais opções */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-secondary flex-shrink-0" />
-                    <p className="text-sm font-semibold text-gray-700">Gere mais opções de receitas parecidas</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      trackEvent('generate_more_recipe_options_click', { recipeId: params.id });
-                      generateMoreRecipeOptions();
-                    }}
-                    disabled={recipeOptionsLoading || savingRecipeOption}
-                    className="w-full border-secondary/30 bg-white text-secondary font-semibold"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {recipeOptionsLoading ? 'Gerando opções...' : 'Gerar mais opções parecidas'}
-                  </Button>
+              {canManageRecipe && (
+                <Collapsible
+                  open={assistantActionsOpen}
+                  onOpenChange={(open) => {
+                    setAssistantActionsOpen(open);
+                    trackEvent('recipe_actions_toggle', { recipeId: params.id, state: open ? 'expanded' : 'collapsed' });
+                  }}
+                  className="rounded-lg border border-secondary/20 bg-secondary/5"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-auto w-full items-start justify-between whitespace-normal border-0 bg-transparent px-4 py-4 text-left text-secondary hover:bg-secondary/10"
+                    >
+                      <div className="flex min-w-0 flex-1 flex-col items-start gap-1 pr-3">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold leading-tight">
+                          <Sparkles className="w-4 h-4" />
+                          Melhorar com o Chefinho
+                        </span>
+                        <span className="text-xs font-normal leading-snug text-gray-600">
+                          Gere novas versões ou ajuste esta receita do seu jeito.
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-5 h-5 shrink-0 transition-transform ${assistantActionsOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
 
-                  {/* Separador "OU" */}
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-secondary/20" />
-                    <span className="text-xs font-semibold text-gray-400 uppercase">ou</span>
-                    <div className="flex-1 h-px bg-secondary/20" />
-                  </div>
+                  <CollapsibleContent className="border-t border-secondary/10 px-4 py-4">
+                    <div className="flex flex-col gap-4">
+                      <div className="rounded-lg border border-secondary/15 bg-white p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-secondary flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-700">Gerar mais opções parecidas</p>
+                        </div>
+                        <p className="mb-3 text-sm text-gray-500">
+                          Útil quando você gostou da ideia geral da receita, mas quer outras variações.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            trackEvent('generate_more_recipe_options_click', { recipeId: params.id });
+                            generateMoreRecipeOptions();
+                          }}
+                          disabled={recipeOptionsLoading || savingRecipeOption}
+                          className="w-full border-secondary/30 bg-white text-secondary font-semibold"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {recipeOptionsLoading ? 'Gerando opções...' : 'Gerar opções'}
+                        </Button>
+                      </div>
 
-                  {/* Refinar receita */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <Wand2 className="w-4 h-4 text-secondary flex-shrink-0" />
-                    <p className="text-sm font-semibold text-gray-700">Refine sua receita</p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <textarea
-                      ref={refineTextareaRef}
-                      rows={2}
-                      value={refineText}
-                      onFocus={debouncedResetFeedbackTimer}
-                      onChange={(e) => {
-                        setRefineText(e.target.value);
-                        const el = e.target;
-                        el.style.height = 'auto';
-                        el.style.height = `${el.scrollHeight}px`;
-                        debouncedResetFeedbackTimer();
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleRefineRecipe();
-                        }
-                      }}
-                      placeholder="Ex: substituir manteiga, deixar mais saudável, remover glúten..."
-                      disabled={refining || !isPro}
-                      className="w-full text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400 resize-none overflow-hidden disabled:opacity-50"
-                    />
-                    {isPro ? (
-                      <Button
-                        className="w-full sm:w-auto sm:self-end bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
-                        onClick={handleRefineRecipe}
-                        disabled={!refineText.trim() || refining}
-                      >
-                        <Wand2 className="w-4 h-4" />
-                        {refining ? 'Refinando...' : 'Refinar receita'}
-                      </Button>
-                    ) : (
-                      <Button
-                        className="w-full sm:w-auto sm:self-end bg-gradient-to-r from-[#F57C00] to-[#FF9800] hover:from-[#E64A19] hover:to-[#F57C00] text-white font-semibold flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:scale-105"
-                        onClick={() => {
-                          trackEvent('premium_gate_refine_upgrade_click');
-                          router.push('/plans');
-                        }}
-                      >
-                        <Lock className="w-4 h-4" />
-                        Fazer upgrade para refinar
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                      <div className="rounded-lg border border-secondary/15 bg-white p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wand2 className="w-4 h-4 text-secondary flex-shrink-0" />
+                          <p className="text-sm font-semibold text-gray-700">Refinar esta receita</p>
+                        </div>
+                        <p className="mb-3 text-sm text-gray-500">
+                          Peça um ajuste direto, como deixar mais leve, sem glúten ou trocar algum ingrediente.
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <textarea
+                            ref={refineTextareaRef}
+                            rows={2}
+                            value={refineText}
+                            onFocus={debouncedResetFeedbackTimer}
+                            onChange={(e) => {
+                              setRefineText(e.target.value);
+                              const el = e.target;
+                              el.style.height = 'auto';
+                              el.style.height = `${el.scrollHeight}px`;
+                              debouncedResetFeedbackTimer();
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleRefineRecipe();
+                              }
+                            }}
+                            placeholder="Ex: substituir manteiga, deixar mais saudável, remover glúten..."
+                            disabled={refining || !isPro}
+                            className="w-full text-sm border border-secondary/30 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white placeholder:text-gray-400 resize-none overflow-hidden disabled:opacity-50"
+                          />
+                          {isPro ? (
+                            <Button
+                              className="w-full sm:w-auto sm:self-end bg-secondary text-white hover:bg-secondary/90 transition-colors flex items-center justify-center gap-2"
+                              onClick={handleRefineRecipe}
+                              disabled={!refineText.trim() || refining}
+                            >
+                              <Wand2 className="w-4 h-4" />
+                              {refining ? 'Refinando...' : 'Refinar receita'}
+                            </Button>
+                          ) : (
+                            <Button
+                              className="w-full sm:w-auto sm:self-end bg-gradient-to-r from-[#F57C00] to-[#FF9800] hover:from-[#E64A19] hover:to-[#F57C00] text-white font-semibold flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:scale-105"
+                              onClick={() => {
+                                trackEvent('premium_gate_refine_upgrade_click');
+                                router.push('/plans');
+                              }}
+                            >
+                              <Lock className="w-4 h-4" />
+                              Fazer upgrade para refinar
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
 
               {/* Botões de compartilhar e gerar nova receita */}
@@ -873,7 +1321,12 @@ const RecipePage = () => {
                     trackEvent('share_button_click');
                     setShareDialogOpen(true);
                   }}
-                  className="flex-1 bg-[#F57C00] text-white font-semibold hover:bg-[#E64A19] transition-colors"
+                  variant={canManageRecipe ? 'outline' : 'default'}
+                  className={`flex-1 font-semibold transition-colors ${
+                    canManageRecipe
+                      ? 'border-[#F57C00]/30 text-[#F57C00] hover:bg-[#F57C00]/5'
+                      : 'bg-[#F57C00] text-white hover:bg-[#E64A19]'
+                  }`}
                 >
                   <Share2 className="w-4 h-4" />
                   Compartilhar
@@ -881,8 +1334,10 @@ const RecipePage = () => {
 
                 {user && (
                   <Button
-                    variant="secondary"
-                    className="flex-1 text-white font-semibold transition-colors"
+                    variant={canManageRecipe ? 'ghost' : 'secondary'}
+                    className={`flex-1 font-semibold transition-colors ${
+                      canManageRecipe ? 'text-gray-700 hover:bg-gray-100' : 'text-white'
+                    }`}
                     onClick={handleGetOtherRecipe}
                   >
                     Gerar outra receita
@@ -921,20 +1376,20 @@ const RecipePage = () => {
               )}
 
               {/* Disclaimer de receita salva - only for logged users viewing their own recipe */}
-              {user && isOwnRecipe && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                  <p className="text-sm text-gray-700 text-center">
-                    ✓ Esta receita foi salva automaticamente. Para ver todas as suas receitas salvas, clique no botão abaixo.
+              {canManageRecipe && (
+                <div className="pt-1 text-center">
+                  <p className="text-sm text-gray-500">
+                    Esta receita já foi salva automaticamente.
                   </p>
                   <Button
                     onClick={() => {
                       trackEvent('view_saved_recipes');
                       router.push('/minhas-receitas');
                     }}
-                    variant="outline"
-                    className="w-full mt-3 border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800 font-semibold"
+                    variant="link"
+                    className="h-auto p-0 text-sm font-semibold text-green-700 hover:text-green-800"
                   >
-                    Ver Receitas Salvas
+                    Ver minhas receitas salvas
                   </Button>
                 </div>
               )}
@@ -981,6 +1436,276 @@ const RecipePage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <Modal isOpen={shoppingListModalOpen} onClose={() => handleShoppingListModalChange(false)}>
+          <div className="mx-auto w-full max-w-lg text-left text-black">
+            {shoppingListStep === 'select-list' && (
+              <>
+                <div className="mb-4 space-y-1.5 text-left">
+                  <h2 className="text-lg font-semibold leading-none tracking-tight text-black">Adicionar em uma lista</h2>
+                  <p className="text-sm text-black/90">
+                    Escolha uma lista para receber os ingredientes desta receita ou crie uma nova agora.
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  {shoppingListsLoading ? (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+                      Carregando suas listas...
+                    </div>
+                  ) : showCreateShoppingList || shoppingLists.length === 0 ? (
+                    <div className="space-y-3 rounded-xl border border-secondary/15 bg-secondary/5 p-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">Criar nova lista</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Dê um nome para organizar os ingredientes desta receita.
+                        </p>
+                      </div>
+                      <Input
+                        value={shoppingListName}
+                        onChange={(event) => setShoppingListName(event.target.value)}
+                        placeholder="Ex: Jantar da semana"
+                        disabled={savingShoppingList || preparingShoppingListItems}
+                      />
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        {shoppingLists.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                              setShowCreateShoppingList(false);
+                              setShoppingListName('');
+                            }}
+                            disabled={savingShoppingList || preparingShoppingListItems}
+                            className="text-gray-700 hover:bg-gray-100"
+                          >
+                            Cancelar
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          onClick={handleCreateShoppingList}
+                          disabled={savingShoppingList || preparingShoppingListItems}
+                          className="bg-secondary text-white hover:bg-secondary/90"
+                        >
+                          {savingShoppingList || preparingShoppingListItems ? 'Criando...' : 'Criar e continuar'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                        {shoppingLists.map((list) => {
+                          const isSelected = selectedShoppingList?.id === list.id;
+
+                          return (
+                            <button
+                              key={list.id}
+                              type="button"
+                              onClick={() => setSelectedShoppingList(list)}
+                              className={`w-full rounded-xl border px-4 py-4 text-left transition-colors ${
+                                isSelected
+                                  ? 'border-secondary bg-secondary/10'
+                                  : 'border-gray-200 bg-white hover:border-secondary/40 hover:bg-secondary/5'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="font-semibold text-gray-800">{list.name}</p>
+                                  <p className="mt-1 text-sm text-gray-500">
+                                    {list.pendingItemCount ?? 0} pendentes de {list.itemCount ?? 0} itens
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <span className="rounded-full bg-secondary px-2 py-1 text-xs font-semibold text-white">
+                                    Selecionada
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowCreateShoppingList(true)}
+                        className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Criar nova lista
+                      </Button>
+
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => handleShoppingListModalChange(false)}
+                          className="text-gray-700 hover:bg-gray-100"
+                        >
+                          Fechar
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => selectedShoppingList && handlePrepareShoppingListItems(selectedShoppingList)}
+                          disabled={!selectedShoppingList || preparingShoppingListItems}
+                          className="bg-secondary text-white hover:bg-secondary/90"
+                        >
+                          {preparingShoppingListItems ? 'Preparando ingredientes...' : 'Continuar'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {shoppingListStep === 'confirm-items' && selectedShoppingList && (
+              <>
+                <div className="mb-4 space-y-1.5 text-left">
+                  <h2 className="text-lg font-semibold leading-none tracking-tight text-black">Confirmar ingredientes</h2>
+                  <p className="text-sm text-black/90">
+                    Revise o que vai entrar em <span className="font-semibold text-gray-900">{selectedShoppingList.name}</span>. Você pode remover o que não quiser adicionar agora.
+                  </p>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-secondary/10 px-3 py-1 font-semibold text-secondary">
+                      {shoppingListDraftItems.filter((item) => item.selected && !item.alreadyInList).length} para adicionar
+                    </span>
+                    {shoppingListDraftItems.some((item) => item.alreadyInList) && (
+                      <span className="rounded-full bg-gray-100 px-3 py-1 font-semibold text-gray-600">
+                        {shoppingListDraftItems.filter((item) => item.alreadyInList).length} já estavam na lista
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                    {shoppingListDraftItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${
+                          item.selected ? 'border-secondary/25 bg-secondary/5' : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className={`font-medium ${item.selected ? 'text-gray-800' : 'text-gray-500'} ${!item.selected && !item.alreadyInList ? 'line-through' : ''}`}>
+                            {item.name}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                            {item.quantityText && <span className="text-gray-500">{item.quantityText}</span>}
+                            {item.alreadyInList && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                                Já está na lista
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {item.alreadyInList ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled
+                            className="text-gray-400"
+                          >
+                            Na lista
+                          </Button>
+                        ) : item.selected ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleToggleDraftShoppingItem(item.id)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remover
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => handleToggleDraftShoppingItem(item.id)}
+                            className="text-secondary hover:bg-secondary/10"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Adicionar
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setShoppingListStep('select-list')}
+                      disabled={savingShoppingListItems}
+                      className="text-gray-700 hover:bg-gray-100"
+                    >
+                      Voltar
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveRecipeToShoppingList}
+                      disabled={savingShoppingListItems}
+                      className="bg-secondary text-white hover:bg-secondary/90"
+                    >
+                      {savingShoppingListItems ? 'Atualizando lista...' : 'Confirmar ingredientes'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {shoppingListStep === 'success' && shoppingListSaveResult && (
+              <>
+                <div className="mb-4 space-y-1.5 text-left">
+                  <h2 className="text-lg font-semibold leading-none tracking-tight text-black">Sua lista foi atualizada</h2>
+                  <p className="text-sm text-black/90">
+                    {shoppingListSaveResult.addedCount > 0
+                      ? `${shoppingListSaveResult.addedCount} ingrediente${shoppingListSaveResult.addedCount > 1 ? 's foram adicionados' : ' foi adicionado'} em ${shoppingListSaveResult.listName}.`
+                      : `${shoppingListSaveResult.listName} já tinha todos os ingredientes selecionados.`}
+                  </p>
+                </div>
+
+                <div className="grid gap-2 pt-2">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      trackEvent('shopping_list_recipe_success_continue_recipe', {
+                        recipeId: params.id,
+                        listId: shoppingListSaveResult.listId,
+                      });
+                      handleShoppingListModalChange(false);
+                    }}
+                    className="w-full bg-secondary text-white hover:bg-secondary/90"
+                  >
+                    Continuar vendo a receita
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      trackEvent('shopping_list_recipe_success_view_list', {
+                        recipeId: params.id,
+                        listId: shoppingListSaveResult.listId,
+                      });
+                      handleShoppingListModalChange(false);
+                      router.push(`/lista-de-compras/${shoppingListSaveResult.listId}`);
+                    }}
+                    className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                  >
+                    Ver lista
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
 
         <RecipeOptionsModal
           isOpen={showRecipeOptionsModal}
