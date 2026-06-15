@@ -10,8 +10,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   const { getUser } = useUserAuth();
   const { setUser } = useUserStore();
   
-  const alwaysPublicPaths = ['/terms', '/privacy'];
-  const authPublicPaths = ['/', '/login', '/signup', '/password-reset'];
+  const alwaysPublicPaths = ['/terms', '/privacy', '/plans-public'];
+  const alwaysPublicPrefixes = ['/recipe/'];
+  const authPublicPaths = ['/login', '/signup', '/password-reset'];
+  
+  const isAlwaysPublic = alwaysPublicPaths.includes(pathname) || 
+    alwaysPublicPrefixes.some(prefix => pathname?.startsWith(prefix));
   
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -20,9 +24,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
         await getUser();
 
         if (authPublicPaths.includes(pathname)) {
-          router.push('/recipe');
+          router.push('/');
         }
-      } else if (!alwaysPublicPaths.includes(pathname) && !authPublicPaths.includes(pathname)) {
+      } else if (!isAlwaysPublic && !authPublicPaths.includes(pathname)) {
         setUser(null);
         router.push('/login');
       }

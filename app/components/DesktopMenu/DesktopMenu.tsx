@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import * as React from 'react';
-import { Utensils } from 'lucide-react';
+import { CalendarRange, Utensils } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { useRecipeStore } from '../../store/recipe';
 import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../Button/Button';
+import { trackEvent } from '../../lib/analytics';
 
 export default function DesktopMenu() {
   const router = useRouter();
@@ -14,12 +15,17 @@ export default function DesktopMenu() {
   const { setShowRecipe } = useRecipeStore();
 
   const handleSignout = () => {
+    trackEvent('user_signout');
     router.push('/');
     signOut(auth).then(() => {
       setShowRecipe(false);
       router.push('/');
       console.log('user is signed out');
     });
+  };
+
+  const handleSupportClick = () => {
+    trackEvent('user_support_click');
   };
 
   return (
@@ -44,6 +50,17 @@ export default function DesktopMenu() {
               </Link>
             </li>
             <li>
+              <Link className="no-underline text-black font-normal" href="/lista-de-compras">
+                Lista de Compras
+              </Link>
+            </li>
+            <li>
+              <Link className="no-underline text-black font-normal inline-flex items-center gap-1" href="/planejamento">
+                <CalendarRange className="h-4 w-4" />
+                Planejamento
+              </Link>
+            </li>
+            <li>
               <Link className="no-underline text-black font-normal" href="/plans">
                 Meu Plano
               </Link>
@@ -59,6 +76,7 @@ export default function DesktopMenu() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="no-underline text-black font-normal"
+                onClick={handleSupportClick}
               >
                 Suporte
               </a>

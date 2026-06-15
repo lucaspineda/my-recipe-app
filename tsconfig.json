@@ -26,8 +26,10 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "app/components/Loading/Loading.tsx"  ],
+    "**/*.tsx",
+    "app/components/Loading/Loading.tsx",
+    ".next-dev/types/**/*.ts"
+  ],
   "exclude": [
     "node_modules"
   ]

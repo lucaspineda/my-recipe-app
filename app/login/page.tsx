@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +11,7 @@ import { useUserAuth } from '../hooks/userAuth';
 import Button from '../components/Button/Button';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
 import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
+import { trackPageVisit } from '../lib/analytics';
 
 const schema = z.object({
   email: z.string().email('Email é obrigatório'),
@@ -17,8 +19,22 @@ const schema = z.object({
 });
 
 export default function Login() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-primary/30" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signInWithEmail, loading, error: signInError } = useUserAuth();
+  const redirectTo = searchParams.get('redirectTo') === '/recipe' ? '/recipe' : '/';
+
+  useEffect(() => {
+    trackPageVisit('login');
+  }, []);
 
   const {
     register,
@@ -29,7 +45,7 @@ export default function Login() {
   });
 
   const handleSignInWithEmail = async (data) => {
-    await signInWithEmail(data.email, data.password, router);
+    await signInWithEmail(data.email, data.password, router, redirectTo);
   };
 
   return (
@@ -38,8 +54,8 @@ export default function Login() {
         <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
         <h2 className="my-6">Faça seu login</h2>
         <div className="space-y-2">
-          <GoogleSignInButton />
-          <FacebookSignInButton />
+          <GoogleSignInButton redirectTo={redirectTo} />
+          <FacebookSignInButton redirectTo={redirectTo} />
         </div>
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-400" />
@@ -74,7 +90,7 @@ export default function Login() {
         <div className="flex flex-col items-center">
           <span className="text-xs mt-4 text-left">
             Não tem conta ainda?&nbsp;
-            <Link href="/signup">Faça seu cadastro</Link>
+            <Link href={redirectTo === '/recipe' ? '/signup?redirectTo=/recipe' : '/signup'}>Faça seu cadastro</Link>
           </span>
           <span className="text-xs mt-4 text-left">
             Perdeu a senha?&nbsp;

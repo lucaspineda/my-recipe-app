@@ -1,18 +1,11 @@
 import { Utensils } from 'lucide-react';
 import Link from 'next/link';
 import { useUserStore } from '../../store/user';
-import { signOut, getAuth } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Button from '../Button/Button';
-import { IconMenu2 } from '@tabler/icons-react';
 
-export interface IAppProps {
-  toggleMenu: () => void;
-}
-
-export default function MobileMenu({toggleMenu}: IAppProps) {
+export default function MobileMenu() {
   const router = useRouter();
-  const auth = getAuth();
   const { user } = useUserStore();
 
   return (
@@ -23,9 +16,7 @@ export default function MobileMenu({toggleMenu}: IAppProps) {
           Chefinho IA
         </Link>
       </p>
-      {user ? (
-        <IconMenu2 className="absolute top-3 right-4 z-10 cursor-pointer" size={30} stroke={2} onClick={toggleMenu} />
-      ) : (
+      {!user && (
         <nav className="text-black">
           <ul className="flex items-center gap-4">
             <li>

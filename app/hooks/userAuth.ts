@@ -18,6 +18,9 @@ import {
 import { doc, setDoc } from "firebase/firestore";
 import { User as UserDB, UserPlan } from "../types";
 import { useUserStore } from "../store/user";
+import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import { trackEvent } from "../lib/analytics";
+import { FacebookAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAUTRpjufvz16h_B-1a9S-zk5r-3-b6wBY",
@@ -35,7 +38,7 @@ const FreePlan: UserPlan = {
   recipeCount: 3,
   planId: 1,
   startedAt: serverTimestamp(),
- 
+  updatedAt: serverTimestamp(),
   name: "Básico",
   cost: 0,
 };
@@ -123,7 +126,7 @@ export const useUserAuth = () => {
     });
   };
 
-  const signUpWithEmail = async (email, password, router) => {
+  const signUpWithEmail = async (email, password, router, redirectTo: string = "/") => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -134,9 +137,10 @@ export const useUserAuth = () => {
       if (userCredential) {
         await createUserInDB(email);
         await getUser();
+        await trackEvent("signup", { method: "email", email });
       }
       if (router) {
-        router.push("/recipe");
+        router.push(redirectTo);
       }
 
       return userCredential.user;
@@ -155,7 +159,8 @@ export const useUserAuth = () => {
   const signInWithEmail = async (
     email: string,
     password: string,
-    router?: AppRouterInstance
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
   ) => {
     setLoading(true);
     try {
@@ -165,10 +170,11 @@ export const useUserAuth = () => {
         password
       );
       if (router) {
-        router.push("/recipe");
+        router.push(redirectTo);
       }
       if (userCredential) {
         registerLoginInDB(email);
+        await trackEvent("signin", { method: "email", email });
       }
       return userCredential.user;
     } catch {
@@ -227,6 +233,80 @@ export const useUserAuth = () => {
       setLoading(false);
     }
   };
+
+  const signInWithGoogleAccessToken = async (
+    accessToken,
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
+  ) => {
+    setLoading(true);
+    try {
+      const credential = GoogleAuthProvider.credential(null, accessToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      console.log(userCredential, "userCredential");
+      const user = userCredential.user;
+      const userExists = (await getUserByUid(user.uid)) || false;
+      if (!userExists) {
+        await createUserInDBByUid(user.email, user.uid);
+      } else {
+        console.log("Usuário já existe no banco de dados:", user.email);
+      }
+      // TODO: need to refactor and remove duplicate getUser functions calls
+      getUser();
+      await trackEvent("signin", { method: "google", email: user.email });
+      console.log("Usuário autenticado com sucesso:", user.email);
+      if (router) {
+        router.push(redirectTo);
+      }
+      return userCredential;
+    } catch (error) {
+      console.error("signInWithGoogleAccessToken error:", error);
+      setError("Erro ao entrar com o Google. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookResponse = async (
+    response: any,
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
+  ) => {
+    setLoading(true);
+    try {
+      if (response.accessToken) {
+        const credential = FacebookAuthProvider.credential(response.accessToken);
+        const result = await signInWithCredential(auth, credential);
+
+        if (result.user) {
+          const userExists = await getUserByUid(result.user.uid);
+          if (!userExists) {
+            await createUserInDBByUid(result.user.email, result.user.uid);
+          } else {
+            console.log('User already exists in DB');
+          }
+          await getUser();
+          await trackEvent("signin", { method: "facebook", email: result.user.email });
+          if (router) {
+            router.push(redirectTo);
+          }
+        }
+      } else {
+        console.error('No access token received from Facebook:', response);
+        setError('Não foi possível obter acesso do Facebook. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Detailed Facebook auth error:', {
+        error,
+        code: error?.code,
+        message: error?.message,
+        stack: error?.stack
+      });
+      setError('Erro ao entrar com o Facebook. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
   return {
     updateUser,
     getUser,
@@ -235,6 +315,8 @@ export const useUserAuth = () => {
     signInWithEmail,
     reauthenticateAndSaveNewPassword,
     sendPasswordRecoverEmail,
+    signInWithGoogleAccessToken,
+    handleFacebookResponse,
     error,
     loading,
     createUserInDB,

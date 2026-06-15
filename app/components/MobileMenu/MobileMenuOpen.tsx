@@ -1,15 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  IconCalendarWeek,
   IconToolsKitchen2,
   IconUser,
   IconShoppingBag,
+  IconShoppingCart,
   IconHeadphones,
   IconList,
 } from "@tabler/icons-react";
 import { signOut, getAuth } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../../store/user";
+import { trackEvent } from '../../lib/analytics';
 
 export default function MobileMenuOpen({ toggleMenu }) {
   const router = useRouter();
@@ -18,12 +21,17 @@ export default function MobileMenuOpen({ toggleMenu }) {
   const { user } = useUserStore();
 
   const handleSignout = () => {
+    trackEvent('user_signout');
     router.push("/");
     signOut(auth).then(() => {
       toggleMenu();
       router.push("/");
       console.log("user is signed out");
     });
+  };
+
+  const handleSupportClick = () => {
+    trackEvent('user_support_click');
   };
 
   console.log('rendered', user)
@@ -62,7 +70,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
               onClick={toggleMenu}
             >
               <IconToolsKitchen2 size={20} stroke={2} />
-              Criar Receitas
+              Início
             </Link>
           </li>
           <li>
@@ -73,6 +81,26 @@ export default function MobileMenuOpen({ toggleMenu }) {
             >
               <IconList size={20} stroke={2} />
               Minhas Receitas
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="flex items-center gap-1 text-black no-underline"
+              href="/lista-de-compras"
+              onClick={toggleMenu}
+            >
+              <IconShoppingCart size={20} stroke={2} />
+              Lista de Compras
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="flex items-center gap-1 text-black no-underline"
+              href="/planejamento"
+              onClick={toggleMenu}
+            >
+              <IconCalendarWeek size={20} stroke={2} />
+              Planejamento
             </Link>
           </li>
           <li>
@@ -101,7 +129,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-black no-underline"
-              onClick={toggleMenu}
+              onClick={handleSupportClick}
             >
               <IconHeadphones size={20} stroke={2} />
               Suporte

@@ -1,13 +1,31 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, where, orderBy, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../hooks/userAuth';
 import Link from 'next/link';
 import { Card } from '../ui/card';
-import { ChefHat, Clock, ArrowRight } from 'lucide-react';
+import { ChefHat, Clock, ArrowRight, CalendarRange } from 'lucide-react';
 import { useRecipeStore } from '../store/recipe';
 import { useUserStore } from '../store/user';
+import { trackPageVisit } from '../lib/analytics';
+import { Button } from '../ui/button';
+import Modal from '../components/Modal/Modal';
+import { Input } from '../ui/input';
+import { useToast } from '../hooks/use-toast';
+import {
+  MEAL_SLOT_LABELS,
+  MEAL_SLOT_ORDER,
+  MealSlotKey,
+  buildEmptyWeekSlots,
+  formatDayLabel,
+  formatWeekdayLabel,
+  getMealPlanDocumentId,
+  getWeekDayOptions,
+  getWeekEndDate,
+  getWeekStartDate,
+  toDateKey,
+} from '../planejamento/shared';
 
 interface Recipe {
   id: string;
@@ -23,11 +41,101 @@ export default function MinhasReceitas() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [plannerModalOpen, setPlannerModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedDateKey, setSelectedDateKey] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState<MealSlotKey>('almoco');
+  const [servings, setServings] = useState('2');
+  const [note, setNote] = useState('');
+  const [savingMeal, setSavingMeal] = useState(false);
   const { user } = useUserStore();
   const { setShowRecipe } = useRecipeStore();
+  const { toast } = useToast();
+  const weekStartDate = toDateKey(getWeekStartDate());
+  const weekEndDate = toDateKey(getWeekEndDate(getWeekStartDate()));
+  const weekDayOptions = getWeekDayOptions(weekStartDate);
+
+  useEffect(() => {
+    trackPageVisit('minhas-receitas');
+  }, []);
 
   const handleRedirect = async () => {
     setShowRecipe(false);
+  };
+
+  const openPlannerModal = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setSelectedDateKey(weekDayOptions[0]?.dateKey || '');
+    setSelectedSlot('almoco');
+    setServings('2');
+    setNote('');
+    setPlannerModalOpen(true);
+  };
+
+  const handleSavePlannedMeal = async () => {
+    if (!user?.uid || !selectedRecipe || !selectedDateKey || !selectedSlot) {
+      return;
+    }
+
+    const nextServings = Number(servings);
+
+    if (!Number.isFinite(nextServings) || nextServings <= 0) {
+      toast({
+        title: 'Porções inválidas',
+        description: 'Digite um número de porções maior que zero.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const planId = getMealPlanDocumentId(user.uid, weekStartDate);
+    const planRef = doc(db, 'mealPlans', planId);
+    setSavingMeal(true);
+
+    try {
+      const planSnapshot = await getDoc(planRef);
+
+      if (!planSnapshot.exists()) {
+        await setDoc(planRef, {
+          userId: user.uid,
+          weekStartDate,
+          weekEndDate,
+          slots: buildEmptyWeekSlots(weekStartDate),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      await updateDoc(planRef, {
+        [`slots.${selectedDateKey}.${selectedSlot}`]: {
+          recipeId: selectedRecipe.id,
+          recipeTitle: selectedRecipe.title,
+          servings: nextServings,
+          note: note.trim() || null,
+          addedFrom: 'my-recipes',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({
+        title: 'Receita planejada',
+        description: `${selectedRecipe.title} foi adicionada em ${formatDayLabel(selectedDateKey)} no ${MEAL_SLOT_LABELS[selectedSlot].toLowerCase()}.`,
+      });
+
+      setPlannerModalOpen(false);
+      setSelectedRecipe(null);
+    } catch (saveError) {
+      console.error('Error saving planned meal:', saveError);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível adicionar a receita ao planejamento.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingMeal(false);
+    }
   };
 
   useEffect(() => {
@@ -127,11 +235,14 @@ export default function MinhasReceitas() {
             </div>
           ) : (
             recipes.map((recipe) => (
-              <Link href={`/recipe/${recipe.id}`} key={recipe.id} className="no-underline">
-                <Card className="group h-full hover:shadow-xl transition-all duration-300 border border-tertiary/30 hover:border-tertiary overflow-hidden bg-white">
-                  <div className="p-6">
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1">
+              <Card
+                key={recipe.id}
+                className="group flex h-full flex-col overflow-hidden border border-tertiary/30 bg-white transition-all duration-300 hover:border-tertiary hover:shadow-xl"
+              >
+                <Link href={`/recipe/${recipe.id}`} className="flex-1 p-6 no-underline">
+                  <div className="flex h-full flex-col">
+                    <div className="flex-1">
+                      <div>
                         <h2 className="text-xl font-semibold text-gray-800 mb-3 group-hover:text-tertiary transition-colors">
                           {recipe.title}
                         </h2>
@@ -150,17 +261,30 @@ export default function MinhasReceitas() {
                           </div>
                         </div>
                       </div>
-
-                      <div className="mt-6 pt-6 border-t border-gray-100">
-                        <div className="flex items-center justify-between text-tertiary">
-                          <span className="font-medium">Ver receita</span>
-                          <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </div>
                     </div>
                   </div>
-                </Card>
-              </Link>
+                </Link>
+
+                <div className="border-t border-gray-100 px-6 py-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Button
+                      variant="outline"
+                      className="w-full border-secondary/25 text-secondary hover:bg-secondary/5 sm:w-auto"
+                      onClick={() => openPlannerModal(recipe)}
+                    >
+                      <CalendarRange className="h-4 w-4" />
+                      Planejar refeição
+                    </Button>
+                    <Link
+                      href={`/recipe/${recipe.id}`}
+                      className="inline-flex items-center gap-2 font-medium text-tertiary no-underline transition-colors hover:text-secondary"
+                    >
+                      <span>Ver receita</span>
+                      <ArrowRight className="w-5 h-5 transform transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </div>
+                </div>
+              </Card>
             ))
           )}
         </div>
@@ -175,6 +299,78 @@ export default function MinhasReceitas() {
             <span className="font-medium">Criar Nova Receita</span>
           </Link>
         </div>
+
+        <Modal isOpen={plannerModalOpen} onClose={() => setPlannerModalOpen(false)}>
+          <div className="mx-auto max-w-lg text-left">
+            <div className="mb-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-secondary">Planejamento da semana</p>
+              <h2 className="mt-2 text-2xl font-semibold text-gray-800">🎉 Adicionar ao planejamento</h2>
+              <p className="mt-2 text-sm text-gray-500">
+                {selectedRecipe ? `Escolha quando você quer cozinhar ${selectedRecipe.title}.` : 'Escolha o dia e a refeição.'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Dia da semana</label>
+                <select
+                  value={selectedDateKey}
+                  onChange={(event) => setSelectedDateKey(event.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-gray-900 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  <option value="" disabled>
+                    Selecione um dia
+                  </option>
+                  {weekDayOptions.map((option) => (
+                    <option key={option.dateKey} value={option.dateKey}>
+                      {formatWeekdayLabel(option.dateKey)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Refeição</label>
+                <select
+                  value={selectedSlot}
+                  onChange={(event) => setSelectedSlot(event.target.value as MealSlotKey)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-gray-900 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  {MEAL_SLOT_ORDER.map((slotKey) => (
+                    <option key={slotKey} value={slotKey}>
+                      {MEAL_SLOT_LABELS[slotKey]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Porções</label>
+                <Input value={servings} onChange={(event) => setServings(event.target.value)} inputMode="numeric" />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Observação opcional</label>
+                <textarea
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  rows={3}
+                  placeholder="Ex: dobrar no jantar de sexta"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button variant="ghost" className="text-gray-600 hover:bg-gray-100" onClick={() => setPlannerModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button className="bg-secondary text-white hover:bg-secondary/90" onClick={handleSavePlannedMeal} disabled={savingMeal}>
+                {savingMeal ? 'Salvando...' : 'Salvar no planejamento'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </main>
     </div>
   );

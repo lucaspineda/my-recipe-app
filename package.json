@@ -9,13 +9,15 @@
     "lint": "next lint",
     "deploy": "next build && gcloud run deploy --source .",
     "deploy:only": "gcloud run deploy --source .",
-    "set-project": "gcloud config set run/region us-central1 && gcloud config set project recipe-app-1bbdc"
+    "set-project": "gcloud config set run/region us-central1 && gcloud config set project recipe-app-1bbdc",
+    "sync:canceled-users": "node scripts/update-canceled-users.js"
   },
   "dependencies": {
     "@greatsumini/react-facebook-login": "^3.4.0",
     "@hookform/resolvers": "^3.9.0",
     "@hotjar/browser": "^1.0.9",
     "@lottiefiles/dotlottie-react": "^0.9.0",
+    "@microsoft/clarity": "^1.0.0",
     "@next/third-parties": "^15.3.2",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -55,8 +57,10 @@
     "clsx": "^2.1.1",
     "dompurify": "^3.2.1",
     "firebase": "^10.13.0",
+    "firebase-admin": "^13.7.0",
     "lucide-react": "^0.461.0",
-    "next": "14.1.4",
+    "next": "^14.2.35",
+    "next-pwa": "^5.6.0",
     "postcss": "^8",
     "react": "^18",
     "react-day-picker": "^9.10.0",
@@ -74,8 +78,8 @@
   "devDependencies": {
     "@types/node": "20.14.5",
     "@types/react": "18.3.3",
-    "eslint": "^8",
-    "eslint-config-next": "14.1.4",
+    "eslint": "^9",
+    "eslint-config-next": "^16.0.10",
     "prettier": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.6.11"
   }

@@ -4,16 +4,20 @@ export const mealOptions = [
     value: "almoco",
   },
   {
+    text: "Sobremesa",
+    value: "sobremesa",
+  },
+  {
     text: "Café da Manhã",
     value: "cafe",
   },
   {
-    text: "Lanche",
-    value: "lanche",
-  },
-  {
     text: "Janta",
     value: "janta",
+  },
+  {
+    text: "Lanche",
+    value: "lanche",
   },
 ];
 

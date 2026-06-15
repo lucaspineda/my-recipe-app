@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +13,17 @@ import { Eye, EyeOff } from 'lucide-react';
 import TagManager from 'react-gtm-module';
 import GoogleSignInButton from '../components/GoogleButton/GoogleButton';
 import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
+import { trackPageVisit } from '../lib/analytics';
 
 export default function Signup() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-primary/30" />}>
+      <SignupContent />
+    </Suspense>
+  );
+}
+
+function SignupContent() {
   const [password, setPassword] = useState('');
   const [passwordChecks, setPasswordChecks] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +35,8 @@ export default function Signup() {
   };
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') === '/recipe' ? '/recipe' : '/';
 
   const schema = z.object({
     email: z.string().email('Email não é válido'),
@@ -45,8 +57,12 @@ export default function Signup() {
     resolver: zodResolver(schema),
   });
 
+  useEffect(() => {
+    trackPageVisit('signup');
+  }, []);
+
   const handleSignUpWithEmail = async (data) => {
-    const user = await signUpWithEmail(data.email, data.password, router);
+    const user = await signUpWithEmail(data.email, data.password, router, redirectTo);
     console.log('User signed up:', user);
     if (user) {
       TagManager.dataLayer({
@@ -60,10 +76,24 @@ export default function Signup() {
   return (
     <main className="flex flex-col text-center h-screen justify-center w-full max-w-[420px] justify-self-center">
       <div className="flex flex-col">
-        <h1 className="text-2xl">Bem-Vindo ao Chefinho IA</h1>
-        <h2 className="my-6">Crie sua conta</h2>
-        <GoogleSignInButton />
-        <FacebookSignInButton />
+        <h1 className="text-2xl font-bold">Bem-Vindo ao Chefinho IA</h1>
+        <div className="my-6 bg-secondary/10 border-2 border-secondary/20 rounded-lg p-4">
+          <p className="text-secondary font-semibold mb-2">🎉 Apenas mais um passo!</p>
+          <p className="text-sm text-gray-700">
+            Você vai conseguir gerar suas primeiras receitas de forma <strong>grátis</strong>.
+          </p>
+          <p className="text-sm text-gray-700 mt-1">
+            Crie sua conta e ganhe <strong>3 receitas grátis por mês</strong>!
+          </p>
+          <p className="text-sm text-gray-700 mt-2">
+            Para ver outros planos,{' '}
+            <Link href="/plans-public" className="text-secondary font-semibold underline hover:text-secondary/80">
+              clique aqui
+            </Link>
+          </p>
+        </div>
+        <GoogleSignInButton redirectTo={redirectTo} />
+        <FacebookSignInButton redirectTo={redirectTo} />
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-400" />
           <span className="mx-4 text-sm text-gray-700">Ou continuar com e-mail</span>
@@ -130,7 +160,7 @@ export default function Signup() {
           Clicando no botão, você concorda com nossos Termos de Serviço e Política de Privacidade
         </span>
         <span className="mt-6">
-          Já tem uma conta? <Link href="/login">Login</Link>
+          Já tem uma conta? <Link href={redirectTo === '/recipe' ? '/login?redirectTo=/recipe' : '/login'}>Login</Link>
         </span>
       </div>
     </main>

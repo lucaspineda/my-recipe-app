@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import MealForm from "../components/MealForm/MealForm";
-import { useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import TestimonialSection from "../components/TestimonialSection/TestimonialSection";
 import StatsSection from "../components/StatsSection/StatsSection";
 import FeaturesSection from "../components/FeaturesSection/FeaturesSection";
@@ -54,7 +54,9 @@ export default function Landing() {
       <TestimonialSection />
       
       <div data-meal-form>
-        <MealForm ref={targetRef} />
+        <Suspense fallback={null}>
+          <MealForm ref={targetRef} />
+        </Suspense>
       </div>
     </div>
   );
