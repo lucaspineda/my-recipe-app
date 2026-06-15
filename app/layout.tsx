@@ -15,8 +15,6 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL('https://chefinhoia.com.br'),
   title: 'Chefinho IA - Criador de receitas com IA',
-  keywords:
-    'receitas, inteligência artificial, IA, comida, culinária, receitas personalizadas, comidas saudáveis, receita para almoço, receita para jantar, receitas fáceis, receitas rápidas',
   description: 'Crie receitas com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!',
   openGraph: {
     title: 'Chefinho IA',

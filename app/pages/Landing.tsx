@@ -27,7 +27,7 @@ export default function Landing() {
           src="/images/people-cooking.svg"
           width={250}
           height={200}
-          alt="test"
+          alt="Pessoas cozinhando receitas criadas com inteligência artificial"
           className="mt-20 z-10 w-auto"
         />
         <h1 className="font-semibold mt-16 z-10">Chefinho IA</h1>
