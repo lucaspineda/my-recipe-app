@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   const { getUser } = useUserAuth();
   const { setUser } = useUserStore();
   
-  const alwaysPublicPaths = ['/terms', '/privacy', '/plans-public'];
+  const alwaysPublicPaths = ['/', '/terms', '/privacy', '/plans-public'];
   const alwaysPublicPrefixes = ['/recipe/'];
   const authPublicPaths = ['/login', '/signup', '/password-reset'];
   
