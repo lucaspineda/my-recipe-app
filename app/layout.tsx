@@ -39,10 +39,36 @@ export const metadata = {
   },
 };
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Chefinho IA',
+  url: 'https://chefinhoia.com.br',
+  logo: 'https://chefinhoia.com.br/icons/icon-512x512.png',
+  description:
+    'Crie receitas com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial.',
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Chefinho IA',
+  url: 'https://chefinhoia.com.br',
+  inLanguage: 'pt-BR',
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <body className={`${rubik.className} flex flex-col min-h-screen`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID}>
           <ClientWrapper>{children}</ClientWrapper>
           <Footer />
