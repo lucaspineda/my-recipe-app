@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   
   const alwaysPublicPaths = ['/terms', '/privacy', '/plans-public'];
   const alwaysPublicPrefixes = ['/recipe/'];
-  const authPublicPaths = ['/', '/login', '/signup', '/password-reset'];
+  const authPublicPaths = ['/login', '/signup', '/password-reset'];
   
   const isAlwaysPublic = alwaysPublicPaths.includes(pathname) || 
     alwaysPublicPrefixes.some(prefix => pathname?.startsWith(prefix));
@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
         await getUser();
 
         if (authPublicPaths.includes(pathname)) {
-          router.push('/recipe');
+          router.push('/');
         }
       } else if (!isAlwaysPublic && !authPublicPaths.includes(pathname)) {
         setUser(null);

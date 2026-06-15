@@ -12,6 +12,7 @@ import Hotjar from '@hotjar/browser';
 import { useUserStore } from '../../store/user';
 import { captureUtmParams } from '../../lib/analytics';
 import AppUpdateBanner from '../AppUpdateBanner/AppUpdateBanner';
+import { usePathname } from 'next/navigation';
 
 const siteId = 6525527;
 const hotjarVersion = 6;
@@ -22,6 +23,8 @@ const tagManagerArgs = {
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useUserStore();
   const projectId = 'rnup5ef83c';
+  const pathname = usePathname();
+  const isDashboardHome = pathname === '/' && !!user;
 
   useEffect(() => {
     captureUtmParams();
@@ -68,7 +71,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       <div className="sticky z-20 top-0 lg:hidden">
         <MobileMenu />
       </div>
-      <div className="relative p-5">{children}</div>
+      <div className={isDashboardHome ? 'relative px-3 pb-20 pt-3 sm:px-4 sm:pb-24 sm:pt-4' : 'relative p-5'}>{children}</div>
       <MobileBottomNav />
     </ProtectedRoute>
   );

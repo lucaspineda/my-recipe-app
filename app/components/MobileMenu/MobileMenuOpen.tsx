@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  IconCalendarWeek,
   IconToolsKitchen2,
   IconUser,
   IconShoppingBag,
@@ -69,7 +70,7 @@ export default function MobileMenuOpen({ toggleMenu }) {
               onClick={toggleMenu}
             >
               <IconToolsKitchen2 size={20} stroke={2} />
-              Criar Receitas
+              Início
             </Link>
           </li>
           <li>
@@ -90,6 +91,16 @@ export default function MobileMenuOpen({ toggleMenu }) {
             >
               <IconShoppingCart size={20} stroke={2} />
               Lista de Compras
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="flex items-center gap-1 text-black no-underline"
+              href="/planejamento"
+              onClick={toggleMenu}
+            >
+              <IconCalendarWeek size={20} stroke={2} />
+              Planejamento
             </Link>
           </li>
           <li>

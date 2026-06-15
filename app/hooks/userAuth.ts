@@ -126,7 +126,7 @@ export const useUserAuth = () => {
     });
   };
 
-  const signUpWithEmail = async (email, password, router) => {
+  const signUpWithEmail = async (email, password, router, redirectTo: string = "/") => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -140,7 +140,7 @@ export const useUserAuth = () => {
         await trackEvent("signup", { method: "email", email });
       }
       if (router) {
-        router.push("/recipe");
+        router.push(redirectTo);
       }
 
       return userCredential.user;
@@ -159,7 +159,8 @@ export const useUserAuth = () => {
   const signInWithEmail = async (
     email: string,
     password: string,
-    router?: AppRouterInstance
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
   ) => {
     setLoading(true);
     try {
@@ -169,7 +170,7 @@ export const useUserAuth = () => {
         password
       );
       if (router) {
-        router.push("/recipe");
+        router.push(redirectTo);
       }
       if (userCredential) {
         registerLoginInDB(email);
@@ -233,7 +234,11 @@ export const useUserAuth = () => {
     }
   };
 
-  const signInWithGoogleAccessToken = async (accessToken) => {
+  const signInWithGoogleAccessToken = async (
+    accessToken,
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
+  ) => {
     setLoading(true);
     try {
       const credential = GoogleAuthProvider.credential(null, accessToken);
@@ -250,6 +255,9 @@ export const useUserAuth = () => {
       getUser();
       await trackEvent("signin", { method: "google", email: user.email });
       console.log("Usuário autenticado com sucesso:", user.email);
+      if (router) {
+        router.push(redirectTo);
+      }
       return userCredential;
     } catch (error) {
       console.error("signInWithGoogleAccessToken error:", error);
@@ -259,7 +267,11 @@ export const useUserAuth = () => {
     }
   };
 
-  const handleFacebookResponse = async (response: any) => {
+  const handleFacebookResponse = async (
+    response: any,
+    router?: AppRouterInstance,
+    redirectTo: string = "/"
+  ) => {
     setLoading(true);
     try {
       if (response.accessToken) {
@@ -275,6 +287,9 @@ export const useUserAuth = () => {
           }
           await getUser();
           await trackEvent("signin", { method: "facebook", email: result.user.email });
+          if (router) {
+            router.push(redirectTo);
+          }
         }
       } else {
         console.error('No access token received from Facebook:', response);

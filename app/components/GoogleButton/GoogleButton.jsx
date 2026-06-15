@@ -2,16 +2,12 @@
 
 import GoogleIcon from './GoogleIcon';
 import { useGoogleLogin } from '@react-oauth/google';
-import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useUserAuth } from '../../hooks/userAuth';
 import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { getAuth } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
-const notify = () => toast.error('Erro ao entrar com o Google. Tente novamente.');
-
-export default function GoogleSignInButton() {
-    const auth = getAuth();
+export default function GoogleSignInButton({ redirectTo = '/' }) {
+  const router = useRouter();
   
   const { signInWithGoogleAccessToken } = useUserAuth();
   const [loading, setLoading] = useState(false);
@@ -19,7 +15,7 @@ export default function GoogleSignInButton() {
   const googleSignIn = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setLoading(true);
-      await signInWithGoogleAccessToken(tokenResponse.access_token);
+      await signInWithGoogleAccessToken(tokenResponse.access_token, router, redirectTo);
       setLoading(false);
     },
     onError: (error) => {

@@ -157,7 +157,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       localStorage.setItem('cookingLevel', cookingLevel);
       localStorage.setItem('mealType', optionMeal);
       
-      router.push('/signup');
+      router.push('/signup?redirectTo=/recipe');
       return;
     }
 

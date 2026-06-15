@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, ChefHat, ShoppingCart, User, Menu } from 'lucide-react';
+import { BookOpen, ChefHat, ShoppingCart, Home, Menu, CalendarRange } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { useState } from 'react';
 import MobileMenuOpen from './MobileMenuOpen';
 
 const navItems = [
+  { href: '/', label: 'Início', icon: Home },
   { href: '/minhas-receitas', label: 'Receitas', icon: BookOpen },
+  { href: '/planejamento', label: 'Semana', icon: CalendarRange },
   { href: '/lista-de-compras', label: 'Lista', icon: ShoppingCart },
   { href: '/recipe', label: 'Criar', icon: ChefHat },
-  { href: '/profile', label: 'Perfil', icon: User },
 ];
 
 export default function MobileBottomNav() {
@@ -32,9 +33,11 @@ export default function MobileBottomNav() {
 
       {!menuOpen && (
         <nav className="fixed bottom-4 left-0 right-0 z-30 lg:hidden flex justify-center px-4">
-          <div className="bg-secondary rounded-2xl px-2 py-2 grid grid-cols-5 border-2 border-tertiary/40 shadow-[0_4px_20px_rgba(0,0,0,0.3)] w-full max-w-md">
+          <div className="bg-secondary rounded-2xl px-2 py-2 grid grid-cols-6 border-2 border-tertiary/40 shadow-[0_4px_20px_rgba(0,0,0,0.3)] w-full max-w-md">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/') || (item.href === '/recipe' && pathname === '/');
+            const isActive = item.href === '/'
+              ? pathname === '/'
+              : pathname === item.href || pathname.startsWith(item.href + '/');
 
             if (isActive) {
               return (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import FacebookLogin from '@greatsumini/react-facebook-login';
-import { signInWithCredential, FacebookAuthProvider, getAuth } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { useUserAuth } from '../../hooks/userAuth';
 import { toast } from 'react-toastify';
 import FacebookIcon from './FacebookIcon';
@@ -12,8 +12,8 @@ const handleError = (error: any) => {
   toast.error('Erro ao entrar com o Facebook. Tente novamente.');
 };
 
-export default function FacebookSignInButton() {
-  const auth = getAuth();
+export default function FacebookSignInButton({ redirectTo = '/' }: { redirectTo?: string }) {
+  const router = useRouter();
   const { handleFacebookResponse } = useUserAuth();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ export default function FacebookSignInButton() {
       appId={'1507399270704823'}
       onSuccess={(response) => {
         setLoading(true);
-        handleFacebookResponse(response).finally(() => setLoading(false));
+        handleFacebookResponse(response, router, redirectTo).finally(() => setLoading(false));
       }}
       onFail={(error) => {
         console.log('Facebook Login Failed:', error);

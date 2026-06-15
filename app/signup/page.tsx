@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +16,14 @@ import FacebookSignInButton from '../components/FacebookButton/FacebookButton';
 import { trackPageVisit } from '../lib/analytics';
 
 export default function Signup() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-primary/30" />}>
+      <SignupContent />
+    </Suspense>
+  );
+}
+
+function SignupContent() {
   const [password, setPassword] = useState('');
   const [passwordChecks, setPasswordChecks] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +35,8 @@ export default function Signup() {
   };
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') === '/recipe' ? '/recipe' : '/';
 
   const schema = z.object({
     email: z.string().email('Email não é válido'),
@@ -51,7 +62,7 @@ export default function Signup() {
   }, []);
 
   const handleSignUpWithEmail = async (data) => {
-    const user = await signUpWithEmail(data.email, data.password, router);
+    const user = await signUpWithEmail(data.email, data.password, router, redirectTo);
     console.log('User signed up:', user);
     if (user) {
       TagManager.dataLayer({
@@ -81,8 +92,8 @@ export default function Signup() {
             </Link>
           </p>
         </div>
-        <GoogleSignInButton />
-        <FacebookSignInButton />
+        <GoogleSignInButton redirectTo={redirectTo} />
+        <FacebookSignInButton redirectTo={redirectTo} />
         <div className="flex items-center my-4">
           <hr className="flex-grow border-t border-gray-400" />
           <span className="mx-4 text-sm text-gray-700">Ou continuar com e-mail</span>
@@ -149,7 +160,7 @@ export default function Signup() {
           Clicando no botão, você concorda com nossos Termos de Serviço e Política de Privacidade
         </span>
         <span className="mt-6">
-          Já tem uma conta? <Link href="/login">Login</Link>
+          Já tem uma conta? <Link href={redirectTo === '/recipe' ? '/login?redirectTo=/recipe' : '/login'}>Login</Link>
         </span>
       </div>
     </main>

@@ -11,6 +11,7 @@
 
 # next.js
 /.next/
+/.next-dev/
 /out/
 
 # production
@@ -43,3 +44,5 @@ public/sw.js.map
 scripts/serviceAccountKey.json
 public/workbox-*.js
 public/workbox-*.js.map
+
+certificates

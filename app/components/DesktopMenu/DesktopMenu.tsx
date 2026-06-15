@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import * as React from 'react';
-import { Utensils } from 'lucide-react';
+import { CalendarRange, Utensils } from 'lucide-react';
 import { useUserStore } from '../../store/user';
 import { useRecipeStore } from '../../store/recipe';
 import { signOut, getAuth } from 'firebase/auth';
@@ -52,6 +52,12 @@ export default function DesktopMenu() {
             <li>
               <Link className="no-underline text-black font-normal" href="/lista-de-compras">
                 Lista de Compras
+              </Link>
+            </li>
+            <li>
+              <Link className="no-underline text-black font-normal inline-flex items-center gap-1" href="/planejamento">
+                <CalendarRange className="h-4 w-4" />
+                Planejamento
               </Link>
             </li>
             <li>

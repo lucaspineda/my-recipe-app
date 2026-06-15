@@ -9,7 +9,8 @@
     "lint": "next lint",
     "deploy": "next build && gcloud run deploy --source .",
     "deploy:only": "gcloud run deploy --source .",
-    "set-project": "gcloud config set run/region us-central1 && gcloud config set project recipe-app-1bbdc"
+    "set-project": "gcloud config set run/region us-central1 && gcloud config set project recipe-app-1bbdc",
+    "sync:canceled-users": "node scripts/update-canceled-users.js"
   },
   "dependencies": {
     "@greatsumini/react-facebook-login": "^3.4.0",
