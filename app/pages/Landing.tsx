@@ -1,63 +1,72 @@
 "use client";
 
-import Image from "next/image";
+import { useRef, Suspense, MouseEvent } from 'react';
 import MealForm from "../components/MealForm/MealForm";
-import { useRef, Suspense } from 'react';
-import TestimonialSection from "../components/TestimonialSection/TestimonialSection";
-import StatsSection from "../components/StatsSection/StatsSection";
-import FeaturesSection from "../components/FeaturesSection/FeaturesSection";
+import HeroDemo from "../components/Landing/HeroDemo";
 import HowItWorksSection from "../components/HowItWorksSection/HowItWorksSection";
+import TestimonialSection from "../components/TestimonialSection/TestimonialSection";
+import styles from "../components/Landing/Landing.module.css";
+import { displayFont } from "../lib/fonts";
 
 export default function Landing() {
-  const targetRef = useRef(null);
-  const handleSignupClick = () => {
-    targetRef.current.scrollIntoView({ behavior: "smooth" });
+  const formSectionRef = useRef<HTMLElement>(null);
+
+  const handleStartClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
   };
+
   return (
-    <div className="bg-primary flex items-center flex-col">
-      <main className="flex items-center flex-col text-center w-full mb-24">
-        <Image
-          src="/images/yellow-wave.svg"
-          width={400}
-          height={180}
-          alt="landing page decoration"
-          className="absolute left-0 top-[-20px] w-auto md:w-[1200px]"
-        />
-        <Image
-          src="/images/people-cooking.svg"
-          width={250}
-          height={200}
-          alt="Pessoas cozinhando receitas criadas com inteligência artificial"
-          className="mt-20 z-10 w-auto"
-        />
-        <h1 className="font-semibold mt-16 z-10">Chefinho IA</h1>
-        <article className="mt-4 w-80 z-10 md:w-[420px] md:text-lg">
-          <p>
-            Crie receitas incríveis com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!
-          </p>
-        </article>
-        <button
-          onClick={handleSignupClick}
-          className="bg-secondary w-full mt-24 py-4 text-white rounded-xl
-					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) z-10 font-semibold md:w-96"
-        >
-          Começar
-        </button>
-      </main>
-      
-      <StatsSection />
-      
-      <FeaturesSection />
-      
+    <div className={`${displayFont.variable} mx-auto w-full max-w-6xl text-[#24343a]`}>
+      <section className="pt-6 md:pt-14">
+        <div className="grid gap-8 md:grid-cols-12 md:items-end">
+          <h1 className={`${styles.display} text-5xl leading-[0.95] text-secondary md:col-span-7 md:text-7xl lg:text-[5.75rem]`}>
+            Receitas com o que você já tem em casa
+          </h1>
+          <div className="md:col-span-5">
+            <p className="max-w-[34rem] text-lg leading-relaxed text-[#4a5a5f]">
+              Liste os ingredientes da geladeira e da despensa. O Chefinho IA monta uma receita completa, com modo de
+              preparo, em segundos.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <a
+                href="#monte-sua-receita"
+                onClick={handleStartClick}
+                className="rounded-xl bg-secondary px-6 py-4 font-semibold text-white no-underline transition-colors hover:bg-[#0b4f5c] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-tertiary"
+              >
+                Montar minha receita
+              </a>
+              <span className="text-sm text-[#4a5a5f]">3 receitas grátis para começar</span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-10 md:mt-14">
+          <HeroDemo />
+        </div>
+      </section>
+
       <HowItWorksSection />
-      
+
       <TestimonialSection />
-      
-      <div data-meal-form>
-        <Suspense fallback={null}>
-          <MealForm ref={targetRef} />
-        </Suspense>
-      </div>
+
+      <section
+        id="monte-sua-receita"
+        ref={formSectionRef}
+        className="grid scroll-mt-24 gap-10 pb-8 pt-20 md:pt-24 lg:grid-cols-12"
+      >
+        <div className="lg:col-span-4">
+          <h2 className={`${styles.display} text-4xl text-secondary md:text-5xl`}>Monte sua receita</h2>
+          <p className="mt-4 max-w-[28rem] text-lg leading-relaxed text-[#4a5a5f]">
+            Você cria sua conta grátis quando pedir a primeira receita e já começa com 3 receitas.
+          </p>
+        </div>
+        <div data-meal-form className="lg:col-span-8">
+          <Suspense fallback={null}>
+            <MealForm />
+          </Suspense>
+        </div>
+      </section>
     </div>
   );
 }
