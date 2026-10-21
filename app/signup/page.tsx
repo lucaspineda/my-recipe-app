@@ -58,8 +58,9 @@ function SignupContent() {
   });
 
   useEffect(() => {
-    trackPageVisit('signup');
-  }, []);
+    // redirectTo "/recipe" means the visitor came from "Gerar Receita" on the landing page
+    trackPageVisit('signup', { redirectTo });
+  }, [redirectTo]);
 
   const handleSignUpWithEmail = async (data) => {
     const user = await signUpWithEmail(data.email, data.password, router, redirectTo);

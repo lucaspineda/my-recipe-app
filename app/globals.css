@@ -9,6 +9,10 @@
   --primary-color: #f6e8d3;
   --secondary-color: #0f6374;
   --tertiary-color: #f6af4c;
+  /* RGB channels for the Tailwind primary/secondary/tertiary colors */
+  --color-primary: 246 232 211;
+  --color-secondary: 15 99 116;
+  --color-tertiary: 246 175 76;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -74,4 +78,93 @@ select {
 button:disabled,
 button[disabled]{
   opacity: 0.75;
+}
+/* ------------------------------------------------------------------
+   Logged-out landing page (app/pages/Landing.tsx)
+   Neutral palette + one accent (basil). The shared MealForm is restyled
+   from the outside here so /recipe keeps its current look and logic.
+   ------------------------------------------------------------------ */
+.landing {
+  --color-primary: 244 244 245;   /* zinc-100 */
+  --color-secondary: 24 24 27;    /* zinc-900: selections, chips, slider */
+  --color-tertiary: 244 244 245;  /* zinc-100: form step markers */
+}
+
+:where(.landing) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.landing :focus-visible:not(input) {
+  outline: 2px solid #18181b;
+  outline-offset: 2px;
+}
+
+.landing [role='slider']:focus-visible {
+  outline: 2px solid #18181b;
+  outline-offset: 3px;
+}
+
+.landing-form .secondary-header {
+  padding: 0.75rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #18181b;
+}
+
+/* Step markers (1–5) */
+.landing-form .rounded-full.bg-tertiary {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #3f3f46;
+}
+
+.landing-form .rounded-full.bg-tertiary.mt-6 {
+  margin-top: 2rem;
+}
+
+/* Ingredient field: the inner input is outline-none, so show focus on its box */
+.landing-form div:has(> div > input[type='text']) {
+  min-height: 3.25rem;
+  border-width: 1.5px;
+  border-color: #d4d4d8;
+  border-radius: 0.75rem;
+}
+
+.landing-form div:has(> div > input[type='text']):focus-within {
+  border-color: #18181b;
+  box-shadow: 0 0 0 3px rgb(24 24 27 / 0.12);
+}
+
+/* Option buttons (mode, level, meal) */
+.landing-form button[type='button'].border-2 {
+  border-width: 1.5px;
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+
+.landing-form button[type='button'].border-secondary {
+  background-color: #fafafa;
+  box-shadow: inset 0 0 0 1px #18181b;
+}
+
+/* The form's submit button is the page's accent CTA */
+.landing-form form > button:not([type]) {
+  height: 3.5rem;
+  margin-bottom: 0;
+  align-items: center;
+  border-radius: 0.875rem;
+  background-color: #187a3e;
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.landing-form form > button:not([type]):hover {
+  background-color: #136332;
 }
