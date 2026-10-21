@@ -14,7 +14,7 @@ These are clean views built on top of the raw changelog tables. **Always use the
 | View | Description | Key Columns |
 |------|-------------|-------------|
 | `firestore_export.survey_responses` | Survey answers | `user_id`, `would_pay`, `would_pay_why_not`, `desired_feature`, `rating`, `rating_comment`, `whatsapp`, `created_at` |
-| `firestore_export.events` | Analytics events | `user_id`, `user_email`, `event_name`, `host`, `route`, `traffic_source`, `traffic_medium`, `traffic_details`, `user_platform`, `is_pwa`, `metadata`, `created_at` |
+| `firestore_export.events` | Analytics events | `user_id`, `user_email`, `event_name`, `host`, `route`, `traffic_source`, `traffic_medium`, `traffic_details`, `user_platform`, `is_pwa`, `metadata`, `page_name`, `redirect_to`, `landing_variant`, `landing_visitor_id`, `created_at` |
 | `firestore_export.users` | Users (latest state) | `user_id`, `email`, `name`, `plan_id`, `plan_name`, `plan_cost`, `recipe_count`, `to_be_canceled`, `plan_started_at`, `plan_expires_at`, `created_at`, `survey_completed_at` |
 | `firestore_export.recipes` | Generated recipes | `document_id`, `user_id`, `title`, `introduction`, `preparation_method`, `observations`, `nutritional_info`, `image_url`, `created_at` |
 
@@ -105,6 +105,51 @@ SELECT
 FROM `recipe-app-1bbdc.firestore_export.events`
 GROUP BY traffic_source, traffic_medium
 ORDER BY events DESC
+```
+
+### Landing page A/B test
+`landing_variant` is `control` (previous landing page) or `redesign`. `landing_visitor_id` is an anonymous cookie id
+that links a logged-out visit to the signup that follows. A visitor counts once, in the variant of their first visit.
+```sql
+WITH visitors AS (
+  SELECT
+    landing_visitor_id AS visitor_id,
+    ARRAY_AGG(landing_variant ORDER BY created_at LIMIT 1)[OFFSET(0)] AS variant
+  FROM `recipe-app-1bbdc.firestore_export.events`
+  WHERE event_name = 'page_visit' AND page_name = 'landing'
+    AND landing_variant IS NOT NULL AND landing_visitor_id IS NOT NULL
+  GROUP BY visitor_id
+),
+form_submits AS (  -- "Gerar Receita" while logged out sends the visitor to /signup?redirectTo=/recipe
+  SELECT DISTINCT landing_visitor_id AS visitor_id
+  FROM `recipe-app-1bbdc.firestore_export.events`
+  WHERE event_name = 'page_visit' AND page_name = 'signup' AND redirect_to = '/recipe'
+),
+signups AS (
+  SELECT landing_visitor_id AS visitor_id, ANY_VALUE(user_id) AS user_id
+  FROM `recipe-app-1bbdc.firestore_export.events`
+  WHERE event_name = 'signup' AND landing_visitor_id IS NOT NULL
+  GROUP BY visitor_id
+),
+recipe_makers AS (
+  SELECT DISTINCT user_id
+  FROM `recipe-app-1bbdc.firestore_export.events`
+  WHERE event_name = 'generate_recipes'
+)
+SELECT
+  v.variant,
+  COUNT(*) AS visitors,
+  COUNT(f.visitor_id) AS form_submits,
+  COUNT(s.visitor_id) AS signups,
+  COUNT(r.user_id) AS signups_with_recipe,
+  ROUND(100 * COUNT(f.visitor_id) / COUNT(*), 2) AS form_submit_rate_pct,
+  ROUND(100 * COUNT(s.visitor_id) / COUNT(*), 2) AS signup_rate_pct
+FROM visitors v
+LEFT JOIN form_submits f ON f.visitor_id = v.visitor_id
+LEFT JOIN signups s ON s.visitor_id = v.visitor_id
+LEFT JOIN recipe_makers r ON r.user_id = s.user_id
+GROUP BY v.variant
+ORDER BY v.variant
 ```
 
 ## Notes

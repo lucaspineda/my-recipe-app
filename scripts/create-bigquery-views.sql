@@ -37,6 +37,10 @@ SELECT
   JSON_VALUE(data, '$.userPlatform') AS user_platform,
   CAST(JSON_VALUE(data, '$.isPWA') AS BOOL) AS is_pwa,
   JSON_VALUE(data, '$.metadata') AS metadata,
+  JSON_VALUE(data, '$.metadata.pageName') AS page_name,
+  JSON_VALUE(data, '$.metadata.redirectTo') AS redirect_to,
+  JSON_VALUE(data, '$.landingVariant') AS landing_variant,
+  JSON_VALUE(data, '$.landingVisitorId') AS landing_visitor_id,
   TIMESTAMP_SECONDS(CAST(JSON_VALUE(data, '$.createdAt._seconds') AS INT64)) AS created_at,
   timestamp AS synced_at
 FROM `recipe-app-1bbdc.firestore_export.events_raw_latest`;

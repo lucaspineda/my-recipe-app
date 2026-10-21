@@ -248,6 +248,7 @@ export const useUserAuth = () => {
       const userExists = (await getUserByUid(user.uid)) || false;
       if (!userExists) {
         await createUserInDBByUid(user.email, user.uid);
+        await trackEvent("signup", { method: "google", email: user.email });
       } else {
         console.log("Usuário já existe no banco de dados:", user.email);
       }
@@ -282,6 +283,7 @@ export const useUserAuth = () => {
           const userExists = await getUserByUid(result.user.uid);
           if (!userExists) {
             await createUserInDBByUid(result.user.email, result.user.uid);
+            await trackEvent("signup", { method: "facebook", email: result.user.email });
           } else {
             console.log('User already exists in DB');
           }
