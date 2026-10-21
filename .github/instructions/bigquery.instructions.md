@@ -118,6 +118,7 @@ WITH visitors AS (
   FROM `recipe-app-1bbdc.firestore_export.events`
   WHERE event_name = 'page_visit' AND page_name = 'landing'
     AND landing_variant IS NOT NULL AND landing_visitor_id IS NOT NULL
+    AND host NOT LIKE 'localhost%'  -- local dev also writes to production Firestore
   GROUP BY visitor_id
 ),
 form_submits AS (  -- "Gerar Receita" while logged out sends the visitor to /signup?redirectTo=/recipe
