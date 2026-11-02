@@ -1,63 +1,59 @@
 "use client";
 
-import Image from "next/image";
-import MealForm from "../components/MealForm/MealForm";
 import { useRef, Suspense } from 'react';
-import TestimonialSection from "../components/TestimonialSection/TestimonialSection";
-import StatsSection from "../components/StatsSection/StatsSection";
-import FeaturesSection from "../components/FeaturesSection/FeaturesSection";
-import HowItWorksSection from "../components/HowItWorksSection/HowItWorksSection";
+import MealForm from "../components/MealForm/MealForm";
+import LandingHeader from "../components/Landing/LandingHeader";
+import LandingHero from "../components/Landing/LandingHero";
+import AfterRecipeSection from "../components/Landing/AfterRecipeSection";
+import TestimonialsSection from "../components/Landing/TestimonialsSection";
+import LandingFooter from "../components/Landing/LandingFooter";
+import { instrumentSans } from "../lib/fonts";
 
 export default function Landing() {
-  const targetRef = useRef(null);
-  const handleSignupClick = () => {
-    targetRef.current.scrollIntoView({ behavior: "smooth" });
+  const formSectionRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Hero CTA: jump to the form and put the cursor in the ingredients field
+  const startWithIngredients = () => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    formRef.current?.querySelector<HTMLInputElement>('input[type="text"]')?.focus({ preventScroll: true });
   };
+
   return (
-    <div className="bg-primary flex items-center flex-col">
-      <main className="flex items-center flex-col text-center w-full mb-24">
-        <Image
-          src="/images/yellow-wave.svg"
-          width={400}
-          height={180}
-          alt="landing page decoration"
-          className="absolute left-0 top-[-20px] w-auto md:w-[1200px]"
-        />
-        <Image
-          src="/images/people-cooking.svg"
-          width={250}
-          height={200}
-          alt="Pessoas cozinhando receitas criadas com inteligência artificial"
-          className="mt-20 z-10 w-auto"
-        />
-        <h1 className="font-semibold mt-16 z-10">Chefinho IA</h1>
-        <article className="mt-4 w-80 z-10 md:w-[420px] md:text-lg">
-          <p>
-            Crie receitas incríveis com os ingredientes que você já tem em casa, usando o poder da Inteligência Artificial!
-          </p>
-        </article>
-        <button
-          onClick={handleSignupClick}
-          className="bg-secondary w-full mt-24 py-4 text-white rounded-xl
-					border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1) z-10 font-semibold md:w-96"
+    <div className={`landing ${instrumentSans.className} min-h-screen bg-white text-zinc-900 antialiased`}>
+      <LandingHeader />
+      <main>
+        <LandingHero onStart={startWithIngredients} />
+        <AfterRecipeSection />
+        <TestimonialsSection />
+
+        <section
+          id="criar-receita"
+          ref={formSectionRef}
+          aria-labelledby="criar-receita-titulo"
+          className="scroll-mt-16 border-t border-zinc-200 px-4 py-20 sm:px-8 md:scroll-mt-[72px] md:py-28"
         >
-          Começar
-        </button>
+          <div className="mx-auto max-w-3xl">
+            <h2
+              id="criar-receita-titulo"
+              className="text-balance text-center text-[2rem] font-semibold leading-[1.08] tracking-[-0.03em] text-zinc-900 md:text-5xl"
+            >
+              Monte sua receita
+            </h2>
+            <p className="mx-auto mt-4 max-w-[52ch] text-balance text-center text-[17px] leading-relaxed text-zinc-600">
+              Comece pelos ingredientes. Ao tocar em Gerar Receita, você cria sua conta e ganha 3 receitas grátis. O
+              que você preencheu fica guardado.
+            </p>
+            <div className="landing-form mt-10 rounded-3xl border border-zinc-200 bg-white p-5 shadow-lift sm:p-8 md:mt-12 md:p-10">
+              <Suspense fallback={null}>
+                <MealForm ref={formRef} />
+              </Suspense>
+            </div>
+          </div>
+        </section>
       </main>
-      
-      <StatsSection />
-      
-      <FeaturesSection />
-      
-      <HowItWorksSection />
-      
-      <TestimonialSection />
-      
-      <div data-meal-form>
-        <Suspense fallback={null}>
-          <MealForm ref={targetRef} />
-        </Suspense>
-      </div>
+      <LandingFooter />
     </div>
   );
 }

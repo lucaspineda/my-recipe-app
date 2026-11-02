@@ -1,6 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import { useIsPublicLanding } from '../../hooks/useIsPublicLanding';
 
 export default function Footer() {
+  // The logged-out landing renders its own footer
+  if (useIsPublicLanding()) return null;
+
   return (
     <footer className="bg-secondary mt-auto pb-20 md:pb-0">
       <div className="max-w-6xl mx-auto px-4 py-12">

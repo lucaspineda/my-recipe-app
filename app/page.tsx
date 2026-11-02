@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Landing from './pages/Landing';
+import LandingExperiment from './pages/LandingExperiment';
 import HomeDashboard from './components/HomeDashboard/HomeDashboard';
 import { auth } from './hooks/userAuth';
 import { useUserStore } from './store/user';
@@ -24,7 +24,7 @@ export default function Init() {
 
   return (
     <>
-      {user ? <HomeDashboard /> : <Landing />}
+      {user ? <HomeDashboard /> : <LandingExperiment />}
     </>
   );
 }

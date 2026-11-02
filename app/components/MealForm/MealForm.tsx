@@ -262,7 +262,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           )}
 
           <div className="bg-tertiary px-6 py-2 rounded-full self-start text-2xl">1</div>
-          <label className="secondary-header py-3">Liste os ingredientes que você possuí em casa</label>
+          <label className="secondary-header py-3">Liste os ingredientes que você possui em casa</label>
           <IngredientsInput
             selectedIngredients={ingredients}
             onIngredientsChange={handleIngredientsChange}

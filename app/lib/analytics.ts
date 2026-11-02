@@ -2,6 +2,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
 import { getAuth } from "firebase/auth";
 import { getPlatform, isRunningAsPWA } from "./utils";
+import { getLandingVariant, getLandingVisitorId } from "./landingExperiment";
 
 const UTM_STORAGE_KEY = "utm_attribution";
 
@@ -105,6 +106,8 @@ export async function trackEvent(
       trafficDetails: attribution?.details ?? null,
       userPlatform: getPlatform(),
       isPWA: isRunningAsPWA(),
+      landingVariant: getLandingVariant(),
+      landingVisitorId: getLandingVisitorId(),
       createdAt: serverTimestamp(),
       metadata: metadata || null,
     });
@@ -116,7 +119,8 @@ export async function trackEvent(
 /**
  * Tracks a page visit event.
  * @param pageName - The name of the page being visited.
+ * @param metadata - Optional extra metadata for the visit.
  */
-export async function trackPageVisit(pageName: string) {
-  await trackEvent("page_visit", { pageName });
+export async function trackPageVisit(pageName: string, metadata?: Record<string, any>) {
+  await trackEvent("page_visit", { pageName, ...metadata });
 }
