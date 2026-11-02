@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChefHat } from 'lucide-react';
 
 export default function LandingHeader() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -27,19 +29,23 @@ export default function LandingHeader() {
         </Link>
         <nav aria-label="Conta">
           <ul className="flex items-center gap-1 text-[15px] font-medium text-zinc-900">
-            <li>
-              <Link href="/login" className="block rounded-[10px] px-3 py-2 hover:bg-zinc-100">
-                Entrar
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/signup"
-                className="block rounded-[10px] border border-zinc-200 px-3.5 py-2 hover:border-zinc-300 hover:bg-zinc-50"
-              >
-                Criar conta
-              </Link>
-            </li>
+            {pathname !== '/login' && (
+              <li>
+                <Link href="/login" className="block rounded-[10px] px-3 py-2 hover:bg-zinc-100">
+                  Entrar
+                </Link>
+              </li>
+            )}
+            {pathname !== '/signup' && (
+              <li>
+                <Link
+                  href="/signup"
+                  className="block rounded-[10px] border border-zinc-200 px-3.5 py-2 hover:border-zinc-300 hover:bg-zinc-50"
+                >
+                  Criar conta
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

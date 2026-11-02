@@ -3,10 +3,13 @@ import type { LandingVariant } from '../lib/landingExperiment';
 
 interface LandingExperimentStore {
   variant: LandingVariant | null;
-  setVariant: (variant: LandingVariant) => void;
+  // False until a page has read the variant cookie; it can then still be null (visitor not in the test)
+  resolved: boolean;
+  setVariant: (variant: LandingVariant | null) => void;
 }
 
 export const useLandingExperimentStore = create<LandingExperimentStore>((set) => ({
   variant: null,
-  setVariant: (variant) => set(() => ({ variant })),
+  resolved: false,
+  setVariant: (variant) => set(() => ({ variant, resolved: true })),
 }));

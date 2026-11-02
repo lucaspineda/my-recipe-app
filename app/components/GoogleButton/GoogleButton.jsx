@@ -6,7 +6,10 @@ import { useUserAuth } from '../../hooks/userAuth';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function GoogleSignInButton({ redirectTo = '/' }) {
+export default function GoogleSignInButton({
+  redirectTo = '/',
+  className = 'global-input flex items-center justify-center gap-2 mb-4',
+}) {
   const router = useRouter();
   
   const { signInWithGoogleAccessToken } = useUserAuth();
@@ -28,7 +31,7 @@ export default function GoogleSignInButton({ redirectTo = '/' }) {
     <>
       <button
         type="button"
-        className="global-input flex items-center justify-center gap-2 mb-4"
+        className={className}
         onClick={() => googleSignIn()}
         title="Entrar com o Google"
         disabled={loading}

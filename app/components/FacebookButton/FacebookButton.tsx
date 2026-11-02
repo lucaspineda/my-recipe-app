@@ -12,7 +12,13 @@ const handleError = (error: any) => {
   toast.error('Erro ao entrar com o Facebook. Tente novamente.');
 };
 
-export default function FacebookSignInButton({ redirectTo = '/' }: { redirectTo?: string }) {
+export default function FacebookSignInButton({
+  redirectTo = '/',
+  className = 'global-input flex items-center justify-center gap-2 mb-4',
+}: {
+  redirectTo?: string;
+  className?: string;
+}) {
   const router = useRouter();
   const { handleFacebookResponse } = useUserAuth();
   const [loading, setLoading] = useState(false);
@@ -30,7 +36,7 @@ export default function FacebookSignInButton({ redirectTo = '/' }: { redirectTo?
         handleError(error);
         setLoading(false);
       }}
-      className="global-input flex items-center justify-center gap-2 mb-4"
+      className={className}
       style={{ backgroundColor: 'white', opacity: loading ? 0.7 : 1, pointerEvents: loading ? 'none' : 'auto' }}
       scope="email,public_profile"
     >
