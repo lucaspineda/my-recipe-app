@@ -1,0 +1,231 @@
+rules_version = '2';
+
+// Firestore security rules for Chefinho IA (project recipe-app-1bbdc).
+//
+// Every collection the browser touches has its own block below; anything else is denied.
+// The backend (Stripe webhook) and the scripts in scripts/ use the Admin SDK, which skips these rules.
+// Tests: firestore-tests/rules.test.mjs (npm run test:rules).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Top-level fields an update adds, removes or changes.
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // plans: the public plan catalog. Only the Admin SDK writes it.
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // users/{uid}: profile and plan. Owner only. The paid-plan fields (planId, cost, name, expiresAt)
+    // are written only by the backend's Stripe webhook and the admin scripts.
+    match /users/{userId} {
+
+      // The free plan written at signup (FreePlan in app/hooks/userAuth.ts).
+      function isNewFreePlan(plan) {
+        return plan is map
+          && plan.keys().hasOnly(['planId', 'cost', 'name', 'recipeCount', 'startedAt', 'updatedAt'])
+          && plan.planId == 1
+          && plan.cost == 0
+          && plan.name is string
+          && plan.recipeCount == 3
+          && plan.startedAt == request.time
+          && plan.updatedAt == request.time;
+      }
+
+      // createUserInDB / createUserInDBByUid. Facebook accounts can have no email.
+      function isValidNewUser(user) {
+        return user.keys().hasOnly(['email', 'createdAt', 'plan'])
+          && (user.get('email', null) == null || user.email is string)
+          && user.createdAt == request.time
+          && isNewFreePlan(user.plan);
+      }
+
+      // SurveyRewardModal sets surveyCompletedAt once and adds the survey bonus in the same write.
+      function completesSurveyNow() {
+        return !('surveyCompletedAt' in resource.data)
+          && request.resource.data.get('surveyCompletedAt', null) == request.time;
+      }
+
+      // Recipe credits can only go down, except for the one-time survey bonus.
+      // Unlimited plans keep recipeCount null; MealForm writes null - 1 = -1 for them.
+      function isAllowedRecipeCount(before, after, bonus) {
+        return after is number
+          && ((before is number && after <= before + bonus)
+            || (!(before is number) && !(after > 0)));
+      }
+
+      // What the browser may change inside `plan`:
+      // - recipeCount: decrement after a recipe (MealForm, recipe page), survey bonus
+      // - toBeCanceled: set to true by the plans page
+      // - startedAt/updatedAt: only when the whole plan is rewritten as a fresh free plan,
+      //   which happens when signup and ProtectedRoute's getUser() both create the user doc
+      function isAllowedPlanChange(before, after) {
+        let changed = after.diff(before).affectedKeys();
+        return changed.hasOnly(['recipeCount', 'toBeCanceled', 'startedAt', 'updatedAt'])
+          && (!('recipeCount' in changed)
+            || isAllowedRecipeCount(before.get('recipeCount', null), after.get('recipeCount', null),
+                completesSurveyNow() ? 5 : 0))
+          && (!('toBeCanceled' in changed) || after.get('toBeCanceled', null) == true)
+          && (!changed.hasAny(['startedAt', 'updatedAt']) || isNewFreePlan(after));
+      }
+
+      function isValidUserUpdate() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let changed = changedKeys();
+        return changed.hasOnly(['email', 'name', 'lastLoginAt', 'createdAt', 'plan', 'surveyCompletedAt'])
+          && (!('email' in changed) || after.get('email', null) == null || after.email is string)
+          && (!('name' in changed) || !('name' in after) || (after.name is string && after.name.size() <= 200))
+          && (!('lastLoginAt' in changed) || !('lastLoginAt' in after) || after.lastLoginAt == request.time)
+          && (!('createdAt' in changed) || after.get('createdAt', null) == request.time)
+          && (!('surveyCompletedAt' in changed) || completesSurveyNow())
+          && (!('plan' in changed)
+            || (before.get('plan', null) is map
+              && after.get('plan', null) is map
+              && isAllowedPlanChange(before.plan, after.plan)));
+      }
+
+      allow read: if isUser(userId);
+      allow create: if isUser(userId) && isValidNewUser(request.resource.data);
+      allow update: if isUser(userId) && isValidUserUpdate();
+      // Deleting the doc would let getUser() recreate it with a fresh free plan.
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // recipes: public read (recipes are shared by link), only the owner changes them.
+    match /recipes/{recipeId} {
+
+      function isRecipeOwner() {
+        return signedIn() && resource.data.get('userId', null) == request.auth.uid;
+      }
+
+      // FeedbackSection lets any signed-in viewer rate a recipe: it replaces the viewer's own entry
+      // in `feedback` (same size or one more) or adds a reason to it (same size).
+      function isFeedbackUpdate() {
+        let before = resource.data.get('feedback', []);
+        let after = request.resource.data.get('feedback', null);
+        return signedIn()
+          && changedKeys().hasOnly(['feedback'])
+          && after is list
+          && after.size() >= before.size()
+          && after.size() <= before.size() + 1;
+      }
+
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.get('userId', null) == request.auth.uid;
+      allow update: if (isRecipeOwner() && request.resource.data.get('userId', null) == request.auth.uid)
+        || isFeedbackUpdate();
+      allow delete: if isRecipeOwner();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // shoppingLists and their items: owner only.
+    match /shoppingLists/{listId} {
+
+      function listPath() {
+        return /databases/$(database)/documents/shoppingLists/$(listId);
+      }
+
+      function ownsListNow() {
+        return signedIn() && exists(listPath()) && get(listPath()).data.userId == request.auth.uid;
+      }
+
+      // Items are created in the same batch as their list on the meal planner page.
+      function ownsListAfterWrite() {
+        return signedIn() && existsAfter(listPath()) && getAfter(listPath()).data.userId == request.auth.uid;
+      }
+
+      // A missing list reads as "not found" (the list page listens to a list the user may just have deleted).
+      allow read: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.get('userId', null) == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.get('userId', null) == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+
+      match /items/{itemId} {
+        allow read: if ownsListNow();
+        allow create, update: if ownsListNow() || ownsListAfterWrite();
+        allow delete: if ownsListNow();
+      }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // mealPlans/{uid}_{weekStartDate}: owner only (getMealPlanDocumentId in app/planejamento/shared.ts).
+    match /mealPlans/{planId} {
+
+      function isOwnPlanId() {
+        return signedIn() && planId.matches(request.auth.uid + '_.+');
+      }
+
+      // The planner reads this week's doc before it exists.
+      allow read: if signedIn()
+        && ((resource == null && isOwnPlanId()) || (resource != null && resource.data.userId == request.auth.uid));
+      allow create: if isOwnPlanId() && request.resource.data.get('userId', null) == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.get('userId', null) == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // survey_responses: write-only for the user who answers; read through the BigQuery export.
+    match /survey_responses/{responseId} {
+      allow create: if signedIn() && request.resource.data.get('userId', null) == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Analytics events written by trackEvent (app/lib/analytics.ts). Anyone may create one, including
+    // logged-out visitors: the landing-page A/B test counts their visits. No read, update or delete rule:
+    // events are only read through the BigQuery export.
+    match /events/{eventId} {
+      function stringOrNull(value, maxLength) {
+        return value == null || (value is string && value.size() <= maxLength);
+      }
+
+      function mapOrNull(value, maxKeys) {
+        return value == null || (value is map && value.size() <= maxKeys);
+      }
+
+      // trackEvent writes "unknown" when there is no user, and sometimes before auth has loaded.
+      function isOwnUserId(userId) {
+        return userId == 'unknown' || (request.auth != null && userId == request.auth.uid);
+      }
+
+      function isValidEvent(event) {
+        return event.keys().hasOnly(['userId', 'userEmail', 'eventName', 'host', 'route',
+            'trafficSource', 'trafficMedium', 'trafficDetails', 'userPlatform', 'isPWA',
+            'landingVariant', 'landingVisitorId', 'createdAt', 'metadata'])
+          && event.createdAt == request.time
+          && event.eventName is string && event.eventName.size() > 0 && event.eventName.size() <= 100
+          && event.userId is string && isOwnUserId(event.userId)
+          && stringOrNull(event.get('userEmail', null), 320)
+          && stringOrNull(event.get('host', null), 255)
+          && stringOrNull(event.get('route', null), 1000)
+          && stringOrNull(event.get('trafficSource', null), 500)
+          && stringOrNull(event.get('trafficMedium', null), 500)
+          && mapOrNull(event.get('trafficDetails', null), 10)
+          && stringOrNull(event.get('userPlatform', null), 50)
+          && (event.get('isPWA', null) == null || event.isPWA is bool)
+          && stringOrNull(event.get('landingVariant', null), 50)
+          && stringOrNull(event.get('landingVisitorId', null), 100)
+          && mapOrNull(event.get('metadata', null), 30);
+      }
+
+      allow create: if isValidEvent(request.resource.data);
+    }
+  }
+}
