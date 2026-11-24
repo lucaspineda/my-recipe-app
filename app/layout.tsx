@@ -6,7 +6,11 @@ const rubik = Rubik({ subsets: ['latin'] });
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { cookies } from 'next/headers';
 import Footer from './components/Footer/Footer';
+import { InitialRenderProvider } from './components/ClientWrapper/InitialRender';
+import { VARIANT_COOKIE, isVariant } from './lib/landingExperiment';
+import { SIGNED_IN_COOKIE } from './lib/signedInHint';
 
 export const viewport = {
   themeColor: '#0f6374',
@@ -58,6 +62,12 @@ const websiteJsonLd = {
 };
 
 export default function RootLayout({ children }) {
+  // Lets "/" render the landing page in the server HTML (variant set by middleware.ts) instead of a blank screen
+  const cookieStore = cookies();
+  const signedInHint = cookieStore.has(SIGNED_IN_COOKIE);
+  const variant = cookieStore.get(VARIANT_COOKIE)?.value;
+  const initialRender = { signedInHint, landingVariant: !signedInHint && isVariant(variant) ? variant : null };
+
   return (
     <html lang="pt-BR">
       <body className={`${rubik.className} flex flex-col min-h-screen`}>
@@ -70,8 +80,10 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID}>
-          <ClientWrapper>{children}</ClientWrapper>
-          <Footer />
+          <InitialRenderProvider value={initialRender}>
+            <ClientWrapper>{children}</ClientWrapper>
+            <Footer />
+          </InitialRenderProvider>
         </GoogleOAuthProvider>
       </body>
       <GoogleAnalytics gaId="G-CX5QCT2T50" />

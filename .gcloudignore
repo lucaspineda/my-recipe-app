@@ -1,0 +1,7 @@
+# Files that `gcloud run deploy --source .` leaves out: everything in .gitignore, plus local tool folders
+# (.claude/ holds Claude Code worktrees, which are full copies of the repo).
+.gcloudignore
+.git
+.gitignore
+#!include:.gitignore
+.claude/

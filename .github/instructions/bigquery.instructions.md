@@ -137,6 +137,18 @@ Since Nov 2, 2026, logged-out visitors to `/` get `control` (the previous landin
   login page doesn't, so `form_submits` counts signup-page visits only.
 - `host = 'chefinhoia.com.br'` drops local dev, which also writes to production Firestore. The excluded visitor id
   was a QA visit made to check the rule.
+- **From 2026-11-24 04:08 UTC (revision `my-recipe-app-00080-dsz`) compare the arms from scratch.** Since then:
+  - `middleware.ts` assigns the variant on the server, and "/" arrives with the landing page already rendered
+    instead of a blank screen. Cloud Run also keeps one instance warm (`min-instances=1`), so visitors no longer
+    wait 5+ seconds for a cold start. Both mean more visitors stay long enough to be recorded, so visitor counts
+    and rates before and after aren't comparable.
+  - The landing `page_visit` is logged once Firebase Auth has loaded, and only when nobody is signed in.
+  - `trafficSource`/`trafficMedium` say where a session came from: Google Ads clicks (`gclid`, `gbraid` or
+    `wbraid` in the URL) are `google`/`cpc`, with `trafficDetails.clickId` and `campaignId`; search referrers are
+    `google`/`organic`, `bing`/`organic`, …; social ones `instagram`/`social`, `youtube`/`social`, …; other sites
+    are `<host>`/`referral`. Direct visits are still `organic`/`none`. Before this, ad clicks were mostly logged
+    as `organic`/`none` too.
+  - Microsoft Clarity sessions carry a `landingVariant` tag, so recordings and heatmaps can be filtered by arm.
 
 ```sql
 WITH params AS (

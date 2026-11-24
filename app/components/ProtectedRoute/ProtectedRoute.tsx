@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import { auth, useUserAuth } from '../../hooks/userAuth';
 import { useUserStore } from '../../store/user';
+import { setSignedInHint } from '../../lib/signedInHint';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode; }) => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       console.log(user, 'user')
+      setSignedInHint(Boolean(user));
       if (user) {
         await getUser();
 
