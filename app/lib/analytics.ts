@@ -29,8 +29,58 @@ function hasGclidCookie(): boolean {
   return document.cookie.split("; ").some((c) => c.startsWith("_gcl_aw="));
 }
 
+// Google Ads adds one of these click ids to the landing URL (gbraid/wbraid on iOS)
+const GOOGLE_ADS_CLICK_IDS = ["gclid", "gbraid", "wbraid"];
+
+/** Google Ads click from the URL; the _gcl_aw cookie only exists after GTM has loaded, too late for the first page. */
+function getGoogleAdsAttribution(): TrafficAttribution | null {
+  const params = new URLSearchParams(window.location.search);
+  const clickId = GOOGLE_ADS_CLICK_IDS.find((key) => params.get(key));
+  if (!clickId) return null;
+  const campaignId = params.get("gad_campaignid");
+  return {
+    source: "google",
+    medium: "cpc",
+    details: { clickId, ...(campaignId && { campaignId }) },
+  };
+}
+
+// Referrer hosts worth naming; anything else external is a plain referral
+const REFERRERS: { pattern: RegExp; source: string; medium: string }[] = [
+  { pattern: /(^|\.)google\.|googlequicksearchbox/, source: "google", medium: "organic" },
+  { pattern: /(^|\.)bing\.com$/, source: "bing", medium: "organic" },
+  { pattern: /(^|\.)duckduckgo\.com$/, source: "duckduckgo", medium: "organic" },
+  { pattern: /(^|\.)search\.brave\.com$/, source: "brave", medium: "organic" },
+  { pattern: /(^|\.)yahoo\./, source: "yahoo", medium: "organic" },
+  { pattern: /(^|\.)(youtube\.com|youtu\.be)$/, source: "youtube", medium: "social" },
+  { pattern: /(^|\.)instagram\.com$/, source: "instagram", medium: "social" },
+  { pattern: /(^|\.)facebook\.com$/, source: "facebook", medium: "social" },
+  { pattern: /(^|\.)(t\.co|x\.com|twitter\.com)$/, source: "twitter", medium: "social" },
+  { pattern: /(^|\.)tiktok\.com$/, source: "tiktok", medium: "social" },
+  { pattern: /(^|\.)whatsapp\.com$/, source: "whatsapp", medium: "social" },
+];
+
+// Sign-in and payment pages send people back here mid-visit; they're not where the visitor came from
+const IGNORED_REFERRERS = /(^|\.)(accounts\.google\.com|firebaseapp\.com|stripe\.com)$/;
+
+/** Where the visitor came from, by referrer. Direct visits (no referrer) stay "organic"/"none" as before. */
+function getReferrerAttribution(): TrafficAttribution | null {
+  if (!document.referrer) return null;
+  let host: string;
+  try {
+    host = new URL(document.referrer).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+  if (!host || host === window.location.hostname.replace(/^www\./, "") || IGNORED_REFERRERS.test(host)) return null;
+  const known = REFERRERS.find(({ pattern }) => pattern.test(host));
+  return known
+    ? { source: known.source, medium: known.medium, details: {} }
+    : { source: host, medium: "referral", details: {} };
+}
+
 /**
- * Captures UTM params or GCLID from the current URL/cookies and persists
+ * Captures UTM params, a Google Ads click id or the referrer from the current URL/cookies and persists
  * them to sessionStorage. Call once on app load.
  */
 export function captureUtmParams(): void {
@@ -53,8 +103,24 @@ export function captureUtmParams(): void {
     return;
   }
 
-  // No UTMs — check for Google Ads GCLID cookie (only on first landing)
-  if (!sessionStorage.getItem(UTM_STORAGE_KEY) && hasGclidCookie()) {
+  // A Google Ads click in the URL is a new visit from an ad, so it also overwrites
+  const adsAttribution = getGoogleAdsAttribution();
+  if (adsAttribution) {
+    sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(adsAttribution));
+    return;
+  }
+
+  // Otherwise only the first page of the session counts: later pages have the site itself as referrer
+  if (sessionStorage.getItem(UTM_STORAGE_KEY)) return;
+
+  const referrerAttribution = getReferrerAttribution();
+  if (referrerAttribution) {
+    sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(referrerAttribution));
+    return;
+  }
+
+  // No UTMs, click id or referrer — check for Google Ads GCLID cookie (only on first landing)
+  if (hasGclidCookie()) {
     const attribution: TrafficAttribution = {
       source: "google",
       medium: "cpc",

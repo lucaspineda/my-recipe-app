@@ -11,6 +11,7 @@ import TagManager from 'react-gtm-module';
 import Hotjar from '@hotjar/browser';
 import { useUserStore } from '../../store/user';
 import { captureUtmParams } from '../../lib/analytics';
+import { getLandingVariant } from '../../lib/landingExperiment';
 import AppUpdateBanner from '../AppUpdateBanner/AppUpdateBanner';
 import { usePathname } from 'next/navigation';
 import { useIsPublicLanding } from '../../hooks/useIsPublicLanding';
@@ -34,6 +35,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     TagManager.initialize(tagManagerArgs);
     Hotjar.init(siteId, hotjarVersion);
     Clarity.init(projectId);
+    // Lets Clarity recordings and heatmaps be filtered by landing A/B variant (middleware.ts sets the cookie on "/")
+    const landingVariant = getLandingVariant();
+    if (landingVariant) Clarity.setTag('landingVariant', landingVariant);
   }, []);
 
   useEffect(() => {

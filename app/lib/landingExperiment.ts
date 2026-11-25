@@ -1,14 +1,23 @@
 // A/B test of the logged-out landing page: "control" is the previous page, "redesign" the new one.
 // The variant lives in a cookie so it sticks across visits; trackEvent reads it to tag every event.
+// middleware.ts assigns it on the server for "/", so the first response already has the right page.
 
 export type LandingVariant = 'control' | 'redesign';
 
 const VARIANTS: LandingVariant[] = ['control', 'redesign'];
-const VARIANT_COOKIE = 'lp_variant';
-const VISITOR_COOKIE = 'lp_vid';
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 days
+export const VARIANT_COOKIE = 'lp_variant';
+export const VISITOR_COOKIE = 'lp_vid';
+export const COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 days
 
-const isVariant = (value: string | null): value is LandingVariant => VARIANTS.includes(value as LandingVariant);
+export const isVariant = (value: string | null | undefined): value is LandingVariant =>
+  VARIANTS.includes(value as LandingVariant);
+
+/** 50/50, unless `?lp=control` or `?lp=redesign` forces one (for QA). Keeps an existing assignment. */
+export function pickLandingVariant(forced: string | null, current: string | null | undefined): LandingVariant {
+  if (isVariant(forced)) return forced;
+  if (isVariant(current)) return current;
+  return Math.random() < 0.5 ? 'control' : 'redesign';
+}
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -41,9 +50,7 @@ export function getLandingVisitorId(): string | null {
  */
 export function assignLandingVariant(): LandingVariant {
   const forced = new URLSearchParams(window.location.search).get('lp');
-  const variant = isVariant(forced)
-    ? forced
-    : getLandingVariant() ?? (Math.random() < 0.5 ? 'control' : 'redesign');
+  const variant = pickLandingVariant(forced, getLandingVariant());
 
   writeCookie(VARIANT_COOKIE, variant);
   writeCookie(VISITOR_COOKIE, getLandingVisitorId() ?? randomId());
