@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import axios from 'axios';
-import { auth } from '../../hooks/userAuth';
+import { useUserAuth } from '../../hooks/userAuth';
+import { billingErrorMessage, postBilling } from '../../lib/billingApi';
 import { Plan, User } from '../../types';
 import { trackEvent } from '../../lib/analytics';
 import { Loader2, Lock } from 'lucide-react';
@@ -18,9 +18,20 @@ export default function CheckoutForm({ plan, user }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
+  const { getUser } = useUserAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  type CheckoutResult =
+    | { status: 'active'; subscriptionId: string }
+    | { status: 'requires_action'; subscriptionId: string; clientSecret: string };
+
+  const fail = (message: string, event: string, metadata: Record<string, unknown> = {}) => {
+    setError(message);
+    trackEvent(event, { planId: plan.id, ...metadata });
+    setLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,21 +45,12 @@ export default function CheckoutForm({ plan, user }: CheckoutFormProps) {
     setError(null);
 
     try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) throw new Error('Usuário não autenticado');
-
       trackEvent('checkout_started', { planId: plan.id, planName: plan.name });
 
-      // Step 1: Create SetupIntent + Customer
-      const setupResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/subscription/setup-intent`,
-        { uid: auth.currentUser!.uid },
-        { headers: { Authorization: token } },
-      );
+      // Step 1: SetupIntent for the user's Stripe customer
+      const { clientSecret, customerId } = await postBilling<{ clientSecret: string; customerId: string }>('setup-intent');
 
-      const { clientSecret, customerId } = setupResponse.data;
-
-      // Step 2: Confirm card with Stripe
+      // Step 2: Save the card with Stripe
       const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -59,36 +61,61 @@ export default function CheckoutForm({ plan, user }: CheckoutFormProps) {
       });
 
       if (stripeError) {
-        setError(stripeError.message || 'Erro ao processar o cartão');
-        trackEvent('checkout_card_error', { error: stripeError.message });
-        setLoading(false);
+        fail(stripeError.message || 'Erro ao processar o cartão', 'checkout_card_error', { error: stripeError.message });
         return;
       }
 
-      // Step 3: Confirm subscription on backend
-      const confirmResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/subscription/confirm-subscription`,
-        {
-          customerId,
-          paymentMethodId: setupIntent.payment_method,
-          plan,
-        },
-        { headers: { Authorization: token } },
-      );
+      // Step 3: Create the subscription. The server picks the price from the plan id and charges the first month.
+      let result = await postBilling<CheckoutResult>('confirm-subscription', {
+        customerId,
+        paymentMethodId: setupIntent.payment_method,
+        planId: plan.id,
+      });
+
+      // Step 4 (only if the bank asks for 3-D Secure): confirm with the bank, then let the server check it.
+      if (result.status === 'requires_action') {
+        trackEvent('checkout_3ds_required', { planId: plan.id });
+        const { error: actionError } = await stripe.confirmCardPayment(result.clientSecret);
+        if (actionError) {
+          fail(
+            actionError.message || 'Seu banco não confirmou o pagamento. Tente de novo ou use outro cartão.',
+            'checkout_card_error',
+            { error: actionError.message, step: '3ds' },
+          );
+          return;
+        }
+        result = await postBilling<CheckoutResult>('complete-subscription', { subscriptionId: result.subscriptionId });
+      }
+
+      if (result.status !== 'active') {
+        fail('Seu pagamento ainda não foi confirmado. Tente de novo em alguns segundos.', 'checkout_error', {
+          error: `status_${result.status}`,
+        });
+        return;
+      }
 
       trackEvent('checkout_completed', {
         planId: plan.id,
         planName: plan.name,
-        subscriptionId: confirmResponse.data.subscriptionId,
+        subscriptionId: result.subscriptionId,
       });
 
+      // The server already saved the new plan; reload it before showing the thank-you page.
+      await getUser();
       router.push('/plans/thank-you');
     } catch (err: any) {
       console.error('Checkout error:', err);
-      const message = err?.response?.data?.message || 'Erro ao processar pagamento. Tente novamente.';
-      setError(message);
-      trackEvent('checkout_error', { error: message });
-      setLoading(false);
+      const status = err?.response?.status ?? null;
+      if (status === 402) {
+        fail(
+          billingErrorMessage(err, 'Seu cartão foi recusado. Tente outro cartão ou pague com Pix.'),
+          'checkout_declined',
+          { code: err?.response?.data?.code ?? 'unknown' },
+        );
+        return;
+      }
+      const message = billingErrorMessage(err, 'Não conseguimos concluir o pagamento agora. Tente de novo em alguns segundos.');
+      fail(message, 'checkout_error', { error: message, status, code: err?.response?.data?.code ?? null });
     }
   };
 
