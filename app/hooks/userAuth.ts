@@ -1,12 +1,14 @@
 import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   getAuth,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   updatePassword,
   User,
 } from "firebase/auth";
+import TagManager from "react-gtm-module";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { initializeApp } from "firebase/app";
 import {
@@ -41,6 +43,17 @@ const FreePlan: UserPlan = {
   updatedAt: serverTimestamp(),
   name: "Básico",
   cost: 0,
+};
+
+type SignupMethod = "email" | "google" | "facebook";
+
+/**
+ * Records one new account: Tag Manager's `sign_up` (container GTM-T7SJQKP2 fires the Google Ads "Sign-up"
+ * conversion and GA4's sign_up on it) and the app's own "signup" event. Call exactly once per new account.
+ */
+const trackSignup = async (method: SignupMethod, email: string | null) => {
+  TagManager.dataLayer({ dataLayer: { event: "sign_up", method } });
+  await trackEvent("signup", { method, email });
 };
 
 export const useUserAuth = () => {
@@ -135,9 +148,9 @@ export const useUserAuth = () => {
         password
       );
       if (userCredential) {
+        await trackSignup("email", email);
         await createUserInDB(email);
         await getUser();
-        await trackEvent("signup", { method: "email", email });
       }
       if (router) {
         router.push(redirectTo);
@@ -245,10 +258,14 @@ export const useUserAuth = () => {
       const userCredential = await signInWithCredential(auth, credential);
       console.log(userCredential, "userCredential");
       const user = userCredential.user;
+      // Firebase says whether this sign-in created the account. "No user record yet" can't tell:
+      // ProtectedRoute's getUser() creates the record on auth change and can get there first.
+      if (getAdditionalUserInfo(userCredential)?.isNewUser) {
+        await trackSignup("google", user.email);
+      }
       const userExists = (await getUserByUid(user.uid)) || false;
       if (!userExists) {
         await createUserInDBByUid(user.email, user.uid);
-        await trackEvent("signup", { method: "google", email: user.email });
       } else {
         console.log("Usuário já existe no banco de dados:", user.email);
       }
@@ -280,10 +297,13 @@ export const useUserAuth = () => {
         const result = await signInWithCredential(auth, credential);
 
         if (result.user) {
+          // Same as Google: Firebase's answer, not the user record, decides a signup
+          if (getAdditionalUserInfo(result)?.isNewUser) {
+            await trackSignup("facebook", result.user.email);
+          }
           const userExists = await getUserByUid(result.user.uid);
           if (!userExists) {
             await createUserInDBByUid(result.user.email, result.user.uid);
-            await trackEvent("signup", { method: "facebook", email: result.user.email });
           } else {
             console.log('User already exists in DB');
           }
