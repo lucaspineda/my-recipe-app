@@ -13,6 +13,7 @@ import { useUserStore } from '../../store/user';
 import { captureUtmParams } from '../../lib/analytics';
 import { getLandingVariant } from '../../lib/landingExperiment';
 import AppUpdateBanner from '../AppUpdateBanner/AppUpdateBanner';
+import PaymentIssueBanner from '../Billing/PaymentIssueBanner';
 import { usePathname } from 'next/navigation';
 import { useIsPublicLanding } from '../../hooks/useIsPublicLanding';
 
@@ -71,6 +72,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         transition={Bounce}
       />
       <AppUpdateBanner />
+      <PaymentIssueBanner />
       {/* The logged-out landing renders its own full-bleed header */}
       {!isPublicLanding && (
         <>
