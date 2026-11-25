@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import TagManager from 'react-gtm-module';
 import { useUserAuth } from './userAuth';
 
 const schema = z.object({
@@ -38,16 +37,10 @@ export function useSignupForm(redirectTo: string) {
     resolver: zodResolver(schema),
   });
 
+  // signUpWithEmail pushes Tag Manager's sign_up itself, like the Google and Facebook signups
   const handleSignUpWithEmail = async (data) => {
     const user = await signUpWithEmail(data.email, data.password, router, redirectTo);
     console.log('User signed up:', user);
-    if (user) {
-      TagManager.dataLayer({
-        dataLayer: {
-          event: 'sign_up',
-        },
-      });
-    }
   };
 
   const onPasswordChange = (value: string) => {

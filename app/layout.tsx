@@ -3,8 +3,6 @@ import './globals.css';
 import { Rubik } from 'next/font/google';
 import ClientWrapper from './components/ClientWrapper';
 const rubik = Rubik({ subsets: ['latin'] });
-import { GoogleAnalytics } from '@next/third-parties/google';
-import { GoogleTagManager } from '@next/third-parties/google';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { cookies } from 'next/headers';
 import Footer from './components/Footer/Footer';
@@ -86,8 +84,6 @@ export default function RootLayout({ children }) {
           </InitialRenderProvider>
         </GoogleOAuthProvider>
       </body>
-      <GoogleAnalytics gaId="G-CX5QCT2T50" />
-      <GoogleTagManager gtmId="AW-1707145258" />
     </html>
   );
 }
