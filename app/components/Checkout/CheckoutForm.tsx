@@ -152,7 +152,7 @@ export default function CheckoutForm({ plan, user }: CheckoutFormProps) {
         <p className="text-sm text-gray-500">
           Prefere pagar com PIX?{' '}
           <a
-            href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20pagar%20com%20PIX"
+            href="https://wa.me/5511976783992?text=Ol%C3%A1%2C%20gostaria%20de%20pagar%20com%20PIX"
             target="_blank"
             rel="noopener noreferrer"
             className="text-secondary font-semibold hover:underline"
