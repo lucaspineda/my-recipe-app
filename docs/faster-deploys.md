@@ -1,6 +1,6 @@
 # Faster Cloud Run deploys for Chefinho IA
 
-Investigation of 2026-11-25. Project `recipe-app-1bbdc`, region `us-central1`. Nothing was deployed or reconfigured. The numbers come from Cloud Build, Cloud Logging, Cloud Run revision status and local `docker build` runs.
+Investigation of 2026-11-25. Project `recipe-app-1bbdc`, region `us-central1`. The numbers come from Cloud Build, Cloud Logging, Cloud Run revision status and local `docker build` runs. The recommended change (options 1 + 2 + 3) was then deployed to production as revision `my-recipe-app-00083-5z6` on 2026-11-26; see [Result](#result-first-deploy-with-the-new-image). No Cloud Run, Cloud Build or IAM settings were changed.
 
 ## TL;DR
 
@@ -9,8 +9,39 @@ Investigation of 2026-11-25. Project `recipe-app-1bbdc`, region `us-central1`. N
   1. **`npm audit` runs inside `npm install`: about 2.5 min.** The install itself takes ~50s. The other ~2.5 min is npm auditing 1,072 packages after the install. Adding `--no-audit` cut it from 3m25s to 50s locally (7 runs).
   2. **A 504 MB image: about 3 min.** Pushing it takes 1m25s. Cloud Run then needs another 1m40s to *import* it before the new revision can start. A Next.js `standalone` image is **65 MB** (measured), the same size class as the backend's 81 MB image, which imports in 5s.
   3. **`next build`: 1.5 min** on the default 2-vCPU build machine. The same build takes 23s on this Mac.
-- **Recommended first, as one PR with no infra change and the same `gcloud run deploy --source .` command:** `npm ci --no-audit`, a two-stage `standalone` Dockerfile with `sharp`, and dropping the redundant local `next build` from `npm run deploy`. Projected web deploy: **~8m40s → ~4–4.5 min**.
+- **Recommended first, as one PR with no infra change and the same `gcloud run deploy --source .` command:** `npm ci --no-audit`, a two-stage `standalone` Dockerfile with `sharp`, and dropping the redundant local `next build` from `npm run deploy`. Projected web deploy: ~8m40s → ~4–4.5 min. **Measured on the first real deploy: 5m07s** (build created → serving), with a 64s gcloud wait inside it.
 - **For releases that change both backend and web, regardless of speed:** create the web revision with `--no-traffic` *before* deploying the backend, then switch traffic. Today checkout ran ~14 min with the new backend and the old frontend. With this order that drops to a few seconds.
+
+## Result: first deploy with the new image
+
+Revision `my-recipe-app-00083-5z6`, build `1608ef70`, deployed 2026-11-26 from this branch with `gcloud run deploy my-recipe-app --source .` (no other flags, no infra change).
+
+| Phase | UTC | Duration | 00082 (old image) |
+|---|---|---|---|
+| gcloud start, upload source | 01:45:44 → 01:45:53 | 9s | |
+| Build start, pull `node:20-alpine` | 01:45:54 → 01:46:05 | 11s | 11s |
+| `npm ci --no-audit --no-fund` | 01:46:05 → 01:46:58 | **53s** | 3m32s with the layer commit |
+| Commit the `node_modules` layer | 01:46:58 → 01:47:35 | 37s | (included above) |
+| `next build` with `output: 'standalone'` | 01:47:36 → 01:49:33 | 1m57s | 1m24s |
+| Runtime stage (copy standalone output) | 01:49:33 → 01:49:38 | 5s | prune 14s |
+| Push the **74 MB** image | 01:49:38 → 01:49:47 | **8.5s** | 1m25s (504 MB) |
+| gcloud waits before creating the revision | 01:49:47 → 01:50:51 | 64s | 4s |
+| Cloud Run imports the image | → 01:50:54 | **2.4s** | 1m40s |
+| Healthy, then Ready at 100% | 01:50:56 → 01:51:00 | 1.3s healthy, ready in 8.6s | |
+| **Build created → serving** | 01:45:53 → 01:51:00 | **5m07s** | **8m40s** |
+| Whole `gcloud run deploy` command | 01:45:44 → 01:51:04 | 5m20s | |
+
+- **What got faster:** `npm ci` (audit off), the push and the image import. Together they saved about 5 min (2m02s + 1m16s + 1m38s, plus 9s from dropping the prune).
+- **What got slower:** `next build` took ~30s longer, because standalone mode traces every file the server needs.
+- **What didn't change:** the gcloud gap between the build finishing and the revision being created. It was 64s this time and has ranged from 4s to 2m11s. Without it, this deploy would have been ~4m05s, inside the projection.
+- **Live site, compared with a baseline taken on 00082 just before the deploy:**
+  - All 16 routes in the smoke test returned the same status and size.
+  - Both forced landing variants were byte-identical, and the A/B cookies were still set.
+  - All 27 JS/CSS assets those pages reference returned 200.
+  - The set of `https://` hosts baked into the JS bundles had the same hash, so the `NEXT_PUBLIC_*` values from `.env` were inlined as before.
+  - The new revision logged no errors.
+  - The one expected difference: `/_next/image` output is now encoded by `sharp`, so it's ~13% larger than the WASM fallback's.
+- **Rollback,** if needed: `gcloud run services update-traffic my-recipe-app --region us-central1 --to-revisions my-recipe-app-00082-fsd=100`.
 
 ## Where the minutes go today
 
@@ -145,7 +176,7 @@ Gotcha: after a `--no-traffic` deploy, traffic stays pinned to a fixed revision 
 - `next.config.mjs`: add `output: 'standalone'`.
 - `package.json`:
   - Add `sharp`. In standalone mode, Next 14.2 returns a **500** for `/_next/image` without it (`next/dist/server/image-optimizer.js`). `next/image` is used in `app/recipe/[id]/page.tsx`, `MobileMenuOpen`, `Input` and `LegacyLanding`.
-  - Change `"deploy"` to `gcloud run deploy --source .`.
+  - Change `"deploy"` to `gcloud run deploy my-recipe-app --source .`. Naming the service also stops gcloud from guessing it from the folder name, which is wrong in a worktree.
 - `.dockerignore`: mirror `.gcloudignore` but keep `.env`. This only affects local builds, because Cloud Build already receives a filtered upload.
 - Risks: the runtime changes from `next start` to `node server.js`, and the standalone file tracer could miss a file that is loaded dynamically. The smoke test above covered every top-level route, the OG images, the service worker, the image optimizer and the middleware. Rollback is `gcloud run services update-traffic my-recipe-app --to-revisions <previous>=100`.
 - Side benefits: the instance uses about a third of the memory (125 vs 397 MiB, against a 512 MiB limit), starts faster, and `next/image` uses `sharp` instead of WASM.
@@ -187,7 +218,7 @@ Not recommended. Cloud Run needs `linux/amd64`, and this Mac is arm64. Under emu
 ## Recommendation
 
 1. **Now, no code:** use the stage-then-switch order (option 0) for any release that touches both services.
-2. **First PR:** options 1 + 2 + 3. Same deploy command, no infra change. Projected web deploy ~8m40s → ~4–4.5 min, and Cloud Run rollout ~1m48s → ~15s.
+2. **First PR (done, live as 00083):** options 1 + 2 + 3. Same deploy command, no infra change. Web deploy 8m40s → **5m07s** measured, and Cloud Run's image import 1m40s → 2.4s.
 3. **Then, if you want it faster:** options 4 + 5 together in one `cloudbuild.yaml` (~1–2 min more).
 4. **Later:** option 6, so a deploy is only the rollout.
 
