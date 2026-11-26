@@ -266,7 +266,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
           <IngredientsInput
             selectedIngredients={ingredients}
             onIngredientsChange={handleIngredientsChange}
-            placeholder="Digite um ingrediente..."
+            placeholder="Ex.: ovos"
             className="mb-4"
             ref={ingredientsInputRef}
           />

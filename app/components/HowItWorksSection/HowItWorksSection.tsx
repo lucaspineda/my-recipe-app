@@ -88,7 +88,7 @@ export default function HowItWorksSection() {
             Pronto para começar?
           </h3>
           <p className="text-lg opacity-90 mb-6">
-            Junte-se a mais de 15.000 brasileiros que já descobriram o prazer de cozinhar com IA!
+            Junte-se às mais de 5.000 pessoas que já criaram conta no Chefinho IA!
           </p>
           <button 
             onClick={() => document.querySelector('[data-meal-form]')?.scrollIntoView({ behavior: 'smooth' })}

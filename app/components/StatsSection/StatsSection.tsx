@@ -1,29 +1,32 @@
-import { ChefHat, Clock, Users, Sparkles } from 'lucide-react';
+import { ChefHat, Users, Star, Gift } from 'lucide-react';
 
+// Real figures, written as lower bounds so they stay true as they grow.
+// Checked in BigQuery on 2026-11-26: 7,282 recipes, 5,031 accounts,
+// average survey rating 4.34 from 137 ratings.
 const stats = [
   {
     icon: ChefHat,
-    number: "50.000+",
+    number: "7.000+",
     label: "Receitas Criadas",
-    description: "Receitas únicas geradas pela IA"
+    description: "Receitas geradas pela IA do Chefinho"
   },
   {
     icon: Users,
-    number: "15.000+",
-    label: "Usuários Ativos",
-    description: "Cozinheiros usando diariamente"
+    number: "5.000+",
+    label: "Contas Criadas",
+    description: "Pessoas que já criaram conta"
   },
   {
-    icon: Clock,
-    number: "5 segs",
-    label: "Tempo Médio",
-    description: "Para gerar uma receita completa"
+    icon: Star,
+    number: "4,3/5",
+    label: "Nota Média",
+    description: "Em mais de 130 avaliações de usuários"
   },
   {
-    icon: Sparkles,
-    number: "98%",
-    label: "Satisfação",
-    description: "Dos usuários recomendam"
+    icon: Gift,
+    number: "3 grátis",
+    label: "Receitas Grátis",
+    description: "Ao criar sua conta"
   }
 ];
 
