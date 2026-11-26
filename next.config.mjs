@@ -9,6 +9,8 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Self-contained server in .next/standalone; the Dockerfile ships only that.
+  output: 'standalone',
   distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   typescript: {
     ignoreBuildErrors: true,
