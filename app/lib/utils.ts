@@ -4,6 +4,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../hooks/userAuth";
 import { getAuth } from "firebase/auth";
 import axios from "axios";
+import { shareInFlight } from "./shareInFlight";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -27,11 +28,22 @@ interface RecipeData {
 
 /**
  * Generates an AI image for a recipe and saves it to Firestore.
+ * The page that creates a recipe asks for its photo, and the recipe page asks
+ * again when it opens and sees no photo yet. While a photo for the same recipe
+ * and title is still being made, the second caller shares that request.
  * @param recipeId - The Firestore document ID of the recipe.
  * @param recipe - Recipe data (supports both raw and saved formats).
  * @returns The generated image URL or null if generation fails.
  */
-export async function generateRecipeImage(
+export function generateRecipeImage(
+  recipeId: string,
+  recipe: RecipeData
+): Promise<string | null> {
+  const title = recipe.titulo || recipe.title || "";
+  return shareInFlight(`${recipeId}|${title}`, () => requestRecipeImage(recipeId, recipe));
+}
+
+async function requestRecipeImage(
   recipeId: string,
   recipe: RecipeData
 ): Promise<string | null> {
