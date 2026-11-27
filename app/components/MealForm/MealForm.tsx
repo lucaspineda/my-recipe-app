@@ -22,8 +22,7 @@ import Modal from '../Modal/Modal';
 import { Slider } from '../../ui/slider';
 import { generateRecipeImage } from '../../lib/utils';
 import { trackEvent } from '../../lib/analytics';
-import RecipeLimitModal from '../SurveyReward/RecipeLimitModal';
-import SurveyRewardModal from '../SurveyReward/SurveyRewardModal';
+import RecipeLimitModal, { RecipeLimitEntry } from '../SurveyReward/RecipeLimitModal';
 
 const schema = z.object({
   ingredients: z.string(),
@@ -45,8 +44,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
   const [prepTime, setPrepTime] = useState(40);
   const [cookingLevel, setCookingLevel] = useState<'iniciante' | 'intermediario' | 'avancado'>('intermediario');
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
-  const [showRecipeLimitModal, setShowRecipeLimitModal] = useState(false);
-  const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const [recipeLimitEntry, setRecipeLimitEntry] = useState<RecipeLimitEntry | null>(null);
   const ingredientsInputRef = React.useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -251,11 +249,11 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
                   type="button"
                   onClick={() => {
                     trackEvent('recipe_limit_modal_opened', { source: 'meal_form_banner' });
-                    setShowRecipeLimitModal(true);
+                    setRecipeLimitEntry('meal_form_banner');
                   }}
                   className="text-xs font-semibold text-secondary bg-white border border-secondary/30 px-3 py-1.5 rounded-lg hover:bg-secondary hover:text-white transition-colors whitespace-nowrap"
                 >
-                  Ganhe mais receitas
+                  Ver opções
                 </button>
               )}
             </div>
@@ -494,7 +492,7 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
               className="mb-20 flex justify-center gap-2 bg-secondary w-full py-4 text-white rounded-lg border-none shadow-[0px_0px_10px_rgba(3,3,3,0.1)] font-semibold cursor-pointer"
               onClick={() => {
                 trackEvent('recipe_limit_modal_opened', { source: 'meal_form' });
-                setShowRecipeLimitModal(true);
+                setRecipeLimitEntry('meal_form');
               }}
             >
               Gerar Receita
@@ -534,32 +532,9 @@ export const MealForm = forwardRef<HTMLFormElement>(({}, ref) => {
       </Modal>
 
       <RecipeLimitModal
-        isOpen={showRecipeLimitModal}
-        surveyAlreadyCompleted={!!user?.surveyCompletedAt}
-        onClose={() => {
-          trackEvent('recipe_limit_dismissed');
-          setShowRecipeLimitModal(false);
-        }}
-        onStartSurvey={() => {
-          setShowRecipeLimitModal(false);
-          setShowSurveyModal(true);
-        }}
-        onUpgrade={() => {
-          setShowRecipeLimitModal(false);
-          router.push('/plans');
-        }}
-      />
-
-      <SurveyRewardModal
-        isOpen={showSurveyModal}
-        onClose={() => {
-          trackEvent('survey_dismissed');
-          setShowSurveyModal(false);
-        }}
-        onComplete={() => {
-          setShowSurveyModal(false);
-          toast.success('Pronto! +5 receitas adicionadas 🎉');
-        }}
+        isOpen={recipeLimitEntry !== null}
+        entry={recipeLimitEntry ?? 'meal_form'}
+        onClose={() => setRecipeLimitEntry(null)}
       />
     </>
   );
