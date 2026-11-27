@@ -130,14 +130,14 @@ button[disabled]{
 }
 
 /* Ingredient field: the inner input is outline-none, so show focus on its box */
-.landing-form div:has(> div > input[type='text']) {
+.landing-form [data-ingredients-box] {
   min-height: 3.25rem;
   border-width: 1.5px;
   border-color: #d4d4d8;
   border-radius: 0.75rem;
 }
 
-.landing-form div:has(> div > input[type='text']):focus-within {
+.landing-form [data-ingredients-box]:focus-within {
   border-color: #18181b;
   box-shadow: 0 0 0 3px rgb(24 24 27 / 0.12);
 }

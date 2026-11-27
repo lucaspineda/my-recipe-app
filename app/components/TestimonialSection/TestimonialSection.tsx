@@ -52,14 +52,18 @@ export default function TestimonialSection() {
         </h2>
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="flex">
+            {/* Average survey rating is 4.3 of 5 (137 ratings, 2026-11-26): 4 filled stars. */}
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+              <Star
+                key={i}
+                className={i < 4 ? 'w-6 h-6 fill-yellow-400 text-yellow-400' : 'w-6 h-6 text-yellow-400'}
+              />
             ))}
           </div>
-          <span className="text-lg font-semibold text-gray-700">4.9/5</span>
+          <span className="text-lg font-semibold text-gray-700">4,3/5</span>
         </div>
         <p className="text-lg text-gray-600">
-          Adorado por <span className="font-bold text-secondary">mais de 15.000</span> cozinheiros brasileiros
+          Nota média em <span className="font-bold text-secondary">mais de 130 avaliações</span> de quem usa o Chefinho IA
         </p>
       </div>
 
@@ -99,7 +103,7 @@ export default function TestimonialSection() {
           ))}
         </div>
         <div className="text-sm text-gray-600 ml-4">
-          <span className="font-semibold">+15.000</span> usuários satisfeitos
+          <span className="font-semibold">+5.000</span> pessoas já criaram conta
         </div>
       </div>
     </section>
